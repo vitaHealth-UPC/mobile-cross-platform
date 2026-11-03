@@ -120,5 +120,95 @@
   "manageConsentExplanation": "You decide whether your family member can view your follow-up information. You can withdraw that permission at any time.",
   "withdrawConsent": "Withdraw consent",
   "withdrawConsentExplanation": "Your family member will no longer view your follow-up information and this access will close. You can establish a new link when you choose.",
-  "keepConsent": "Keep relationship"
+  "keepConsent": "Keep relationship",
+  "signInWithPin": "Sign in with PIN",
+  "pinAccessTitle": "Sign in to Tata",
+  "pinSetupTitle": "Create your PIN",
+  "pinAccessSubtitle": "Simple access for the older adult.",
+  "pinSetupSubtitle": "Choose 4 digits for future sign-ins.",
+  "pinAccessHint": "Use your 4-digit PIN.",
+  "pinSetupHint": "Create a 4-digit PIN.",
+  "olderAdultBadge": "Older adult",
+  "pinLabel": "PIN",
+  "pinDeleteDigit": "Delete last digit",
+  "pinDigitsEntered": "{count} of 4 digits entered",
+  "@pinDigitsEntered": {
+    "description": "Screen reader summary of PIN progress; digits are never read aloud.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pinSubmitAccess": "Sign in",
+  "pinSubmitSetup": "Save PIN",
+  "pinProcessing": "Processing…",
+  "pinTryLater": "Try again later",
+  "pinSetupInfoTitle": "Set up your access",
+  "pinSetupInfoBody": "Choose four digits to sign in without email or password.",
+  "pinIncorrectTitle": "Incorrect PIN",
+  "pinIncorrectBody": "Check the four digits and try again.",
+  "pinLockedTitle": "Access temporarily locked",
+  "pinLockedBody": "Too many incorrect attempts. Try again in 15 minutes.",
+  "pinErrorTitle": "We couldn't complete access",
+  "pinLinkErrorBody": "Check your care link and try again.",
+  "pinForgot": "Forgot your PIN? Ask your family member for help.",
+  "back": "Back",
+  "homeToday": "Today",
+  "homeLoading": "Checking your schedule…",
+  "homeNextDose": "Next dose",
+  "homeInHours": "In {hours} h",
+  "@homeInHours": {
+    "description": "Time remaining before the next intake, in whole hours.",
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "homeInMinutes": "In {minutes} min",
+  "@homeInMinutes": {
+    "description": "Time remaining before the next intake, in whole minutes.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "homeDueNow": "It's time for your dose",
+  "homeEmptyTitle": "No upcoming dose",
+  "homeEmptyDescription": "There are no pending doses scheduled.",
+  "homeErrorTitle": "We couldn't load your next dose",
+  "homeErrorBody": "Try again in a few minutes.",
+  "homeRetry": "Retry",
+  "homeProgressTitle": "Today's progress",
+  "homeProgressValue": "{completed}/{total}",
+  "@homeProgressValue": {
+    "description": "Confirmed intakes over scheduled intakes for today.",
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "homeCompleted": "Doses completed",
+  "homeProgressUnavailable": "Check your schedule",
+  "homeProgressEmpty": "No doses scheduled",
+  "homeProgressDone": "Well done, you completed your doses!",
+  "homeProgressInProgress": "You're doing great!",
+  "homeProgressEncouragement": "Every dose counts",
+  "homeVoiceTitle": "Confirm by voice",
+  "homeVoiceSubtitle": "Quick and easy",
+  "homeAgendaTitle": "See all my doses",
+  "homeAgendaSubtitle": "Full schedule",
+  "homeTipTitle": "Tip of the day",
+  "homeTipDescription": "Take your medication with water and at the same time every day.",
+  "homeDismissTip": "Dismiss tip of the day",
+  "homeTabStart": "Home",
+  "homeTabMore": "More",
+  "homeCareLink": "My care link",
+  "homeSwitchAccount": "Switch account"
 }

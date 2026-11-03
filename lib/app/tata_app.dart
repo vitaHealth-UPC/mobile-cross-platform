@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../features/identity_subscription/application/readmodels/remembered_adult.dart';
 import '../features/identity_subscription/presentation/bloc/access/access_bloc.dart';
 import '../features/identity_subscription/presentation/bloc/access/access_event.dart';
+import '../features/identity_subscription/presentation/bloc/pin/pin_bloc.dart';
 import '../features/identity_subscription/presentation/bloc/recovery/recovery_bloc.dart';
 import '../features/identity_subscription/presentation/bloc/registration/registration_bloc.dart';
 import '../features/identity_subscription/presentation/navigation/access_route.dart';
@@ -20,6 +22,8 @@ class TataApp extends StatelessWidget {
     this.consentBuilder,
     this.invitationBuilder,
     this.adultBuilder,
+    this.loadRememberedAdult,
+    this.createPinAccessBloc,
   });
 
   final AccessBloc Function() createAccessBloc;
@@ -31,6 +35,8 @@ class TataApp extends StatelessWidget {
   consentBuilder;
   final WidgetBuilder? invitationBuilder;
   final Widget Function(BuildContext, VoidCallback, VoidCallback)? adultBuilder;
+  final Future<RememberedAdult?> Function()? loadRememberedAdult;
+  final PinBloc Function(String olderAdultId)? createPinAccessBloc;
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +56,8 @@ class TataApp extends StatelessWidget {
           consentBuilder: consentBuilder,
           invitationBuilder: invitationBuilder,
           adultBuilder: adultBuilder,
+          loadRememberedAdult: loadRememberedAdult,
+          createPinAccessBloc: createPinAccessBloc,
         ),
       ),
     );

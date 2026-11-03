@@ -60,6 +60,14 @@ final class CareLinkApi {
     },
   );
 
+  /// Readable by the adult themself or an authorized caregiver.
+  Future<ApiResponse> profile(String olderAdultId, String token) =>
+      _client.request(
+        'GET',
+        'api/v1/older-adults/${Uri.encodeComponent(olderAdultId)}',
+        token: token,
+      );
+
   Future<ApiResponse> generate(
     String caregiverId,
     String olderAdultId,

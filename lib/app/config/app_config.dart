@@ -3,6 +3,8 @@ final class AppConfig {
   AppConfig({required Uri apiBaseUrl, bool allowLocalHttp = false})
     : apiBaseUrl = _validate(apiBaseUrl, allowLocalHttp);
 
+  /// `TATA_ALLOW_LOCAL_HTTP` only admits cleartext to local development hosts,
+  /// such as Spring on the host machine seen from the emulator at 10.0.2.2.
   factory AppConfig.fromEnvironment() => AppConfig(
     apiBaseUrl: Uri.parse(
       const String.fromEnvironment(
@@ -10,6 +12,7 @@ final class AppConfig {
         defaultValue: 'https://web-services-yzxl.onrender.com/',
       ),
     ),
+    allowLocalHttp: const bool.fromEnvironment('TATA_ALLOW_LOCAL_HTTP'),
   );
 
   final Uri apiBaseUrl;
