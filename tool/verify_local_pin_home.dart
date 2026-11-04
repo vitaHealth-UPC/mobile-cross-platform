@@ -10,11 +10,16 @@ import 'package:tata/features/identity_subscription/infrastructure/remote/pin_ap
 import 'package:tata/features/identity_subscription/infrastructure/remote/session_api.dart';
 import 'package:tata/features/identity_subscription/infrastructure/repositories/remote_pin_access.dart';
 import 'package:tata/features/identity_subscription/infrastructure/repositories/remote_session_repository.dart';
+import 'package:tata/features/intake_execution/application/readmodels/agenda_week.dart';
 import 'package:tata/features/intake_execution/application/readmodels/daily_progress.dart';
+import 'package:tata/features/intake_execution/application/usecases/confirm_intake.dart';
 import 'package:tata/features/intake_execution/application/usecases/get_daily_progress.dart';
+import 'package:tata/features/intake_execution/application/usecases/get_intake_detail.dart';
 import 'package:tata/features/intake_execution/application/usecases/get_next_intake.dart';
+import 'package:tata/features/intake_execution/application/usecases/get_week_agenda.dart';
 import 'package:tata/features/intake_execution/domain/entities/intake.dart';
 import 'package:tata/features/intake_execution/infrastructure/remote/intake_api.dart';
+import 'package:tata/features/intake_execution/infrastructure/repositories/remote_intake_confirmation.dart';
 import 'package:tata/features/intake_execution/infrastructure/repositories/remote_intake_reader.dart';
 import 'package:tata/shared/application/session/session_owner.dart';
 import 'package:tata/shared/common/result/app_result.dart';
@@ -22,7 +27,8 @@ import 'package:tata/shared/infrastructure/network/api_client.dart';
 
 import '../test/support/memory_session_store.dart';
 
-/// Opt-in real TCP/Spring probe for PIN access and the adult home.
+/// Opt-in real TCP/Spring probe for PIN access, the adult home and touch
+/// confirmation with its idempotent retry.
 /// The caregiver prepares one active treatment, then the adult signs in with
 /// the PIN and reads the next intake and today's progress. Fixture secrets
 /// never appear in output.
@@ -108,7 +114,46 @@ Future<void> main(List<String> arguments) async {
     if (progress case AppSuccess(:final value)) {
       stdout.writeln('Home: ${value.taken}/${value.total} taken today');
     }
-    stdout.writeln('PIN + Home probe passed');
+
+    // The next intake is about 25 minutes ahead, so it is confirmed on time.
+    final nextId = switch (next) {
+      AppSuccess(:final value?) => value.id,
+      _ => throw StateError('No next intake to confirm'),
+    };
+    final confirmations = RemoteIntakeConfirmation(
+      api: IntakeApi(client),
+      store: store,
+    );
+    final first = await ConfirmIntake(confirmations)(nextId);
+    _check(switch (first) {
+      AppSuccess(:final value) =>
+        value.intake.status == IntakeStatus.confirmed &&
+            !value.alreadyConfirmed,
+      AppFailure() => false,
+    }, 'Touch confirmation was not recorded on time');
+    final replay = await ConfirmIntake(confirmations)(nextId);
+    _check(switch (replay) {
+      AppSuccess(:final value) => value.alreadyConfirmed,
+      AppFailure() => false,
+    }, 'A repeated confirmation was not reported as already confirmed');
+    stdout.writeln('Confirm: on time, and the retry created no duplicate');
+
+    final detail = await GetIntakeDetail(intakes)(nextId);
+    _check(switch (detail) {
+      AppSuccess(:final value) => value.taken && value.confirmedAt != null,
+      AppFailure() => false,
+    }, 'Detail does not show the recorded confirmation');
+    final week = await GetWeekAgenda(intakes)(
+      AgendaWeek.containing(DateTime.now()),
+    );
+    _check(switch (week) {
+      AppSuccess(:final value) => value.any(
+        (intake) => intake.id == nextId && intake.taken,
+      ),
+      AppFailure() => false,
+    }, 'Weekly agenda does not show the confirmed intake');
+    stdout.writeln('Agenda: the confirmed dose appears as taken this week');
+    stdout.writeln('PIN + Home + confirmation probe passed');
   } finally {
     client.close();
   }
