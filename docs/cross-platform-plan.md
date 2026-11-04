@@ -1112,6 +1112,7 @@ Actualizar esta sección al cerrar cada recorrido o checkpoint, junto con el est
 | --- | --- | --- | --- | --- |
 | 02-11-2026 | Identity y Care Link: onboarding, acceso, alta, recovery, vínculo y consentimiento con retirada | 58cb71b (código compartido); 4d5d7a9 (plan) | 69 tests aprobados; análisis limpio; evidencia Spring local de los cortes descritos | Persistencia del setup cuidador, PIN con alcance, inicio clínico y restantes contextos |
 | 03-11-2026 | PIN (alta tras consentimiento y acceso con alcance de current), Home adulto (próxima toma y progreso diario) y olvido del atajo PIN al retirar consentimiento | Sobre ce70f0d; commit pendiente | 102 tests; análisis y formato limpios; build apk debug; tool/verify_local_pin_home.dart contra Spring local en Docker (seed demo); recorrido instalado en emulador Pixel_10 (API 37): invitación, consentimiento, alta de PIN, Home vacío y con toma real, refresco, cambio de cuenta, PIN incorrecto, PIN correcto, reinicio con sesión restaurada y retiro de consentimiento sin atajo; bloqueo 401x3/403 PIN_LOCKED comprobado en Spring; mismo recorrido instalado en teléfono físico POCO X6 Pro (Android 16) vía adb reverse, con conversión UTC a hora de Perú | Agenda, detalle y confirmación de tomas para activar atajos |
+| 03-11-2026 | Agenda semanal, detalle de toma y confirmación táctil (US-24, US-21, US-06, resultado US-23) conectados desde Home | Sobre b2493b3; commit pendiente | 123 tests (botón Confirmar fijo abajo tras verlo cortado en el POCO); análisis y formato limpios; build apk debug; sonda Spring local: confirmación a tiempo, reintento idempotente, detalle y agenda; emulador Pixel_10: próxima toma, detalle, confirmar, resultado, Home 1/1 recargado, agenda con estado y detalle confirmado sin botón; mismo recorrido en teléfono físico POCO X6 Pro (Android 16) vía adb reverse, con día local correcto (03:11 UTC = martes 10:11 p. m.) y reingreso por PIN conservando 1/1 | Caso tardío y omisión en dispositivo; persistencia Drift de confirmaciones pendientes (TS-13) y voz (TS-11) |
 
 ### Plantilla de siguiente registro
 
@@ -1132,7 +1133,7 @@ No registrar porcentajes estimados como validación. Separar implementación, co
 
 ## Registro de variantes Flutter
 
-Inventario de referencia:70 variantes. Estado inicial compartido:1 completa aceptada,3 parciales comparadas,66 sin implementación específica. Tras el corte PIN + Home (03-11-2026): 1 completa, 8 parciales, 61 sin implementación específica. La funcionalidad se registra por recorrido y actor, sin equiparar aprobación visual con cierre funcional. Las extensiones INV-01 (invitación), REC-01 (recuperación) y WDR-01 (retirada) tienen comportamiento implementado y pruebas propias; no amplían este denominador.
+Inventario de referencia:70 variantes. Estado inicial compartido:1 completa aceptada,3 parciales comparadas,66 sin implementación específica. Tras el corte PIN + Home (03-11-2026): 1 completa, 8 parciales, 61 sin implementación específica. Tras agenda y confirmación (03-11-2026): 1 completa, 18 parciales, 51 sin implementación específica. La funcionalidad se registra por recorrido y actor, sin equiparar aprobación visual con cierre funcional. Las extensiones INV-01 (invitación), REC-01 (recuperación) y WDR-01 (retirada) tienen comportamiento implementado y pruebas propias; no amplían este denominador.
 
 | # | Variante | Nodo Figma | Implementación | Fidelidad visual | Funcionalidad y evidencia |
 | --- | --- | --- | --- | --- | --- |
@@ -1146,9 +1147,9 @@ Inventario de referencia:70 variantes. Estado inicial compartido:1 completa acep
 | 8 | Home | 563:58 | Parcial | Comparada, ajustes abiertos (iniciales en lugar de foto; atajos voz/agenda y pestañas Medicamentos/Agenda/Notas ocultos hasta existir sus flujos) | AdultHomeRoute/HomeBloc con intakes/next y agenda del día; tests, sonda Spring local y emulador (vacío, toma real, refresco, reinicio); teléfono físico POCO X6 Pro comprobado |
 | 9 | My Medications | 563:361 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 10 | Medication Detail | 563:142 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
-| 11 | Weekly Schedule | 563:500 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
+| 11 | Weekly Schedule | 563:500 | Parcial | Comparada, ajustes abiertos (flechas de semana en lugar del icono de calendario) | AgendaRoute/AgendaBloc semana lunes-domingo con agenda?from&to; tests, sonda Spring local, emulador y teléfono físico POCO X6 Pro |
 | 12 | Voice Confirmation | 563:242 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
-| 13 | Dose Confirmed | 563:291 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
+| 13 | Dose Confirmed | 563:291 | Parcial | Comparada, ajustes abiertos (no afirma "familia notificada") | Resultado con hora registrada y próxima toma real; tests, sonda Spring local, emulador y teléfono físico POCO X6 Pro |
 | 14 | Accessibility | 563:618 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 15 | Family Summary | 563:727 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 16 | Linked Person | 563:1121 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
@@ -1176,20 +1177,20 @@ Inventario de referencia:70 variantes. Estado inicial compartido:1 completa acep
 | 38 | Medication Deactivated | 563:2537 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 39 | Medication Reminder Due | 563:2619 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 40 | Voice Not Recognized | 563:2707 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
-| 41 | Dose Already Confirmed | 563:2760 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
+| 41 | Dose Already Confirmed | 563:2760 | Parcial | Sin comparar en dispositivo | alreadyConfirmed del reintento y 409 releído como tomada; dose_flow_test.dart y sonda Spring |
 | 42 | No Adherence Data | 563:2834 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 43 | Treatment Incomplete | 563:2942 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 44 | Treatment Paused | 563:3010 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 45 | Treatment Access Denied | 563:3092 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 46 | No Next Dose | 563:3178 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
-| 47 | Dose Detail - Pending | 563:3266 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
-| 48 | Dose Detail - Confirmed | 563:3370 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
-| 49 | Dose Detail - Late | 563:3474 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
-| 50 | Dose Detail - Omitted | 563:3578 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
+| 47 | Dose Detail - Pending | 563:3266 | Parcial | Comparada, ajustes abiertos (sin fila "Para qué": el backend no la provee) | DoseRoute/DoseBloc con intakes/{id} y confirmación TOUCH; tests, sonda Spring local, emulador y teléfono físico POCO X6 Pro |
+| 48 | Dose Detail - Confirmed | 563:3370 | Parcial | Comparada, ajustes abiertos | Estado confirmado sin botón de confirmar; tests, sonda Spring local, emulador y teléfono físico POCO X6 Pro |
+| 49 | Dose Detail - Late | 563:3474 | Parcial | Sin comparar en dispositivo | Estado LATE con mensaje propio; tests (Spring local no genera tomas vencidas al activar) |
+| 50 | Dose Detail - Omitted | 563:3578 | Parcial | Sin comparar en dispositivo | Sin botón de confirmar y mensaje de omisión; dose_flow_test.dart |
 | 51 | Reinforced Reminder | 563:3682 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
-| 52 | Late Dose Confirmed | 563:3770 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
-| 53 | Omission Preserved | 563:3844 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
-| 54 | Agenda With Statuses | 563:3918 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
+| 52 | Late Dose Confirmed | 563:3770 | Parcial | Sin comparar en dispositivo | Recibo LATE mostrado como "Toma registrada"; dose_flow_test.dart |
+| 53 | Omission Preserved | 563:3844 | Parcial | Sin comparar en dispositivo | 409 releído como OMITTED conserva la omisión; si la relectura falla no se afirma omisión; dose_flow_test.dart |
+| 54 | Agenda With Statuses | 563:3918 | Parcial | Comparada, ajustes abiertos (sin barra inferior propia; se abre desde Home) | Estados confirmada/pendiente/tardía/omitida por toma y recarga al volver del detalle; tests, sonda Spring local, emulador y teléfono físico POCO X6 Pro |
 | 55 | Empty Intake History | 563:4037 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 56 | Contact Unavailable | 563:4145 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 57 | Follow-up Note Saved | 563:4245 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
