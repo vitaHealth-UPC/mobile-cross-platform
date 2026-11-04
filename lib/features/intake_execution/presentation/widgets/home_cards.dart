@@ -13,10 +13,18 @@ const _cardShadow = [
 
 /// Figma 563:58 next-dose card: local time, medication, dose and time remaining.
 class NextIntakeCard extends StatelessWidget {
-  const NextIntakeCard({super.key, required this.intake, required this.now});
+  const NextIntakeCard({
+    super.key,
+    required this.intake,
+    required this.now,
+    this.onTap,
+  });
 
   final Intake intake;
   final DateTime now;
+
+  /// Opens the dose detail, where the dose can be confirmed.
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +35,7 @@ class NextIntakeCard extends StatelessWidget {
       'h:mm a',
       locale,
     ).format(intake.scheduledAt.toLocal());
-    return Container(
+    final card = Ink(
       padding: const EdgeInsets.fromLTRB(18, 18, 8, 16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
@@ -105,6 +113,14 @@ class NextIntakeCard extends StatelessWidget {
         ],
       ),
     );
+    return Material(
+      type: MaterialType.transparency,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: onTap,
+        child: card,
+      ),
+    );
   }
 
   String _remaining(AppLocalizations text) {
@@ -151,16 +167,16 @@ class HomeMessageCard extends StatelessWidget {
               color: TataColors.ink,
             ),
           ),
-          if (body != null) ...[
+          if (body case final message?) ...[
             const SizedBox(height: 6),
             Text(
-              body!,
+              message,
               style: const TextStyle(fontSize: 13, color: TataColors.muted),
             ),
           ],
-          if (action != null && onAction != null) ...[
+          if ((action, onAction) case (final label?, final retry?)) ...[
             const SizedBox(height: 12),
-            ElevatedButton(onPressed: onAction, child: Text(action!)),
+            ElevatedButton(onPressed: retry, child: Text(label)),
           ],
         ],
       ),

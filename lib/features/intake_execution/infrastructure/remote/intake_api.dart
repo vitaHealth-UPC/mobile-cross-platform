@@ -14,6 +14,21 @@ final class IntakeApi {
         token: token,
       );
 
+  /// 200 with stored evidence, or 404 for an unknown intake.
+  Future<ApiResponse> detail(String intakeId, String token) => _client.request(
+    'GET',
+    'api/v1/intakes/${Uri.encodeComponent(intakeId)}',
+    token: token,
+  );
+
+  /// Manual confirmation; the backend accepts only the TOUCH channel here.
+  Future<ApiResponse> confirm(String intakeId, String token) => _client.request(
+    'POST',
+    'api/v1/intakes/${Uri.encodeComponent(intakeId)}/confirmation',
+    token: token,
+    body: {'channel': 'TOUCH'},
+  );
+
   /// Ordered evidence scheduled between the UTC instants [from] and [to].
   Future<ApiResponse> agenda(
     String olderAdultId,

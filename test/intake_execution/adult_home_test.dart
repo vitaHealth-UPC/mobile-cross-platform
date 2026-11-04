@@ -29,6 +29,10 @@ final class FakeIntakeReader implements IntakeReader {
   @override
   Future<AppResult<List<Intake>>> agenda(DateTime from, DateTime to) async =>
       agendaResult;
+
+  @override
+  Future<AppResult<Intake>> detail(String intakeId) async =>
+      const AppFailure('INTAKE_NOT_FOUND');
 }
 
 void main() {
@@ -48,6 +52,8 @@ void main() {
     FakeIntakeReader reader, {
     VoidCallback? onInvalidated,
     VoidCallback? onMore,
+    Future<void> Function()? onAgenda,
+    Future<void> Function(String)? onDose,
   }) async {
     tester.view
       ..physicalSize = const Size(1179, 2649)
@@ -71,6 +77,8 @@ void main() {
             clock: () => now,
             onOpenMore: onMore ?? () {},
             onSessionInvalidated: onInvalidated ?? () {},
+            onOpenAgenda: onAgenda,
+            onOpenDose: onDose,
           ),
         ),
       ),
@@ -167,4 +175,36 @@ void main() {
     await tester.tap(find.bySemanticsLabel('Más'));
     expect(more, 1);
   });
+
+  testWidgets(
+    'next dose, shortcut and tab open the flows and reload on return',
+    (tester) async {
+      final reader = FakeIntakeReader(
+        nextResult: AppSuccess(
+          intake('next', IntakeStatus.pending, DateTime(2026, 11, 3, 8)),
+        ),
+        agendaResult: const AppSuccess([]),
+      );
+      final opened = <String>[];
+      await pumpHome(
+        tester,
+        reader,
+        onAgenda: () async => opened.add('agenda'),
+        onDose: (id) async => opened.add(id),
+      );
+      expect(find.text('Ver todas mis tomas'), findsOneWidget);
+      expect(find.bySemanticsLabel('Agenda'), findsOneWidget);
+      expect(find.text('Confirmar con voz'), findsNothing);
+
+      await tester.tap(find.text('Losartán 50 mg'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Ver todas mis tomas'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.bySemanticsLabel('Agenda'));
+      await tester.pumpAndSettle();
+
+      expect(opened, ['next', 'agenda', 'agenda']);
+      expect(reader.reads, 4, reason: 'initial load plus one per return');
+    },
+  );
 }

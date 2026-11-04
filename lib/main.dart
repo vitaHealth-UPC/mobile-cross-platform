@@ -41,6 +41,8 @@ void main() {
           readAdultName: dependencies.readAdultName,
           createPinSetupBloc: dependencies.createPinSetupBloc,
           createHomeBloc: dependencies.createHomeBloc,
+          createAgendaBloc: dependencies.createAgendaBloc,
+          createDoseBloc: dependencies.createDoseBloc,
           createConsentBloc: dependencies.createConsentBloc,
           onSignOut: signOut,
           onSessionChanged: changed,
