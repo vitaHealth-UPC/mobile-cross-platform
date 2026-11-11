@@ -100,6 +100,59 @@ void main() {
     }
   });
 
+  testWidgets('the content runs under the floating bar and ends clear of it', (
+    tester,
+  ) async {
+    tester.view
+      ..physicalSize = const Size(1179, 1800)
+      ..devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      adherenceApp(
+        AdherenceHistoryScreen(
+          state: content(),
+          clock: () => fixtureNow,
+          onPeriodSelected: (_) {},
+          onOpenRecommendations: () {},
+          onRetry: () {},
+          onTabSelected: (_) {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final barTop = tester.getTopLeft(find.byType(CaregiverTabBar)).dy;
+
+    // Like Figma, the scrolling body is not cut where the bar starts.
+    expect(
+      tester.getBottomLeft(find.byType(SingleChildScrollView)).dy,
+      greaterThan(barTop),
+    );
+
+    await tester.drag(
+      find.byType(SingleChildScrollView),
+      const Offset(0, -3000),
+    );
+    await tester.pumpAndSettle();
+
+    final lastCardBottom = tester
+        .getBottomLeft(find.text('Vitamina D3, omitida'))
+        .dy;
+    expect(lastCardBottom, lessThan(barTop), reason: 'last row hidden by bar');
+  });
+
+  testWidgets('the metric cards keep the Figma height, not a looser one', (
+    tester,
+  ) async {
+    await pumpScreen(tester, content());
+
+    final card = find.ancestor(
+      of: find.text('Adherencia'),
+      matching: find.byType(Container),
+    );
+    // Figma: 92. The two-line caption may add a little; 1.43 line height gave 115.
+    expect(tester.getSize(card.first).height, inInclusiveRange(92, 104));
+  });
+
   testWidgets('omits what the server did not send', (tester) async {
     await pumpScreen(
       tester,

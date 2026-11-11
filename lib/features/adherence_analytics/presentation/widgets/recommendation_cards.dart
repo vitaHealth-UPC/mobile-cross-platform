@@ -41,16 +41,16 @@ class PatternHeatmapCard extends StatelessWidget {
               color: TataColors.ink,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 9),
           Text(
             adherencePatternSentence(text, pattern),
             style: const TextStyle(
               fontSize: 12,
-              height: 1.5,
+              height: 1.25,
               color: TataColors.muted,
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 13),
           Text(
             text.recommendationsConcentration,
             style: const TextStyle(
@@ -59,7 +59,7 @@ class PatternHeatmapCard extends StatelessWidget {
               color: AdherencePalette.chartLabel,
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 13),
           Semantics(
             container: true,
             label: text.recommendationsHeatmapSemantics,

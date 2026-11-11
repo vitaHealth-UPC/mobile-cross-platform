@@ -84,6 +84,30 @@ void main() {
     expect(find.text('Aplicar ajustes'), findsOneWidget);
   });
 
+  testWidgets('the cards keep the Figma heights and spacing', (tester) async {
+    await pumpScreen(tester, content());
+
+    final pattern = find.ancestor(
+      of: find.text('Concentración por horario'),
+      matching: find.byType(Container),
+    );
+    final first = find.ancestor(
+      of: find.text('1. Ajusta el recordatorio'),
+      matching: find.byType(Container),
+    );
+    final second = find.ancestor(
+      of: find.text('2. Revisa el horario'),
+      matching: find.byType(Container),
+    );
+    // Figma: pattern 182 tall, recommendations 71 tall and 14 apart.
+    expect(tester.getSize(pattern.last).height, inInclusiveRange(180, 190));
+    expect(tester.getSize(first.first).height, inInclusiveRange(69, 76));
+    expect(
+      tester.getTopLeft(second.first).dy - tester.getBottomLeft(first.first).dy,
+      closeTo(14, 1),
+    );
+  });
+
   testWidgets('the heat map draws three rows of seven cells by intensity', (
     tester,
   ) async {

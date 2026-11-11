@@ -35,17 +35,15 @@ class AdherenceRecommendationsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = AppLocalizations.of(context);
     // Figma text has no letter spacing; Material adds 0.25 to body text.
-    const tight = TextStyle(letterSpacing: 0);
+    const tight = TextStyle(letterSpacing: 0, height: 1.2);
     final apply = onApplyAdjustments;
     return Scaffold(
       backgroundColor: TataColors.background,
       bottomNavigationBar: DefaultTextStyle.merge(
         style: tight,
-        child: SafeArea(
-          child: CaregiverTabBar(
-            selected: CaregiverTab.home,
-            onSelected: onTabSelected,
-          ),
+        child: CaregiverTabBar(
+          selected: CaregiverTab.home,
+          onSelected: onTabSelected,
         ),
       ),
       body: DefaultTextStyle.merge(
