@@ -18,6 +18,7 @@ class AgendaRoute extends StatefulWidget {
     required this.onSessionInvalidated,
     this.clock = DateTime.now,
     this.onBack,
+    this.onMore,
   });
 
   final AgendaBloc Function() createBloc;
@@ -27,6 +28,7 @@ class AgendaRoute extends StatefulWidget {
   final VoidCallback onSessionInvalidated;
   final Clock clock;
   final VoidCallback? onBack;
+  final VoidCallback? onMore;
 
   @override
   State<AgendaRoute> createState() => _AgendaRouteState();
@@ -90,6 +92,7 @@ class _AgendaRouteState extends State<AgendaRoute> {
           onRetry: _refresh,
           onOpenDose: _open,
           onBack: widget.onBack,
+          onMore: widget.onMore,
         );
       },
     ),

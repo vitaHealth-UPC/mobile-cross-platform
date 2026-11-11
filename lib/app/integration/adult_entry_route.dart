@@ -144,10 +144,18 @@ class _AdultEntryRouteState extends State<AdultEntryRoute> {
         MaterialPageRoute(
           builder: (routeContext) => DoseRoute(
             createBloc: () => widget.createDoseBloc(intakeId),
+            onAgenda: () {
+              Navigator.of(routeContext).popUntil((route) => route.isFirst);
+              _openAgenda(context);
+            },
             onBack: () => Navigator.of(routeContext).pop(),
             onBackHome: () =>
                 Navigator.of(routeContext).popUntil((route) => route.isFirst),
             onSessionInvalidated: () => _leaveForRevalidation(routeContext),
+            onMore: () {
+              Navigator.of(routeContext).popUntil((route) => route.isFirst);
+              _openMore(context);
+            },
           ),
         ),
       );
@@ -160,6 +168,10 @@ class _AdultEntryRouteState extends State<AdultEntryRoute> {
             onOpenDose: (intakeId) => _openDose(routeContext, intakeId),
             onBack: () => Navigator.of(routeContext).pop(),
             onSessionInvalidated: () => _leaveForRevalidation(routeContext),
+            onMore: () {
+              Navigator.of(routeContext).popUntil((route) => route.isFirst);
+              _openMore(context);
+            },
           ),
         ),
       );

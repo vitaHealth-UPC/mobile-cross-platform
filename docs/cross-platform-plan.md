@@ -1115,6 +1115,8 @@ Actualizar esta sección al cerrar cada recorrido o checkpoint, junto con el est
 | 03-11-2026 | Agenda semanal, detalle de toma y confirmación táctil (US-24, US-21, US-06, resultado US-23) conectados desde Home | Sobre b2493b3; commit pendiente | 123 tests (botón Confirmar fijo abajo tras verlo cortado en el POCO); análisis y formato limpios; build apk debug; sonda Spring local: confirmación a tiempo, reintento idempotente, detalle y agenda; emulador Pixel_10: próxima toma, detalle, confirmar, resultado, Home 1/1 recargado, agenda con estado y detalle confirmado sin botón; mismo recorrido en teléfono físico POCO X6 Pro (Android 16) vía adb reverse, con día local correcto (03:11 UTC = martes 10:11 p. m.) y reingreso por PIN conservando 1/1 | Caso tardío y omisión en dispositivo; persistencia Drift de confirmaciones pendientes (TS-13) y voz (TS-11) |
 | 11-11-2026 | TS-13: cache de tomas y cola offline de confirmaciones con Drift por adulto y vínculo, reenvío serializado, restauración de sesión del adulto sin red y borrado local al retirar consentimiento | Sobre 6d2d8ab; commit pendiente | 170 tests; análisis y formato limpios; build apk debug; Spring local y emulador Pixel_10 sin red: arranque en frío, confirmación guardada, cierre forzado, agenda "por enviar", reenvío automático con una sola confirmación en servidor y borrado de filas tras retirar consentimiento | Reenvío con la app cerrada (no implementado: solo primer plano); probar en teléfono físico y contra Render. La entrega offline informa confirmedAt con la hora del toque (contrato v1.1.0 del 11-11-2026); si el servidor rechaza esa hora, se reenvía con la hora de llegada. La confirmación en línea sigue sin enviarla |
 
+| 11-11-2026 | Autorización de Home, alta de PIN existente y fidelidad de PIN, Home, agenda, detalle y resultados, integrados con offline del equipo | Sobre 00d611a | 206 tests; análisis y formato limpios; 26 escenarios de layout con escalas 1 y 1.5 y capturas revisadas frente a Figma | Despliegue Render por el titular; integrar voz, medicamentos y notas según backlog |
+
 ### Plantilla de siguiente registro
 
 Copiar este bloque para cada continuación y sustituir los campos con resultados comprobados:
@@ -1143,14 +1145,14 @@ Inventario de referencia:70 variantes. Estado inicial compartido:1 completa acep
 | 3 | Onboarding | 563:5 | Completa | Aceptada proporcionalmente | Acciones y navegación comprobadas en widgets; onboarding_screen_test.dart; falta dispositivo |
 | 4 | Caregiver Registration | 563:1398 | Parcial | Comparada, ajustes abiertos | Alta, verificación y reenvío; tests y probe Spring local; falta validación instalada |
 | 5 | Link & Consent | 563:1440 | Parcial | Comparada, ajustes abiertos | Cuidador y adulto con decisiones y retirada; tests y Spring local; falta persistencia del setup cuidador y core adulto |
-| 6 | PIN Access | 563:1338 | Parcial | Comparada, ajustes abiertos (iniciales en lugar de foto) | PinRoute/PinBloc.access con pin-sessions + current; tests, sonda Spring local y emulador (incorrecto y correcto); teléfono físico POCO X6 Pro comprobado |
+| 6 | PIN Access | 563:1338 | Parcial | Aceptada proporcionalmente en render ES (11-11-2026; normal y texto 150 %) | PinRoute/PinBloc.access con pin-sessions + current; tests, sonda Spring local y emulador (incorrecto y correcto); teléfono físico POCO X6 Pro comprobado Capturas de widgets revisadas contra Figma; no se agrega evidencia de Render ni dispositivo. |
 | 7 | Login | 641:16 | Parcial | Comparada, ajustes abiertos | Password, restore y logout; social sin integrar; tests y Spring local |
-| 8 | Home | 563:58 | Parcial | Comparada, ajustes abiertos (iniciales en lugar de foto; atajos voz/agenda y pestañas Medicamentos/Agenda/Notas ocultos hasta existir sus flujos) | AdultHomeRoute/HomeBloc con intakes/next y agenda del día; tests, sonda Spring local y emulador (vacío, toma real, refresco, reinicio); teléfono físico POCO X6 Pro comprobado |
+| 8 | Home | 563:58 | Parcial | Aceptada proporcionalmente en render ES (11-11-2026; normal y texto 150 %) | Barra de cinco destinos e ilustraciones originales; voz, medicamentos y notas sin contrato conectado permanecen deshabilitados. Iniciales por adulto. Progreso sin permiso invalida Home. |
 | 9 | My Medications | 563:361 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 10 | Medication Detail | 563:142 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 11 | Weekly Schedule | 563:500 | Parcial | Comparada, ajustes abiertos (flechas de semana en lugar del icono de calendario) | AgendaRoute/AgendaBloc semana lunes-domingo con agenda?from&to; tests, sonda Spring local, emulador y teléfono físico POCO X6 Pro |
 | 12 | Voice Confirmation | 563:242 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
-| 13 | Dose Confirmed | 563:291 | Parcial | Comparada, ajustes abiertos (no afirma "familia notificada") | Resultado con hora registrada y próxima toma real; tests, sonda Spring local, emulador y teléfono físico POCO X6 Pro |
+| 13 | Dose Confirmed | 563:291 | Parcial | Aceptada proporcionalmente en render ES (11-11-2026; normal y texto 150 %) | Resultado con hora registrada y próxima toma real; tests, sonda Spring local, emulador y teléfono físico POCO X6 Pro Capturas de widgets revisadas contra Figma; no se agrega evidencia de Render ni dispositivo. |
 | 14 | Accessibility | 563:618 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 15 | Family Summary | 563:727 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 16 | Linked Person | 563:1121 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
@@ -1166,7 +1168,7 @@ Inventario de referencia:70 variantes. Estado inicial compartido:1 completa acep
 | 26 | Notification Preferences | 563:1219 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 27 | Notes - Caregiver | 576:2859 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 28 | Plan & Subscription | 563:1701 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
-| 29 | PIN Setup | 563:1970 | Parcial | Comparada, ajustes abiertos | Alta tras consentimiento real en emulador con pin-credentials; PIN_ALREADY_REGISTERED comprobado en Spring; teléfono físico POCO X6 Pro comprobado |
+| 29 | PIN Setup | 563:1970 | Parcial | Aceptada proporcionalmente en render ES (11-11-2026; normal y texto 150 %) | PIN_ALREADY_REGISTERED informa que no cambia el PIN; continuar requiere confirmación explícita del usuario. Se limpian dígitos y se propaga pérdida de permiso. |
 | 30 | PIN Incorrect | 563:2034 | Parcial | Comparada, ajustes abiertos | INVALID_PIN 401 de Spring mostrado en emulador; dígitos limpiados; también en teléfono físico |
 | 31 | PIN Temporarily Blocked | 563:2098 | Parcial | Sin comparar contra el nodo | Spring devuelve 401x3 y 403 PIN_LOCKED; mapeo y bloqueo de teclado en pin_flow_test.dart; sin captura en emulador |
 | 32 | Duplicate Email | 563:2162 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
@@ -1178,20 +1180,20 @@ Inventario de referencia:70 variantes. Estado inicial compartido:1 completa acep
 | 38 | Medication Deactivated | 563:2537 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 39 | Medication Reminder Due | 563:2619 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 40 | Voice Not Recognized | 563:2707 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
-| 41 | Dose Already Confirmed | 563:2760 | Parcial | Sin comparar en dispositivo | alreadyConfirmed del reintento y 409 releído como tomada; dose_flow_test.dart y sonda Spring |
+| 41 | Dose Already Confirmed | 563:2760 | Parcial | Aceptada proporcionalmente en render ES (11-11-2026; normal y texto 150 %) | alreadyConfirmed del reintento y 409 releído como tomada; dose_flow_test.dart y sonda Spring Capturas de widgets revisadas contra Figma; no se agrega evidencia de Render ni dispositivo. |
 | 42 | No Adherence Data | 563:2834 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 43 | Treatment Incomplete | 563:2942 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 44 | Treatment Paused | 563:3010 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 45 | Treatment Access Denied | 563:3092 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 46 | No Next Dose | 563:3178 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
-| 47 | Dose Detail - Pending | 563:3266 | Parcial | Comparada, ajustes abiertos (sin fila "Para qué": el backend no la provee) | DoseRoute/DoseBloc con intakes/{id} y confirmación TOUCH; tests, sonda Spring local, emulador y teléfono físico POCO X6 Pro |
-| 48 | Dose Detail - Confirmed | 563:3370 | Parcial | Comparada, ajustes abiertos | Estado confirmado sin botón de confirmar; tests, sonda Spring local, emulador y teléfono físico POCO X6 Pro |
-| 49 | Dose Detail - Late | 563:3474 | Parcial | Sin comparar en dispositivo | Estado LATE con mensaje propio; tests (Spring local no genera tomas vencidas al activar) |
-| 50 | Dose Detail - Omitted | 563:3578 | Parcial | Sin comparar en dispositivo | Sin botón de confirmar y mensaje de omisión; dose_flow_test.dart |
+| 47 | Dose Detail - Pending | 563:3266 | Parcial | Aceptada proporcionalmente en render ES (11-11-2026; normal y texto 150 %) | DoseRoute/DoseBloc con intakes/{id} y confirmación TOUCH; tests, sonda Spring local, emulador y teléfono físico POCO X6 Pro Capturas de widgets revisadas contra Figma; no se agrega evidencia de Render ni dispositivo. |
+| 48 | Dose Detail - Confirmed | 563:3370 | Parcial | Aceptada proporcionalmente en render ES (11-11-2026; normal y texto 150 %) | Estado confirmado sin botón de confirmar; tests, sonda Spring local, emulador y teléfono físico POCO X6 Pro Capturas de widgets revisadas contra Figma; no se agrega evidencia de Render ni dispositivo. |
+| 49 | Dose Detail - Late | 563:3474 | Parcial | Aceptada proporcionalmente en render ES (11-11-2026; normal y texto 150 %) | Estado LATE con mensaje propio; tests (Spring local no genera tomas vencidas al activar) Capturas de widgets revisadas contra Figma; no se agrega evidencia de Render ni dispositivo. |
+| 50 | Dose Detail - Omitted | 563:3578 | Parcial | Aceptada proporcionalmente en render ES (11-11-2026; normal y texto 150 %) | Sin botón de confirmar y mensaje de omisión; dose_flow_test.dart Capturas de widgets revisadas contra Figma; no se agrega evidencia de Render ni dispositivo. |
 | 51 | Reinforced Reminder | 563:3682 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
-| 52 | Late Dose Confirmed | 563:3770 | Parcial | Sin comparar en dispositivo | Recibo LATE mostrado como "Toma registrada"; dose_flow_test.dart |
-| 53 | Omission Preserved | 563:3844 | Parcial | Sin comparar en dispositivo | 409 releído como OMITTED conserva la omisión; si la relectura falla no se afirma omisión; dose_flow_test.dart |
-| 54 | Agenda With Statuses | 563:3918 | Parcial | Comparada, ajustes abiertos (sin barra inferior propia; se abre desde Home) | Estados confirmada/pendiente/tardía/omitida por toma y recarga al volver del detalle; tests, sonda Spring local, emulador y teléfono físico POCO X6 Pro |
+| 52 | Late Dose Confirmed | 563:3770 | Parcial | Aceptada proporcionalmente en render ES (11-11-2026; normal y texto 150 %) | Recibo LATE con subtítulo de retraso y nota de clasificación. No afirma entrega a familiares. |
+| 53 | Omission Preserved | 563:3844 | Parcial | Aceptada proporcionalmente en render ES (11-11-2026; normal y texto 150 %) | 409 releído como OMITTED conserva la omisión; si la relectura falla no se afirma omisión; dose_flow_test.dart Capturas de widgets revisadas contra Figma; no se agrega evidencia de Render ni dispositivo. |
+| 54 | Agenda With Statuses | 563:3918 | Parcial | Aceptada proporcionalmente en render ES (11-11-2026; normal y texto 150 %) | Línea temporal, tarjetas nativas, marcas por enviar conservadas, barra compartida en Agenda y recarga al volver. |
 | 55 | Empty Intake History | 563:4037 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 56 | Contact Unavailable | 563:4145 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 57 | Follow-up Note Saved | 563:4245 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
@@ -1209,6 +1211,18 @@ Inventario de referencia:70 variantes. Estado inicial compartido:1 completa acep
 | 69 | External Destination Unavailable | 563:5425 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 70 | Internationalization | 665:183 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 
+
+## Revisión del lote integrado (11-11-2026)
+
+Home propaga pérdida de autenticación, sesión o consentimiento de cualquiera de sus dos consultas; una respuesta correcta de próxima toma no oculta una denegación en progreso. PIN_ALREADY_REGISTERED se presenta como estado propio, aclara que los dígitos nuevos no se guardan y exige pulsar Continuar con mi PIN actual. Las regresiones verifican ambas decisiones y la revocación durante el alta de PIN.
+
+El componente de Intake presentation/widgets/adult_navigation_bar.dart conserva cinco destinos y selección entre Home, Agenda y detalle. App conecta las acciones disponibles; los destinos sin integración quedan deshabilitados. Las tarjetas, línea temporal, botones y estados se componen con widgets. Se conservan las marcas de cola y el estado por enviar del compañero, sin presentarlos como recibo del servidor.
+
+Los SVG de cápsula, notas, calendario, familia y éxito proceden de Figma; la cápsula conserva la rotación del nodo y los SVG sus dimensiones raíz. La tableta reutilizada tiene 352 x 352 píxeles. Water + Plant (100 x 100) y Confetti (150 x 60) conservan la resolución original disponible, sin fabricar detalle por reescalado. Las fotos de perfil no disponibles se representan mediante iniciales dinámicas.
+
+adaptive_screens_test.dart comprueba 13 estados a 393 x 883 y escala 1, y a 360 x 640 y escala 1.5: PIN acceso/alta, Home, Agenda, cuatro detalles y cinco resultados. Nombre e insignia se redistribuyen sin fragmentar palabras; la hora de Home y su ilustración pasan a columna con texto grande. El helper de captura restaura las sombras del entorno de prueba. Las capturas permanecen como evidencia local reproducible, fuera de los assets productivos.
+
+Son 12 variantes Figma corregidas y aceptadas proporcionalmente, más el estado offline por enviar fuera del denominador. Con el onboarding anterior suman 13 variantes aceptadas visualmente. No implica cierre de sus historias: la tabla conserva la funcionalidad parcial y distingue widgets, servidor local y Render. Este corte no integra en main/develop ni modifica el report.
 
 ## Procedimiento de implementación y revisión
 

@@ -32,16 +32,31 @@ Future<void> captureWidget(
 ) async {
   final directory = Platform.environment['TATA_CAPTURE_DIR'];
   if (directory == null) return;
-  await tester.runAsync(() async {
-    final render = tester.renderObject<RenderRepaintBoundary>(boundary);
-    final image = await render.toImage(pixelRatio: 1);
-    try {
-      final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-      await Directory(directory).create(recursive: true);
-      await File('$directory/$name.png')
-          .writeAsBytes(bytes!.buffer.asUint8List());
-    } finally {
-      image.dispose();
-    }
-  });
+  final previousShadows = debugDisableShadows;
+  final render = tester.renderObject<RenderRepaintBoundary>(boundary);
+  void repaint(RenderObject object) {
+    object.markNeedsPaint();
+    object.visitChildren(repaint);
+  }
+
+  debugDisableShadows = false;
+  repaint(render);
+  await tester.pump();
+  try {
+    await tester.runAsync(() async {
+      final image = await render.toImage(pixelRatio: 1);
+      try {
+        final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+        await Directory(directory).create(recursive: true);
+        await File('$directory/$name.png')
+            .writeAsBytes(bytes!.buffer.asUint8List());
+      } finally {
+        image.dispose();
+      }
+    });
+  } finally {
+    debugDisableShadows = previousShadows;
+    repaint(render);
+    await tester.pump();
+  }
 }

@@ -6,6 +6,7 @@ import '../../../../shared/presentation/theme/tata_colors.dart';
 import '../../../../shared/presentation/theme/tata_typography.dart';
 import '../../domain/entities/intake.dart';
 import '../bloc/agenda/agenda_state.dart';
+import '../widgets/adult_navigation_bar.dart';
 import '../widgets/intake_labels.dart';
 
 /// Figma 563:500 / 563:3918 weekly agenda with per-dose status (US-24).
@@ -20,6 +21,7 @@ class AgendaScreen extends StatelessWidget {
     required this.onOpenDose,
     this.errorText,
     this.onBack,
+    this.onMore,
   });
 
   final AgendaState state;
@@ -32,6 +34,7 @@ class AgendaScreen extends StatelessWidget {
   final ValueChanged<String> onOpenDose;
   final String? errorText;
   final VoidCallback? onBack;
+  final VoidCallback? onMore;
 
   @override
   Widget build(BuildContext context) {
@@ -43,11 +46,17 @@ class AgendaScreen extends StatelessWidget {
       DateFormat.MMMMd(locale).format(days.last),
     );
     return Scaffold(
+      bottomNavigationBar: AdultNavigationBar(
+        selected: AdultDestination.agenda,
+        onHome: onBack,
+        onMore: onMore,
+      ),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: onRetry,
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(22, 16, 22, 24),
+            key: const PageStorageKey('adult-agenda'),
+            padding: const EdgeInsets.fromLTRB(18, 28, 22, 24),
             children: [
               Row(
                 children: [
@@ -231,7 +240,7 @@ class _AgendaEntry extends StatelessWidget {
     final text = AppLocalizations.of(context);
     final time = intakeTime(context, intake.scheduledAt);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.only(bottom: 24),
       child: Semantics(
         button: true,
         label: text.agendaDoseSemantics(
@@ -240,83 +249,107 @@ class _AgendaEntry extends StatelessWidget {
           intakeDisplayLabel(text, intake),
         ),
         excludeSemantics: true,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
+          clipBehavior: Clip.none,
           children: [
-            SizedBox(
-              width: 72,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 14),
-                child: Column(
-                  children: [
-                    Text(
-                      time,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: TataColors.ink,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    IntakePeriodIcon(instant: intake.scheduledAt),
-                  ],
-                ),
+            const Positioned(
+              left: 54,
+              top: 0,
+              bottom: -24,
+              child: SizedBox(
+                width: 2,
+                child: ColoredBox(color: Color(0xFFE1E2ED)),
               ),
             ),
-            Expanded(
-              child: Material(
-                color: intakeCardColor(intake.scheduledAt),
-                borderRadius: BorderRadius.circular(18),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(18),
-                  onTap: onTap,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: 74,
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
-                    child: Row(
+                    padding: const EdgeInsets.only(top: 14),
+                    child: Column(
                       children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                intake.medicationName,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                  color: TataColors.ink,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                intake.dose,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: TataColors.ink,
-                                ),
-                              ),
-                              if (intake.instructions case final notes?
-                                  when notes.trim().isNotEmpty) ...[
-                                const SizedBox(height: 6),
-                                Text(
-                                  notes,
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    color: TataColors.muted,
-                                  ),
-                                ),
-                              ],
-                            ],
+                        Text(
+                          time,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: TataColors.ink,
                           ),
                         ),
-                        const SizedBox(width: 10),
-                        IntakeStatusMark(
-                          status: intake.status,
-                          queued: intake.queued,
+                        const SizedBox(height: 10),
+                        Transform.translate(
+                          offset: const Offset(17, 0),
+                          child: ColoredBox(
+                            color: TataColors.background,
+                            child: IntakePeriodIcon(
+                              instant: intake.scheduledAt,
+                            ),
+                          ),
                         ),
                       ],
                     ),
                   ),
                 ),
-              ),
+                Expanded(
+                  child: Material(
+                    color: intakeCardColor(intake.scheduledAt),
+                    elevation: 2,
+                    shadowColor: const Color(0x181A2138),
+                    borderRadius: BorderRadius.circular(18),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(18),
+                      onTap: onTap,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    intake.medicationName,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                      color: TataColors.ink,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    intake.dose,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      color: TataColors.ink,
+                                    ),
+                                  ),
+                                  if (intake.instructions case final notes?
+                                      when notes.trim().isNotEmpty) ...[
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      notes,
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        color: TataColors.muted,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            IntakeStatusMark(
+                              status: intake.status,
+                              queued: intake.queued,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

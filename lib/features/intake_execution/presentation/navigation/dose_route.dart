@@ -18,6 +18,8 @@ class DoseRoute extends StatelessWidget {
     required this.onBackHome,
     required this.onSessionInvalidated,
     this.clock = DateTime.now,
+    this.onMore,
+    this.onAgenda,
   });
 
   final DoseBloc Function() createBloc;
@@ -27,6 +29,8 @@ class DoseRoute extends StatelessWidget {
   final VoidCallback onBackHome;
   final VoidCallback onSessionInvalidated;
   final Clock clock;
+  final VoidCallback? onMore;
+  final VoidCallback? onAgenda;
 
   @override
   Widget build(BuildContext context) => BlocProvider(
@@ -62,6 +66,8 @@ class DoseRoute extends StatelessWidget {
               next: state.next,
               now: now,
               onBackHome: onBackHome,
+              onMore: onMore,
+              onAgenda: onAgenda,
             ),
           (DoseStatus.ready, final intake?, null) => DoseDetailScreen(
             intake: intake,
@@ -71,6 +77,9 @@ class DoseRoute extends StatelessWidget {
             errorText: error,
             onConfirm: () => bloc.add(const DoseConfirmRequested()),
             onBack: onBack,
+            onBackHome: onBackHome,
+            onMore: onMore,
+            onAgenda: onAgenda,
           ),
           (DoseStatus.failure, _, _) => _Failure(
             title: text.doseErrorTitle,
