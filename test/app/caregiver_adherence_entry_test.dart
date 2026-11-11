@@ -175,4 +175,37 @@ void main() {
     expect(find.text('Rosa Vargas'), findsOneWidget);
     expect(find.text('Historial e insights'), findsNothing);
   });
+
+  testWidgets('the relative card follows the Figma linked person pattern', (
+    tester,
+  ) async {
+    useFigmaPhone(tester);
+    await tester.pumpWidget(
+      RepaintBoundary(
+        key: const Key('caregiver-area-capture'),
+        child: adherenceApp(
+          CaregiverProfilesScreen(
+            links: [link],
+            loading: false,
+            onRegister: (_, _) {},
+            onRefresh: () {},
+            onSignOut: () {},
+            onOpenProfile: (_) {},
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await captureWidget(
+      tester,
+      find.byKey(const Key('caregiver-area-capture')),
+      'caregiver-area-relative-card',
+    );
+
+    expect(find.text('RV'), findsOneWidget);
+    expect(find.text('Rosa Vargas'), findsOneWidget);
+    expect(find.text('Vínculo confirmado'), findsOneWidget);
+    expect(find.byIcon(Icons.chevron_right), findsOneWidget);
+    expect(find.text('Tus familiares'), findsOneWidget);
+  });
 }
