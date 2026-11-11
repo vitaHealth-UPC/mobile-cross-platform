@@ -131,6 +131,30 @@ String adherencePatternSentence(
   ),
 };
 
+/// Level word of an adherence percentage. Only the 90 percent line the app
+/// already uses for praise separates the two words; finer bands would be a
+/// product decision the design does not make.
+String adherenceLevelLabel(AppLocalizations text, int adherencePercent) =>
+    adherencePercent >= 90
+    ? text.adherenceLevelExcellent
+    : text.adherenceLevelFollowUp;
+
+/// Change against the previous period of the level card, named as in Figma for
+/// a month ("vs. mes anterior") and a week, and by days for any other length.
+String? adherenceLevelCaption(
+  AppLocalizations text,
+  int? change,
+  int periodDays,
+) {
+  final value = adherenceChangeText(change);
+  if (value == null) return null;
+  return switch (periodDays) {
+    30 => text.adherenceLevelVsMonth(value),
+    7 => text.adherenceLevelVsWeek(value),
+    _ => text.adherenceChangeVsPrevious(value, periodDays),
+  };
+}
+
 /// Translates a stable failure code into a message safe to show.
 String adherenceErrorText(AppLocalizations text, String? code) =>
     switch (code) {

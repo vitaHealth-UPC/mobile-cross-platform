@@ -529,5 +529,37 @@
   "recommendationsApply": "Aplicar ajustes",
   "recommendationsLoading": "Consultando tus recomendaciones…",
   "recommendationsErrorTitle": "No pudimos cargar las recomendaciones",
-  "adherenceOpenFromProfile": "Ver historial de adherencia"
+  "adherenceOpenFromProfile": "Ver historial de adherencia",
+  "adherenceLevelTitle": "Nivel de adherencia",
+  "adherenceLevelInfo": "Porcentaje de tomas confirmadas, a tiempo o tardías, en el período.",
+  "adherenceLevelExcellent": "Excelente",
+  "adherenceLevelFollowUp": "En seguimiento",
+  "adherenceLevelVsMonth": "{change} vs. mes anterior",
+  "@adherenceLevelVsMonth": {
+    "placeholders": {
+      "change": {
+        "type": "String"
+      }
+    }
+  },
+  "adherenceLevelVsWeek": "{change} vs. semana anterior",
+  "@adherenceLevelVsWeek": {
+    "placeholders": {
+      "change": {
+        "type": "String"
+      }
+    }
+  },
+  "adherenceLevelSemantics": "Nivel de adherencia: {level}, {percent}%.",
+  "@adherenceLevelSemantics": {
+    "description": "Screen reader summary of the adherence level card.",
+    "placeholders": {
+      "level": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  }
 }

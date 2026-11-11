@@ -6,6 +6,7 @@ import '../../features/adherence_analytics/application/usecases/get_recommendati
 import '../../features/adherence_analytics/infrastructure/remote/analytics_api.dart';
 import '../../features/adherence_analytics/infrastructure/repositories/remote_adherence_repository.dart';
 import '../../features/adherence_analytics/presentation/bloc/history/history_bloc.dart';
+import '../../features/adherence_analytics/presentation/bloc/level/level_bloc.dart';
 import '../../features/adherence_analytics/presentation/bloc/recommendations/recommendations_bloc.dart';
 import '../../features/care_link/application/usecases/accept_care_link.dart';
 import '../../features/care_link/application/usecases/generate_linking_code.dart';
@@ -175,6 +176,13 @@ final class AppDependencies {
   /// Creates the adherence history state of [olderAdultId], read with the
   /// session of the caregiver of that link or of the adult themselves.
   HistoryBloc createAdherenceHistoryBloc(String olderAdultId) => HistoryBloc(
+    olderAdultId: olderAdultId,
+    summary: GetAdherenceSummary(_adherence),
+  );
+
+  /// Creates the adherence level of [olderAdultId] for a screen that shows it
+  /// as a card, such as the person profile.
+  LevelBloc createAdherenceLevelBloc(String olderAdultId) => LevelBloc(
     olderAdultId: olderAdultId,
     summary: GetAdherenceSummary(_adherence),
   );

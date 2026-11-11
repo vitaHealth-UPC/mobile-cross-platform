@@ -529,5 +529,37 @@
   "recommendationsApply": "Apply adjustments",
   "recommendationsLoading": "Loading your recommendations…",
   "recommendationsErrorTitle": "We couldn't load the recommendations",
-  "adherenceOpenFromProfile": "View adherence history"
+  "adherenceOpenFromProfile": "View adherence history",
+  "adherenceLevelTitle": "Adherence level",
+  "adherenceLevelInfo": "Share of confirmed intakes, on time or late, in the period.",
+  "adherenceLevelExcellent": "Excellent",
+  "adherenceLevelFollowUp": "Under follow-up",
+  "adherenceLevelVsMonth": "{change} vs. previous month",
+  "@adherenceLevelVsMonth": {
+    "placeholders": {
+      "change": {
+        "type": "String"
+      }
+    }
+  },
+  "adherenceLevelVsWeek": "{change} vs. previous week",
+  "@adherenceLevelVsWeek": {
+    "placeholders": {
+      "change": {
+        "type": "String"
+      }
+    }
+  },
+  "adherenceLevelSemantics": "Adherence level: {level}, {percent}%.",
+  "@adherenceLevelSemantics": {
+    "description": "Screen reader summary of the adherence level card.",
+    "placeholders": {
+      "level": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  }
 }
