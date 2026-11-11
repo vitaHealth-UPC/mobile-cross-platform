@@ -29,6 +29,11 @@ abstract final class AdherencePalette {
   static const emptyStateBody = Color(0xFF78859E);
   static const outlinedAction = Color(0xFF21457A);
   static const retrySurface = Color(0xFFF0ECFF);
+  static const weeklyStart = Color(0xFFE8F5EB);
+  static const weeklyEnd = Color(0xFFDDEDE1);
+  static const weeklyTitle = Color(0xFF296345);
+  static const gaugeTrack = Color(0xFFD7E5DC);
+  static const gaugeFill = Color(0xFF5D9A75);
 
   /// Soft elevation shared by every card of the two screens.
   static const cardShadow = [

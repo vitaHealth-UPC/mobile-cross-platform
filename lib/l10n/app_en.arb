@@ -561,5 +561,37 @@
         "type": "int"
       }
     }
+  },
+  "weeklyAdherenceTitle": "Adherence this week",
+  "weeklyAdherenceGood": "Well done, {name}",
+  "@weeklyAdherenceGood": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "weeklyAdherenceFollowUp": "Let's keep supporting {name}",
+  "@weeklyAdherenceFollowUp": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "weeklyAdherenceSemantics": "{name}'s adherence this week: {percent}%. {message}",
+  "@weeklyAdherenceSemantics": {
+    "description": "Screen reader summary of the weekly adherence card.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      },
+      "message": {
+        "type": "String"
+      }
+    }
   }
 }
