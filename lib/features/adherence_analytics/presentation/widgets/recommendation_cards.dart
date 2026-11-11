@@ -231,7 +231,9 @@ class BackToHistoryButton extends StatelessWidget {
       foregroundColor: AdherencePalette.outlinedAction,
       side: const BorderSide(color: AdherencePalette.outlinedAction),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-      textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+      // Replacing the whole style would drop the theme font (Inter).
+      textStyle: Theme.of(context).textTheme.labelLarge
+          ?.copyWith(fontSize: 14, fontWeight: FontWeight.w600),
     ),
     child: Text(AppLocalizations.of(context).recommendationsBack),
   );

@@ -199,6 +199,9 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Aplicar ajustes'), findsNothing);
+    // A custom button style once dropped the theme font and showed system text.
+    final label = tester.element(find.text('Volver a historial'));
+    expect(DefaultTextStyle.of(label).style.fontFamily, 'Inter');
 
     await tester.tap(find.text('Volver a historial'));
     expect(back, 1);
