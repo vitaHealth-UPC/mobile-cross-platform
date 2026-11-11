@@ -528,5 +528,6 @@
   "recommendationsBack": "Back to history",
   "recommendationsApply": "Apply adjustments",
   "recommendationsLoading": "Loading your recommendations…",
-  "recommendationsErrorTitle": "We couldn't load the recommendations"
+  "recommendationsErrorTitle": "We couldn't load the recommendations",
+  "adherenceOpenFromProfile": "View adherence history"
 }

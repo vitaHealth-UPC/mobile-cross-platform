@@ -528,5 +528,6 @@
   "recommendationsBack": "Volver a historial",
   "recommendationsApply": "Aplicar ajustes",
   "recommendationsLoading": "Consultando tus recomendaciones…",
-  "recommendationsErrorTitle": "No pudimos cargar las recomendaciones"
+  "recommendationsErrorTitle": "No pudimos cargar las recomendaciones",
+  "adherenceOpenFromProfile": "Ver historial de adherencia"
 }

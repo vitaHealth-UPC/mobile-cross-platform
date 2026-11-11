@@ -16,8 +16,12 @@ class CaregiverProfilesScreen extends StatefulWidget {
     required this.onRefresh,
     required this.onSignOut,
     this.errorText,
+    this.onOpenProfile,
   });
   final List<CaregiverLinkSummary> links;
+
+  /// Opens what the host offers for a confirmed relationship; null hides it.
+  final ValueChanged<CaregiverLinkSummary>? onOpenProfile;
   final bool loading;
   final void Function(String, DateTime) onRegister;
   final VoidCallback onRefresh;
@@ -64,9 +68,18 @@ class _CaregiverProfilesScreenState extends State<CaregiverProfilesScreen> {
                     Text(text.noConfirmedProfiles),
                   for (final profile in widget.links)
                     Card(
-                      child: ListTile(
-                        title: Text(profile.fullName),
-                        subtitle: Text(text.linkConfirmed),
+                      child: Semantics(
+                        onTapHint: text.adherenceOpenFromProfile,
+                        child: ListTile(
+                          title: Text(profile.fullName),
+                          subtitle: Text(text.linkConfirmed),
+                          trailing: widget.onOpenProfile == null
+                              ? null
+                              : const Icon(Icons.chevron_right),
+                          onTap: widget.onOpenProfile == null
+                              ? null
+                              : () => widget.onOpenProfile!(profile),
+                        ),
                       ),
                     ),
                   TextButton(

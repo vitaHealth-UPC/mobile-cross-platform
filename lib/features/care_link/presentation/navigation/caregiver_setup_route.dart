@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
+import '../../application/readmodels/caregiver_link_summary.dart';
 import '../bloc/profiles/profiles_bloc.dart';
 import '../bloc/profiles/profiles_event.dart';
 import '../bloc/profiles/profiles_state.dart';
@@ -15,8 +16,13 @@ class CaregiverSetupRoute extends StatelessWidget {
     required this.createBloc,
     required this.onSignOut,
     required this.onSessionInvalidated,
+    this.onOpenProfile,
   });
   final ProfilesBloc Function() createBloc;
+
+  /// Lets the host open its flows for a confirmed relationship, for example
+  /// the adherence history, without Care Link knowing about them.
+  final ValueChanged<CaregiverLinkSummary>? onOpenProfile;
   final VoidCallback onSignOut;
   final VoidCallback onSessionInvalidated;
 
@@ -60,6 +66,7 @@ class CaregiverSetupRoute extends StatelessWidget {
           links: state.links,
           loading: state.loading,
           errorText: error,
+          onOpenProfile: onOpenProfile,
           onRegister: (name, date) => bloc.add(OlderAdultSubmitted(name, date)),
           onRefresh: () => bloc.add(const ProfilesRequested()),
           onSignOut: onSignOut,
