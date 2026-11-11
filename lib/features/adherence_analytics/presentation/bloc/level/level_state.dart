@@ -3,6 +3,9 @@ import '../../../application/readmodels/adherence_summary.dart';
 /// Days of evidence the adherence level considers: the last month.
 const adherenceLevelPeriodDays = 30;
 
+/// Days of evidence the weekly adherence card considers: the last week.
+const adherenceWeekPeriodDays = 7;
+
 /// Observable phases of the adherence level.
 enum LevelStatus {
   /// A request is in flight.
