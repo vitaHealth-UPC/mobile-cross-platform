@@ -7,6 +7,7 @@ import '../../features/adherence_analytics/infrastructure/remote/analytics_api.d
 import '../../features/adherence_analytics/infrastructure/repositories/remote_adherence_repository.dart';
 import '../../features/adherence_analytics/presentation/bloc/history/history_bloc.dart';
 import '../../features/adherence_analytics/presentation/bloc/level/level_bloc.dart';
+import '../../features/adherence_analytics/presentation/bloc/level/level_state.dart';
 import '../../features/adherence_analytics/presentation/bloc/recommendations/recommendations_bloc.dart';
 import '../../features/care_link/application/usecases/accept_care_link.dart';
 import '../../features/care_link/application/usecases/generate_linking_code.dart';
@@ -185,6 +186,14 @@ final class AppDependencies {
   LevelBloc createAdherenceLevelBloc(String olderAdultId) => LevelBloc(
     olderAdultId: olderAdultId,
     summary: GetAdherenceSummary(_adherence),
+  );
+
+  /// Creates the weekly adherence of [olderAdultId] for a screen that shows it
+  /// as a card, such as the family summary.
+  LevelBloc createAdherenceWeekBloc(String olderAdultId) => LevelBloc(
+    olderAdultId: olderAdultId,
+    summary: GetAdherenceSummary(_adherence),
+    periodDays: adherenceWeekPeriodDays,
   );
 
   /// Creates the recommendations state of [olderAdultId]; the server insight is
