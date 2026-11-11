@@ -305,5 +305,19 @@
   "outcomeOmittedBody": "El periodo permitido terminó sin confirmación.",
   "outcomeProgressTitle": "Tu progreso se ha actualizado",
   "outcomeProgressBody": "La toma queda registrada en tu historial.",
-  "outcomeBackHome": "Volver al inicio"
+  "outcomeBackHome": "Volver al inicio",
+  "intakeStatusQueued": "Por enviar",
+  "doseMessageQueued": "Guardamos tu confirmación. La enviaremos cuando vuelva la conexión.",
+  "doseMessageRejected": "Tu confirmación se envió cuando esta toma ya no se podía registrar.",
+  "outcomeQueuedTitle": "Toma guardada",
+  "outcomeQueuedBody": "Se registrará cuando vuelva la conexión.",
+  "homeOfflineBanner": "Sin conexión. Ves la última información guardada.",
+  "homeQueuedBanner": "{count, plural, =1{1 toma por enviar.} other{{count} tomas por enviar.}}",
+  "@homeQueuedBanner": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

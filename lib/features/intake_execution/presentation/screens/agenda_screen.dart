@@ -237,7 +237,7 @@ class _AgendaEntry extends StatelessWidget {
         label: text.agendaDoseSemantics(
           time,
           intake.medicationName,
-          intakeStatusLabel(text, intake.status),
+          intakeDisplayLabel(text, intake),
         ),
         excludeSemantics: true,
         child: Row(
@@ -308,7 +308,10 @@ class _AgendaEntry extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 10),
-                        IntakeStatusMark(status: intake.status),
+                        IntakeStatusMark(
+                          status: intake.status,
+                          queued: intake.queued,
+                        ),
                       ],
                     ),
                   ),

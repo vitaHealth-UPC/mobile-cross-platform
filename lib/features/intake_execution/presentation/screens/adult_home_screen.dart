@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/presentation/theme/tata_colors.dart';
 import '../../../../shared/presentation/widgets/initials_avatar.dart';
+import '../../application/readmodels/intake_sync_status.dart';
 import '../../domain/entities/intake.dart';
 import '../bloc/home/home_state.dart';
 import '../widgets/home_cards.dart';
@@ -24,6 +25,7 @@ class AdultHomeScreen extends StatefulWidget {
     this.onOpenVoice,
     this.onOpenAgenda,
     this.onOpenDose,
+    this.syncStatus,
   });
 
   final HomeState state;
@@ -34,6 +36,9 @@ class AdultHomeScreen extends StatefulWidget {
   /// Opens account actions such as consent management and switching account.
   final VoidCallback onOpenMore;
   final String? errorText;
+
+  /// Shown only when stored data is in use or confirmations are unsent.
+  final IntakeSyncStatus? syncStatus;
   final ValueChanged<String>? onOpenVoice;
   final VoidCallback? onOpenAgenda;
 
@@ -117,6 +122,29 @@ class _AdultHomeScreenState extends State<AdultHomeScreen> {
                 ],
               ),
               const SizedBox(height: 20),
+              if (_syncNotice(text) case final notice?) ...[
+                Semantics(
+                  liveRegion: true,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: TataColors.infoSurface,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text(
+                      notice,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: TataColors.infoText,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+              ],
               switch ((state.status, next)) {
                 (HomeStatus.loading, _) => HomeMessageCard(
                   title: text.homeLoading,
@@ -160,6 +188,17 @@ class _AdultHomeScreenState extends State<AdultHomeScreen> {
         ),
       ),
     );
+  }
+
+  String? _syncNotice(AppLocalizations text) {
+    final status = widget.syncStatus;
+    if (status == null) return null;
+    final queued = status.queued > 0
+        ? text.homeQueuedBanner(status.queued)
+        : null;
+    return status.offline
+        ? [text.homeOfflineBanner, ?queued].join(' ')
+        : queued;
   }
 
   Widget? _shortcuts(AppLocalizations text, String? nextId) {

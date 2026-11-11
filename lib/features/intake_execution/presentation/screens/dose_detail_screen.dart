@@ -33,7 +33,7 @@ class DoseDetailScreen extends StatelessWidget {
     final text = AppLocalizations.of(context);
     final time = intakeTime(context, intake.scheduledAt);
     final day = intakeDay(context, intake.scheduledAt, now);
-    final pending = intake.status == IntakeStatus.pending;
+    final pending = intake.confirmable;
     return PopScope(
       canPop: !confirming,
       child: Scaffold(
@@ -251,7 +251,7 @@ class _ScheduleCard extends StatelessWidget {
               ],
             ),
           ),
-          IntakeStatusChip(status: intake.status),
+          IntakeStatusChip(status: intake.status, queued: intake.queued),
         ],
       ),
     );
@@ -368,6 +368,9 @@ class _StatusNote extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = AppLocalizations.of(context);
     final message = switch (intake.status) {
+      _ when intake.localConfirmation == LocalConfirmation.rejected =>
+        text.doseMessageRejected,
+      IntakeStatus.pending when intake.queued => text.doseMessageQueued,
       IntakeStatus.pending => text.doseMessagePending,
       IntakeStatus.confirmed => text.doseMessageConfirmed,
       IntakeStatus.late => text.doseMessageLate,
@@ -384,7 +387,7 @@ class _StatusNote extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            text.doseState(intakeStatusLabel(text, intake.status)),
+            text.doseState(intakeDisplayLabel(text, intake)),
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,

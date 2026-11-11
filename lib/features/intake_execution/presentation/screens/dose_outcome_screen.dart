@@ -29,6 +29,7 @@ class DoseOutcomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = AppLocalizations.of(context);
     final omitted = outcome == ConfirmationOutcome.omissionPreserved;
+    final queued = outcome == ConfirmationOutcome.pendingSync;
     final (title, subtitle) = switch (outcome) {
       ConfirmationOutcome.confirmed => (
         text.outcomeWellDone,
@@ -42,6 +43,10 @@ class DoseOutcomeScreen extends StatelessWidget {
       ConfirmationOutcome.omissionPreserved => (
         text.outcomeOmittedTitle,
         text.outcomeOmittedBody,
+      ),
+      ConfirmationOutcome.pendingSync => (
+        text.outcomeQueuedTitle,
+        text.outcomeQueuedBody,
       ),
     };
     // The recorded instant is the evidence; an omission has none, so show the schedule.
@@ -65,10 +70,16 @@ class DoseOutcomeScreen extends StatelessWidget {
                       shape: BoxShape.circle,
                       color: omitted
                           ? TataColors.errorSurface
+                          : queued
+                          ? TataColors.primary
                           : const Color(0xFF9BD3AE),
                     ),
                     child: Icon(
-                      omitted ? Icons.history : Icons.check,
+                      omitted
+                          ? Icons.history
+                          : queued
+                          ? Icons.cloud_upload_outlined
+                          : Icons.check,
                       size: 52,
                       color: omitted ? TataColors.errorText : Colors.white,
                     ),
@@ -172,7 +183,8 @@ class DoseOutcomeScreen extends StatelessWidget {
                   ),
                 ),
               ],
-              if (!omitted) ...[
+              // Progress and history are only true once the server has it.
+              if (!omitted && !queued) ...[
                 const SizedBox(height: 14),
                 _Card(
                   color: TataColors.lavender,

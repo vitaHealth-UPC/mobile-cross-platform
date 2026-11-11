@@ -305,5 +305,12 @@
   "outcomeOmittedBody": "The allowed period ended without a confirmation.",
   "outcomeProgressTitle": "Your progress was updated",
   "outcomeProgressBody": "The dose stays recorded in your history.",
-  "outcomeBackHome": "Back to home"
+  "outcomeBackHome": "Back to home",
+  "intakeStatusQueued": "To be sent",
+  "doseMessageQueued": "We saved your confirmation. We will send it when the connection returns.",
+  "doseMessageRejected": "Your confirmation was sent when this dose could no longer be recorded.",
+  "outcomeQueuedTitle": "Dose saved",
+  "outcomeQueuedBody": "It will be recorded when the connection returns.",
+  "homeOfflineBanner": "No connection. You are seeing the last saved information.",
+  "homeQueuedBanner": "{count, plural, =1{1 dose to be sent.} other{{count} doses to be sent.}}"
 }
