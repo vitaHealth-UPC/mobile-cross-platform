@@ -1,6 +1,12 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
+import '../../features/adherence_analytics/application/usecases/get_adherence_summary.dart';
+import '../../features/adherence_analytics/application/usecases/get_recommendations.dart';
+import '../../features/adherence_analytics/infrastructure/remote/analytics_api.dart';
+import '../../features/adherence_analytics/infrastructure/repositories/remote_adherence_repository.dart';
+import '../../features/adherence_analytics/presentation/bloc/history/history_bloc.dart';
+import '../../features/adherence_analytics/presentation/bloc/recommendations/recommendations_bloc.dart';
 import '../../features/care_link/application/usecases/accept_care_link.dart';
 import '../../features/care_link/application/usecases/generate_linking_code.dart';
 import '../../features/care_link/application/usecases/register_consent.dart';
@@ -66,14 +72,13 @@ final class AppDependencies {
     this._intakes,
     this._adultProfiles,
     this._confirmations,
+    this._adherence,
   );
 
   /// Composes real HTTP and secure storage using environment configuration.
   factory AppDependencies.production() {
-    final client = ApiClient(
-      baseUrl: AppConfig.fromEnvironment().apiBaseUrl,
-      client: http.Client(),
-    );
+    final config = AppConfig.fromEnvironment();
+    final client = ApiClient(baseUrl: config.apiBaseUrl, client: http.Client());
     final store = SecureSessionStore(
       storage: const FlutterSecureStorage(),
       clock: DateTime.now,
@@ -105,6 +110,11 @@ final class AppDependencies {
       RemoteIntakeReader(api: IntakeApi(client), store: store),
       RemoteAdultProfileReader(api: CareLinkApi(client), store: store),
       RemoteIntakeConfirmation(api: IntakeApi(client), store: store),
+      RemoteAdherenceRepository(
+        api: AnalyticsApi(client),
+        store: store,
+        zoneId: config.calendarZone,
+      ),
     );
   }
 
@@ -118,6 +128,7 @@ final class AppDependencies {
   final RemoteIntakeReader _intakes;
   final RemoteAdultProfileReader _adultProfiles;
   final RemoteIntakeConfirmation _confirmations;
+  final RemoteAdherenceRepository _adherence;
 
   /// Adult remembered on this device after PIN enrollment, if any.
   Future<RememberedAdult?> readRememberedAdult() => _rememberedAdults.read();
@@ -160,6 +171,21 @@ final class AppDependencies {
     next: GetNextIntake(_intakes),
     progress: GetDailyProgress(_intakes, DateTime.now),
   );
+
+  /// Creates the adherence history state of [olderAdultId], read with the
+  /// session of the caregiver of that link or of the adult themselves.
+  HistoryBloc createAdherenceHistoryBloc(String olderAdultId) => HistoryBloc(
+    olderAdultId: olderAdultId,
+    summary: GetAdherenceSummary(_adherence),
+  );
+
+  /// Creates the recommendations state of [olderAdultId]; the server insight is
+  /// shown as received and never derived locally.
+  RecommendationsBloc createAdherenceRecommendationsBloc(String olderAdultId) =>
+      RecommendationsBloc(
+        olderAdultId: olderAdultId,
+        recommendations: GetRecommendations(_adherence),
+      );
 
   /// Creates consent state without granting any caregiver or clinical capability.
   ConsentBloc createConsentBloc() => ConsentBloc(
