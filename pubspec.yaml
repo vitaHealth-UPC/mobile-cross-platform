@@ -16,6 +16,7 @@ dependencies:
   http: ^1.6.0
   flutter_secure_storage: ^11.2.0
   flutter_svg: ^2.3.0
+  shared_preferences: ^2.5.3
 
   intl: ^0.20.3
   drift: ^2.35.4
