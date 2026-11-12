@@ -738,5 +738,30 @@
   "pfErrInvalidPolicy": "Los tiempos deben ir en orden (recordatorio < pendiente < omitida < escalamiento, máximo 1440) y el resumen usar HH:mm.",
   "pfErrInvalidContact": "Revisa el nombre y el teléfono (7 a 15 dígitos) de cada contacto.",
   "pfErrGeneric": "No pudimos guardar tus preferencias. Inténtalo nuevamente.",
-  "pfSettings": "Ajustes"
+  "pfSettings": "Ajustes",
+  "catalogTitle": "Mis medicamentos",
+  "catalogSubtitle": "Tus medicamentos activos",
+  "catalogManagedByCaregiver": "Tu familiar administra los medicamentos.",
+  "catalogFeatured": "Destacado",
+  "catalogActiveCount": "Activos {count}",
+  "catalogHistory": "Historial",
+  "catalogEmptyTitle": "Sin medicamentos",
+  "catalogHistoryEmpty": "No hay tratamientos pausados ni medicamentos inactivos.",
+  "catalogActiveEmpty": "No hay medicamentos con tratamientos activos.",
+  "catalogError": "No pudimos cargar tus medicamentos",
+  "catalogScheduleUnavailable": "Horario no disponible",
+  "catalogNoNext": "Sin próxima toma",
+  "catalogDetailTitle": "Detalle del medicamento",
+  "catalogNoRegimen": "Este medicamento no tiene una pauta configurada.",
+  "catalogTreatmentActive": "Tratamiento activo",
+  "catalogTreatmentPaused": "Tratamiento pausado",
+  "catalogTreatmentDraft": "Borrador de tratamiento",
+  "catalogSchedule": "Horario de la pauta",
+  "@catalogActiveCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

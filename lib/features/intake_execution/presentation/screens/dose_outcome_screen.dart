@@ -3,9 +3,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/presentation/theme/tata_colors.dart';
+import '../../../../shared/presentation/widgets/adult_navigation_bar.dart';
 import '../../domain/entities/intake.dart';
 import '../bloc/dose/dose_state.dart';
-import '../widgets/adult_navigation_bar.dart';
 import '../widgets/intake_labels.dart';
 
 /// Figma 563:291 (confirmed), 563:3770 (late), 563:2760 (already confirmed)
@@ -20,6 +20,7 @@ class DoseOutcomeScreen extends StatelessWidget {
     required this.onBackHome,
     this.next,
     this.onMore,
+    this.onMedications,
     this.onAgenda,
   });
 
@@ -27,6 +28,7 @@ class DoseOutcomeScreen extends StatelessWidget {
   final Intake intake;
   final Intake? next;
   final VoidCallback? onMore;
+  final VoidCallback? onMedications;
   final VoidCallback? onAgenda;
   final DateTime now;
   final VoidCallback onBackHome;
@@ -71,6 +73,7 @@ class DoseOutcomeScreen extends StatelessWidget {
           onHome: onBackHome,
           onAgenda: onAgenda,
           onMore: onMore,
+          onMedications: onMedications,
         ),
         body: SafeArea(
           child: ListView(

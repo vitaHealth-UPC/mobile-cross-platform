@@ -4,9 +4,9 @@ import 'package:intl/intl.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/presentation/theme/tata_colors.dart';
 import '../../../../shared/presentation/theme/tata_typography.dart';
+import '../../../../shared/presentation/widgets/adult_navigation_bar.dart';
 import '../../domain/entities/intake.dart';
 import '../bloc/agenda/agenda_state.dart';
-import '../widgets/adult_navigation_bar.dart';
 import '../widgets/intake_labels.dart';
 
 /// Figma 563:500 / 563:3918 weekly agenda with per-dose status (US-24).
@@ -22,6 +22,7 @@ class AgendaScreen extends StatelessWidget {
     this.errorText,
     this.onBack,
     this.onMore,
+    this.onMedications,
   });
 
   final AgendaState state;
@@ -35,6 +36,7 @@ class AgendaScreen extends StatelessWidget {
   final String? errorText;
   final VoidCallback? onBack;
   final VoidCallback? onMore;
+  final VoidCallback? onMedications;
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +52,7 @@ class AgendaScreen extends StatelessWidget {
         selected: AdultDestination.agenda,
         onHome: onBack,
         onMore: onMore,
+        onMedications: onMedications,
       ),
       body: SafeArea(
         child: RefreshIndicator(

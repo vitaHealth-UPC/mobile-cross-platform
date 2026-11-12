@@ -1137,7 +1137,7 @@ No registrar porcentajes estimados como validación. Separar implementación, co
 
 ## Registro de variantes Flutter
 
-Inventario de referencia:70 variantes. Estado inicial compartido:1 completa aceptada,3 parciales comparadas,66 sin implementación específica. Tras el corte PIN + Home (03-11-2026): 1 completa, 8 parciales, 61 sin implementación específica. Tras agenda y confirmación (03-11-2026): 1 completa, 18 parciales, 51 sin implementación específica. Tras analítica de adherencia (11-11-2026): 1 completa, 20 parciales, 49 sin implementación específica. La funcionalidad se registra por recorrido y actor, sin equiparar aprobación visual con cierre funcional. Las extensiones INV-01 (invitación), REC-01 (recuperación) y WDR-01 (retirada) tienen comportamiento implementado y pruebas propias; no amplían este denominador.
+Inventario de referencia:70 variantes. Estado inicial compartido:1 completa aceptada,3 parciales comparadas,66 sin implementación específica. Tras el corte PIN + Home (03-11-2026): 1 completa, 8 parciales, 61 sin implementación específica. Tras agenda y confirmación (03-11-2026): 1 completa, 18 parciales, 51 sin implementación específica. Tras analítica de adherencia (11-11-2026): 1 completa, 20 parciales, 49 sin implementación específica. Tras integración del 12-11-2026: 1 completa, 27 parciales y 42 sin implementación específica; 15 variantes aceptadas visualmente de forma proporcional. La funcionalidad se registra por recorrido y actor, sin equiparar aprobación visual con cierre funcional. Las extensiones INV-01 (invitación), REC-01 (recuperación) y WDR-01 (retirada) tienen comportamiento implementado y pruebas propias; no amplían este denominador.
 
 | # | Variante | Nodo Figma | Implementación | Fidelidad visual | Funcionalidad y evidencia |
 | --- | --- | --- | --- | --- | --- |
@@ -1148,13 +1148,13 @@ Inventario de referencia:70 variantes. Estado inicial compartido:1 completa acep
 | 5 | Link & Consent | 563:1440 | Parcial | Comparada, ajustes abiertos | Cuidador y adulto con decisiones y retirada; tests y Spring local; falta persistencia del setup cuidador y core adulto |
 | 6 | PIN Access | 563:1338 | Parcial | Aceptada proporcionalmente en render ES (11-11-2026; normal y texto 150 %) | PinRoute/PinBloc.access con pin-sessions + current; tests, sonda Spring local y emulador (incorrecto y correcto); teléfono físico POCO X6 Pro comprobado Capturas de widgets revisadas contra Figma; no se agrega evidencia de Render ni dispositivo. |
 | 7 | Login | 641:16 | Parcial | Comparada, ajustes abiertos | Password, restore y logout; social sin integrar; tests y Spring local |
-| 8 | Home | 563:58 | Parcial | Aceptada proporcionalmente en render ES (11-11-2026; normal y texto 150 %) | Barra de cinco destinos e ilustraciones originales; voz, medicamentos y notas sin contrato conectado permanecen deshabilitados. Iniciales por adulto. Progreso sin permiso invalida Home. |
-| 9 | My Medications | 563:361 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
-| 10 | Medication Detail | 563:142 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
+| 8 | Home | 563:58 | Parcial | Aceptada proporcionalmente en render ES (11-11-2026; normal y texto 150 %) | Barra de cinco destinos e ilustraciones originales; Medicamentos enlaza al catálogo; voz y notas conservan su estado de integración anterior. Iniciales por adulto. Progreso sin permiso invalida Home. |
+| 9 | My Medications | 563:361 | Parcial | Aceptada proporcionalmente en render ES (12-11-2026; normal; layout 150 % comprobado) | MyMedicationsBloc del equipo con catálogo adulto real, filtros y detalle. Referencia por medicationId al próximo intake; tests HTTP, estado y navegación. Sin evidencia nueva de Render/dispositivo. |
+| 10 | Medication Detail | 563:142 | Parcial | Aceptada proporcionalmente en render ES (12-11-2026; normal; layout 150 % comprobado) | Detalle usa todas las pautas del catálogo y zona horaria recibida; abre intake real. No inventa finalidad clínica ni pronostica tomas desde horarios. Tests y capturas de widgets. |
 | 11 | Weekly Schedule | 563:500 | Parcial | Comparada, ajustes abiertos (flechas de semana en lugar del icono de calendario) | AgendaRoute/AgendaBloc semana lunes-domingo con agenda?from&to; tests, sonda Spring local, emulador y teléfono físico POCO X6 Pro |
 | 12 | Voice Confirmation | 563:242 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 13 | Dose Confirmed | 563:291 | Parcial | Aceptada proporcionalmente en render ES (11-11-2026; normal y texto 150 %) | Resultado con hora registrada y próxima toma real; tests, sonda Spring local, emulador y teléfono físico POCO X6 Pro Capturas de widgets revisadas contra Figma; no se agrega evidencia de Render ni dispositivo. |
-| 14 | Accessibility | 563:618 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
+| 14 | Accessibility | 563:618 | Parcial | Sin comparación visual certificada en este corte | Implementación del equipo con preferencias locales por usuario, sincronización, AppearanceCubit y tests; falta contraste con el nodo y validación integral de accesibilidad en las vistas. |
 | 15 | Family Summary | 563:727 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 16 | Linked Person | 563:1121 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 17 | Alerts | 563:819 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
@@ -1162,11 +1162,11 @@ Inventario de referencia:70 variantes. Estado inicial compartido:1 completa acep
 | 19 | History & Insights | 563:1017 | Parcial | Comparada, ajustes abiertos (eje con 5 fechas proporcionales a los puntos; el brillo del fondo es casi invisible, como en el nodo) | AdherenceFlowRoute/HistoryBloc con adherence/summary de 7 o 30 días; estados contenido, sin datos (563:2836), sin resultados (563:4039), 7 días (563:4447, sin captura propia), carga y error; tests de caso de uso, mapper, repositorio con sesión, bloc y widget; falta entrada desde Family Monitoring, Spring/Render y dispositivo |
 | 20 | Adherence Recommendations | 563:1767 | Parcial | Comparada, ajustes abiertos ("Aplicar ajustes" no se dibuja hasta que Treatment pueda recibir los ajustes) | RecommendationsBloc con adherence/insight de 30 días; estados contenido, evidencia insuficiente (563:4552), carga y error; sin recomendación local; tests de bloc, widget y flujo con Historial; falta Spring/Render y dispositivo |
 | 21 | Notes - Adult | 576:2785 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
-| 22 | Add Medication - Caregiver | 563:453 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
-| 23 | Create Treatment | 563:1490 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
-| 24 | Treatment Management | 563:1554 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
+| 22 | Add Medication - Caregiver | 563:453 | Parcial | Sin comparación visual certificada en este corte | Registro de medicamento del equipo, validación de campos y recibo real mediante repositorio; tests de contrato y flujo. Falta revisión Figma y prueba instalada. |
+| 23 | Create Treatment | 563:1490 | Parcial | Sin comparación visual certificada en este corte | Asistente del equipo para crear, configurar y activar tratamiento; conserva borrador y valida recibos; tests de flujo. Falta revisión Figma y prueba instalada. |
+| 24 | Treatment Management | 563:1554 | Parcial | Sin comparación visual certificada en este corte | Gestión del equipo con lectura, edición, pausa, reanudación y medicamento activo; tests de contrato y bloc. Falta contraste visual y Spring desplegado. |
 | 25 | Inventory & Restock | 563:1632 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
-| 26 | Notification Preferences | 563:1219 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
+| 26 | Notification Preferences | 563:1219 | Parcial | Sin comparación visual certificada en este corte | Preferencias de notificación del equipo con contratos, estado y pruebas; falta contraste Figma y verificar el efecto del sistema de notificaciones en dispositivo. |
 | 27 | Notes - Caregiver | 576:2859 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 28 | Plan & Subscription | 563:1701 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 29 | PIN Setup | 563:1970 | Parcial | Aceptada proporcionalmente en render ES (11-11-2026; normal y texto 150 %) | PIN_ALREADY_REGISTERED informa que no cambia el PIN; continuar requiere confirmación explícita del usuario. Se limpian dígitos y se propaga pérdida de permiso. |
@@ -1217,13 +1217,41 @@ Inventario de referencia:70 variantes. Estado inicial compartido:1 completa acep
 
 Home propaga pérdida de autenticación, sesión o consentimiento de cualquiera de sus dos consultas; una respuesta correcta de próxima toma no oculta una denegación en progreso. PIN_ALREADY_REGISTERED se presenta como estado propio, aclara que los dígitos nuevos no se guardan y exige pulsar Continuar con mi PIN actual. Las regresiones verifican ambas decisiones y la revocación durante el alta de PIN.
 
-El componente de Intake presentation/widgets/adult_navigation_bar.dart conserva cinco destinos y selección entre Home, Agenda y detalle. App conecta las acciones disponibles; los destinos sin integración quedan deshabilitados. Las tarjetas, línea temporal, botones y estados se componen con widgets. Se conservan las marcas de cola y el estado por enviar del compañero, sin presentarlos como recibo del servidor.
+El componente shared/presentation/widgets/adult_navigation_bar.dart conserva cinco destinos y selección entre Home, Agenda y detalle. App conecta las acciones disponibles; los destinos sin integración quedan deshabilitados. Las tarjetas, línea temporal, botones y estados se componen con widgets. Se conservan las marcas de cola y el estado por enviar del compañero, sin presentarlos como recibo del servidor.
 
 Los SVG de cápsula, notas, calendario, familia y éxito proceden de Figma; la cápsula conserva la rotación del nodo y los SVG sus dimensiones raíz. La tableta reutilizada tiene 352 x 352 píxeles. Water + Plant (100 x 100) y Confetti (150 x 60) conservan la resolución original disponible, sin fabricar detalle por reescalado. Las fotos de perfil no disponibles se representan mediante iniciales dinámicas.
 
 adaptive_screens_test.dart comprueba 13 estados a 393 x 883 y escala 1, y a 360 x 640 y escala 1.5: PIN acceso/alta, Home, Agenda, cuatro detalles y cinco resultados. Nombre e insignia se redistribuyen sin fragmentar palabras; la hora de Home y su ilustración pasan a columna con texto grande. El helper de captura restaura las sombras del entorno de prueba. Las capturas permanecen como evidencia local reproducible, fuera de los assets productivos.
 
 Son 12 variantes Figma corregidas y aceptadas proporcionalmente, más el estado offline por enviar fuera del denominador. Con el onboarding anterior suman 13 variantes aceptadas visualmente. No implica cierre de sus historias: la tabla conserva la funcionalidad parcial y distingue widgets, servidor local y Render. Este corte no integra en main/develop ni modifica el report.
+
+## Corte integrado de catálogo y contribuciones (12-11-2026)
+
+Base remota: 8735ece en temp. Se integran los commits de adherencia, tratamientos y preferencias sin reescribir sus evidencias. El borrador local anterior queda preservado; la implementación productiva reutiliza MyMedicationsBloc, GetMyMedicationsOverview, TreatmentApi y los repositorios del equipo, con una sola fuente para el catálogo.
+
+| Archivos | Responsabilidad y relación |
+| --- | --- |
+| application/readmodels/treatment_readmodels.dart | MyMedication conserva todas las pautas configuradas; TreatmentDetail conserva recurrenceZone. MedicationNextDose lleva medicationId y el ID real del intake. MyMedicationsOverview separa el catálogo de un fallo al consultar la próxima toma. |
+| infrastructure/mappers/treatment_mapper.dart | Valida dueño del catálogo, relación medicamento/tratamiento, pauta configurada e instrucciones; no sustituye datos malformados por ejemplos. |
+| infrastructure/repositories/remote_treatment_readers.dart | GET /api/v1/me/medications usa la identidad adulta capturada por authorizedRequest y valida olderAdultId contra esa identidad. |
+| application/usecases/treatment_usecases.dart y presentation/bloc/my_medications/my_medications_bloc.dart | Consultan catálogo y próxima toma, distinguen vacío de fallo y dan prioridad a la pérdida de acceso. Conservan filtros y descartan recargas antiguas. |
+| presentation/screens/my_medications_screen.dart | Host de selección, vuelta al catálogo, actualización al regresar al primer plano y retirada de datos tras revocación. |
+| presentation/screens/medication_catalog_screen.dart | Figma 563:361 con tarjetas nativas, filtros, cantidades reales, ilustración original e iconos de mañana/noche. |
+| presentation/screens/medication_details_screen.dart | Figma 563:142 con todas las pautas, datos disponibles y preparación. La finalidad clínica ausente no se inventa. |
+| presentation/navigation/treatment_navigation.dart y app/integration/adult_entry_route.dart | Conectan Home, Medicamentos, Agenda y detalle de toma mediante callbacks públicos. La composición entre contextos queda en app. |
+| shared/presentation/widgets/adult_navigation_bar.dart | Barra pura compartida por Intake y Treatment; conserva cinco destinos y selección. Los destinos sin flujo integrado permanecen deshabilitados. |
+| intake_execution/domain/entities/intake.dart e infrastructure/mappers/intake_mapper.dart | Conservan medicationId y treatmentId remotos, también en copias de confirmación local. Las instantáneas locales antiguas pueden carecer de estas referencias. |
+| assets/icons/catalog_morning.svg, catalog_night.svg y assets/illustrations/catalog_glow.svg | Recursos originales Figma, sin rasterizar controles. El filtro SVG no soportado se representa con ImageFiltered de Flutter y sigma 26; se conserva el viewBox. |
+| test/treatment_management/catalog_repository_test.dart | Prueba ruta, bearer, roles, propietario, respuesta tardía, relaciones, horarios y catálogo vacío. |
+| test/treatment_management/catalog_overview_test.dart | Prueba fallo parcial de agenda, prioridad de revocación y conservación de referencias en cola offline. |
+| test/treatment_management/catalog_navigation_test.dart | Prueba selección, vuelta, historial y retirada del catálogo al perder permisos. |
+| test/treatment_management/catalog_screens_test.dart y catalog_fixtures.dart | Render con fuentes y recursos reales en 393x883 y 360x640, texto 100 % y 150 %, scroll y apertura del intake verdadero. Los datos de ejemplo viven solo en tests. |
+
+Las rutas de esta tabla son relativas a lib/features/treatment_management salvo prefijos app, shared, intake_execution, assets y test. No se agregan repositorios, entidades o blocs paralelos al trabajo del equipo.
+
+Verificación integrada: 407 pruebas aprobadas; flutter analyze --no-pub sin incidencias. Capturas de catálogo y detalle revisadas contra los nodos correctos; los layouts con texto ampliado se prueban sin overflow. El botón de alta queda deshabilitado para el adulto, cuyo catálogo es de consulta. Cuando el próximo intake global pertenece a otro medicamento, la pantalla indica información de próxima toma no disponible en lugar de asegurar que ese medicamento no tiene tomas. La cola local antigua no fuerza una migración de base únicamente para obtener estas referencias.
+
+El catálogo no se declara probado contra Render ni en teléfono en este corte. Los flujos nuevos de tratamientos y preferencias pasan la suite integrada, pero conservan su contraste visual pendiente. El siguiente recorrido es revisar el asistente y la gestión de tratamientos con sus nodos Figma, manteniendo sus contratos existentes; después, preferencias y su efecto visual en las pantallas compartidas.
 
 ## Procedimiento de implementación y revisión
 

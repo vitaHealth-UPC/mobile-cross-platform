@@ -19,6 +19,7 @@ class AgendaRoute extends StatefulWidget {
     this.clock = DateTime.now,
     this.onBack,
     this.onMore,
+    this.onMedications,
   });
 
   final AgendaBloc Function() createBloc;
@@ -29,6 +30,7 @@ class AgendaRoute extends StatefulWidget {
   final Clock clock;
   final VoidCallback? onBack;
   final VoidCallback? onMore;
+  final VoidCallback? onMedications;
 
   @override
   State<AgendaRoute> createState() => _AgendaRouteState();
@@ -93,6 +95,7 @@ class _AgendaRouteState extends State<AgendaRoute> {
           onOpenDose: _open,
           onBack: widget.onBack,
           onMore: widget.onMore,
+          onMedications: widget.onMedications,
         );
       },
     ),

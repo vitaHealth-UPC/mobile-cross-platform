@@ -19,6 +19,7 @@ class DoseRoute extends StatelessWidget {
     required this.onSessionInvalidated,
     this.clock = DateTime.now,
     this.onMore,
+    this.onMedications,
     this.onAgenda,
   });
 
@@ -30,6 +31,7 @@ class DoseRoute extends StatelessWidget {
   final VoidCallback onSessionInvalidated;
   final Clock clock;
   final VoidCallback? onMore;
+  final VoidCallback? onMedications;
   final VoidCallback? onAgenda;
 
   @override
@@ -67,6 +69,7 @@ class DoseRoute extends StatelessWidget {
               now: now,
               onBackHome: onBackHome,
               onMore: onMore,
+              onMedications: onMedications,
               onAgenda: onAgenda,
             ),
           (DoseStatus.ready, final intake?, null) => DoseDetailScreen(
@@ -79,6 +82,7 @@ class DoseRoute extends StatelessWidget {
             onBack: onBack,
             onBackHome: onBackHome,
             onMore: onMore,
+            onMedications: onMedications,
             onAgenda: onAgenda,
           ),
           (DoseStatus.failure, _, _) => _Failure(

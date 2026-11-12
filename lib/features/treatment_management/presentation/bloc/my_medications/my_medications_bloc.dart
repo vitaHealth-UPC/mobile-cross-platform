@@ -29,6 +29,7 @@ final class MyMedicationsState {
     this.nextDose,
     this.history = false,
     this.errorCode,
+    this.scheduleError,
   });
 
   final MyMedicationsStatus status;
@@ -36,6 +37,7 @@ final class MyMedicationsState {
   final MedicationNextDose? nextDose;
   final bool history;
   final String? errorCode;
+  final String? scheduleError;
 
   List<MyMedication> get active =>
       medications.where((item) => item.active).toList();
@@ -57,6 +59,7 @@ final class MyMedicationsBloc
           nextDose: state.nextDose,
           history: event.history,
           errorCode: state.errorCode,
+          scheduleError: state.scheduleError,
         ),
       ),
     );
@@ -78,6 +81,7 @@ final class MyMedicationsBloc
         status: MyMedicationsStatus.ready,
         medications: value.medications,
         nextDose: value.nextDose,
+        scheduleError: value.scheduleError,
         history: state.history,
       ),
       AppFailure<MyMedicationsOverview>(:final code) => MyMedicationsState(

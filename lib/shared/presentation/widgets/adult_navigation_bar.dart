@@ -3,8 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import '../../../../l10n/generated/app_localizations.dart';
-import '../../../../shared/presentation/theme/tata_colors.dart';
+import '../../../l10n/generated/app_localizations.dart';
+import '../theme/tata_colors.dart';
 
 /// Stable adult destinations from the prototype, independent of route ownership.
 enum AdultDestination { home, medications, agenda, notes, more }

@@ -292,6 +292,7 @@ final class AppDependencies {
                   ? null
                   : MedicationNextDose(
                       intakeId: value.id,
+                      medicationId: value.medicationId,
                       medicationName: value.medicationName,
                       scheduledAt: value.scheduledAt,
                     ),

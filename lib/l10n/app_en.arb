@@ -731,5 +731,30 @@
   "pfErrInvalidPolicy": "Times must increase in order (reminder < pending < missed < escalation, maximum 1440) and the summary must use HH:mm.",
   "pfErrInvalidContact": "Check the name and phone (7 to 15 digits) of each contact.",
   "pfErrGeneric": "We could not save your preferences. Please try again.",
-  "pfSettings": "Settings"
+  "pfSettings": "Settings",
+  "catalogTitle": "My medications",
+  "catalogSubtitle": "Your active medications",
+  "catalogManagedByCaregiver": "Your caregiver manages medications.",
+  "catalogFeatured": "Featured",
+  "catalogActiveCount": "Active {count}",
+  "catalogHistory": "History",
+  "catalogEmptyTitle": "No medications",
+  "catalogHistoryEmpty": "No paused treatments or inactive medications.",
+  "catalogActiveEmpty": "No medications have active treatments.",
+  "catalogError": "Could not load your medications",
+  "catalogScheduleUnavailable": "Schedule unavailable",
+  "catalogNoNext": "No next dose",
+  "catalogDetailTitle": "Medication details",
+  "catalogNoRegimen": "This medication has no configured regimen.",
+  "catalogTreatmentActive": "Active treatment",
+  "catalogTreatmentPaused": "Paused treatment",
+  "catalogTreatmentDraft": "Draft treatment",
+  "catalogSchedule": "Regimen schedule",
+  "@catalogActiveCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

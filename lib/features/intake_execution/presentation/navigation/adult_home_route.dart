@@ -23,6 +23,7 @@ class AdultHomeRoute extends StatefulWidget {
     this.clock = DateTime.now,
     this.onOpenVoice,
     this.onOpenAgenda,
+    this.onOpenMedications,
     this.onOpenDose,
     this.sync,
   });
@@ -39,6 +40,7 @@ class AdultHomeRoute extends StatefulWidget {
   /// Open the agenda or one dose; both complete when the user returns, and
   /// the home reloads because a confirmation may have changed it.
   final Future<void> Function()? onOpenAgenda;
+  final Future<void> Function()? onOpenMedications;
   final Future<void> Function(String intakeId)? onOpenDose;
 
   /// Sends confirmations saved offline while this screen is open.
@@ -130,6 +132,10 @@ class _AdultHomeRouteState extends State<AdultHomeRoute> {
           onRefresh: _refresh,
           onOpenMore: widget.onOpenMore,
           onOpenVoice: widget.onOpenVoice,
+          onOpenMedications: switch (widget.onOpenMedications) {
+            final open? => () => _returnFrom(open()),
+            null => null,
+          },
           onOpenAgenda: switch (widget.onOpenAgenda) {
             final open? => () => _returnFrom(open()),
             null => null,

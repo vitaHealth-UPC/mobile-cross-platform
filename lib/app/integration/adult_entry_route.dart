@@ -127,10 +127,7 @@ class _AdultEntryRouteState extends State<AdultEntryRoute> {
                 title: Text(text.tmMyMedicationsTitle),
                 onTap: () {
                   Navigator.of(sheetContext).pop();
-                  widget.treatments!.openMyMedications(
-                    context,
-                    widget.onSessionChanged,
-                  );
+                  _openMedications(this.context);
                 },
               ),
             if (widget.preferences != null)
@@ -173,14 +170,42 @@ class _AdultEntryRouteState extends State<AdultEntryRoute> {
     widget.onSessionChanged();
   }
 
+  Future<void> _openMedications(BuildContext context) async {
+    final treatments = widget.treatments;
+    if (treatments == null) return;
+    final navigator = Navigator.of(context);
+    void home() => navigator.popUntil((route) => route.isFirst);
+    await treatments.openMyMedications(
+      context,
+      widget.onSessionChanged,
+      onHome: home,
+      onAgenda: () {
+        home();
+        _openAgenda(this.context);
+      },
+      onMore: () {
+        home();
+        _openMore(this.context);
+      },
+      onDose: (id) => _openDose(this.context, id),
+    );
+  }
+
   Future<void> _openDose(BuildContext context, String intakeId) =>
       Navigator.of(context).push<void>(
         MaterialPageRoute(
           builder: (routeContext) => DoseRoute(
             createBloc: () => widget.createDoseBloc(intakeId),
+            onMedications: widget.treatments == null
+                ? null
+                : () {
+                    Navigator.of(routeContext)
+                        .popUntil((route) => route.isFirst);
+                    _openMedications(this.context);
+                  },
             onAgenda: () {
               Navigator.of(routeContext).popUntil((route) => route.isFirst);
-              _openAgenda(context);
+              _openAgenda(this.context);
             },
             onBack: () => Navigator.of(routeContext).pop(),
             onBackHome: () =>
@@ -188,7 +213,7 @@ class _AdultEntryRouteState extends State<AdultEntryRoute> {
             onSessionInvalidated: () => _leaveForRevalidation(routeContext),
             onMore: () {
               Navigator.of(routeContext).popUntil((route) => route.isFirst);
-              _openMore(context);
+              _openMore(this.context);
             },
           ),
         ),
@@ -199,12 +224,19 @@ class _AdultEntryRouteState extends State<AdultEntryRoute> {
         MaterialPageRoute(
           builder: (routeContext) => AgendaRoute(
             createBloc: widget.createAgendaBloc,
+            onMedications: widget.treatments == null
+                ? null
+                : () {
+                    Navigator.of(routeContext)
+                        .popUntil((route) => route.isFirst);
+                    _openMedications(this.context);
+                  },
             onOpenDose: (intakeId) => _openDose(routeContext, intakeId),
             onBack: () => Navigator.of(routeContext).pop(),
             onSessionInvalidated: () => _leaveForRevalidation(routeContext),
             onMore: () {
               Navigator.of(routeContext).popUntil((route) => route.isFirst);
-              _openMore(context);
+              _openMore(this.context);
             },
           ),
         ),
@@ -259,6 +291,9 @@ class _AdultEntryRouteState extends State<AdultEntryRoute> {
       sync: widget.intakeSync,
       onOpenMore: () => _openMore(context),
       onOpenAgenda: () => _openAgenda(context),
+      onOpenMedications: widget.treatments == null
+          ? null
+          : () => _openMedications(context),
       onOpenDose: (intakeId) => _openDose(context, intakeId),
       onSessionInvalidated: widget.onSessionChanged,
     ),

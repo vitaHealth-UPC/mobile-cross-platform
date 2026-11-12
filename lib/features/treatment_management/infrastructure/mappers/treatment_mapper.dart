@@ -41,6 +41,10 @@ abstract final class TreatmentMapper {
 
   static TreatmentDetail detail(Object? body) {
     final data = _object(body);
+    final instructions = data['instructions'];
+    if (instructions != null && instructions is! String) {
+      throw const FormatException('Bad instructions');
+    }
     final times = data['scheduledTimes'];
     final scheduled = times == null
         ? <String>[]
@@ -60,11 +64,10 @@ abstract final class TreatmentMapper {
       dose: _optionalText(data, 'dose'),
       frequency: _optionalText(data, 'frequency'),
       scheduledTimes: List.unmodifiable(scheduled),
-      instructions: data['instructions'] is String
-          ? data['instructions'] as String
-          : '',
+      instructions: instructions as String? ?? '',
       reminderLeadMinutes: _minutes(data, 'reminderLeadMinutes'),
       followUpDelayMinutes: _minutes(data, 'followUpDelayMinutes'),
+      recurrenceZone: _optionalText(data, 'recurrenceZone'),
     );
   }
 
@@ -77,18 +80,21 @@ abstract final class TreatmentMapper {
   }
 
   /// Catalog entries of the older adult, each with its related treatments.
-  static List<MyMedication> myMedications(Object? body) {
+  static List<MyMedication> myMedications(Object? body, {String? ownerId}) {
     final seen = <String>{};
     return List.unmodifiable(
       _list(body).map((item) {
         final data = _object(item);
         final medication = TreatmentMapper.medication(data['medication']);
-        if (!seen.add(medication.id)) {
+        if ((ownerId != null && medication.olderAdultId != ownerId) ||
+            !seen.add(medication.id)) {
           throw const FormatException('Duplicate medications');
         }
         final related = details(data['treatments']);
         for (final treatment in related) {
-          if (treatment.olderAdultId != medication.olderAdultId ||
+          if (!treatment.configured ||
+              treatment.medicationId == null ||
+              treatment.olderAdultId != medication.olderAdultId ||
               (treatment.medicationId != null &&
                   treatment.medicationId != medication.id)) {
             throw const FormatException('Foreign treatment');
@@ -113,6 +119,7 @@ abstract final class TreatmentMapper {
           dose: regimen?.dose ?? '',
           instructions: regimen?.instructions ?? '',
           scheduledTimes: regimen?.scheduledTimes ?? const [],
+          treatments: List.unmodifiable(related),
         );
       }),
     );

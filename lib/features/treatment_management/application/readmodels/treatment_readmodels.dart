@@ -15,6 +15,7 @@ final class TreatmentDetail {
     this.instructions = '',
     this.reminderLeadMinutes,
     this.followUpDelayMinutes,
+    this.recurrenceZone,
   });
 
   final String id;
@@ -32,6 +33,7 @@ final class TreatmentDetail {
 
   /// Null when the system default follow-up applies.
   final int? followUpDelayMinutes;
+  final String? recurrenceZone;
 
   bool get isDraft => status == TreatmentStatus.draft;
 
@@ -53,11 +55,15 @@ final class MyMedication {
     required this.dose,
     required this.instructions,
     required this.scheduledTimes,
+    this.treatments = const [],
   });
 
   final String id;
   final String name;
   final String presentation;
+
+  /// All configured regimens returned with this medication.
+  final List<TreatmentDetail> treatments;
 
   /// True only when the medication is available and one of its treatments is active.
   final bool active;
@@ -79,11 +85,15 @@ final class MedicationNextDose {
   const MedicationNextDose({
     required this.intakeId,
     required this.medicationName,
+    this.medicationId,
     required this.scheduledAt,
   });
 
   final String intakeId;
   final String medicationName;
+
+  /// Server reference; legacy cached intake snapshots may not carry it.
+  final String? medicationId;
 
   /// UTC instant; presentation converts it to the device time zone.
   final DateTime scheduledAt;
@@ -91,8 +101,13 @@ final class MedicationNextDose {
 
 /// Medication catalog paired with the next intake available for the same adult.
 final class MyMedicationsOverview {
-  const MyMedicationsOverview(this.medications, this.nextDose);
+  const MyMedicationsOverview(
+    this.medications,
+    this.nextDose, {
+    this.scheduleError,
+  });
 
   final List<MyMedication> medications;
   final MedicationNextDose? nextDose;
+  final String? scheduleError;
 }

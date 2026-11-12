@@ -60,8 +60,10 @@ final class RemoteMyMedicationsReader implements MyMedicationsReader {
     _store,
     const {SessionRole.olderAdult},
     (session) => _api.myMedications(session.accessToken),
-    (response, _) => response.status == 200
-        ? AppSuccess(TreatmentMapper.myMedications(response.body))
+    (response, owner) => response.status == 200
+        ? AppSuccess(
+            TreatmentMapper.myMedications(response.body, ownerId: owner.id),
+          )
         : const AppFailure('REQUEST_FAILED'),
   );
 }
