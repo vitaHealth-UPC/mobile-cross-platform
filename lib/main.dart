@@ -54,6 +54,7 @@ void main() {
           createAgendaBloc: dependencies.createAgendaBloc,
           createDoseBloc: dependencies.createDoseBloc,
           createConsentBloc: dependencies.createConsentBloc,
+          intakeSync: dependencies.intakeSync,
           onSignOut: signOut,
           onSessionChanged: changed,
         );

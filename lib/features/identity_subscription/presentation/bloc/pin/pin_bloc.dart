@@ -66,16 +66,17 @@ final class PinBloc extends Bloc<PinEvent, PinState> {
     if (emit.isDone) return;
     final error = switch (result) {
       AppSuccess() => null,
-      // An existing enrollment already satisfies setup; the adult keeps that PIN.
-      AppFailure(:final code)
-          when mode == PinMode.setup && code == 'PIN_ALREADY_REGISTERED' =>
-        null,
       AppFailure(:final code) => code,
     };
     emit(
       error == null
           ? const PinState(status: PinStatus.completed)
-          : PinState(errorCode: error),
+          : PinState(
+              status: mode == PinMode.setup && error == 'PIN_ALREADY_REGISTERED'
+                  ? PinStatus.alreadyRegistered
+                  : PinStatus.editing,
+              errorCode: error,
+            ),
     );
   }
 }

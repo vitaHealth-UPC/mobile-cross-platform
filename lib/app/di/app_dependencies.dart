@@ -45,14 +45,23 @@ import '../../features/identity_subscription/presentation/bloc/access/access_blo
 import '../../features/identity_subscription/presentation/bloc/pin/pin_bloc.dart';
 import '../../features/identity_subscription/presentation/bloc/recovery/recovery_bloc.dart';
 import '../../features/identity_subscription/presentation/bloc/registration/registration_bloc.dart';
+import '../../features/intake_execution/application/ports/intake_confirmation.dart';
+import '../../features/intake_execution/application/ports/intake_local_store.dart';
+import '../../features/intake_execution/application/ports/intake_reader.dart';
+import '../../features/intake_execution/application/ports/intake_sync.dart';
 import '../../features/intake_execution/application/usecases/confirm_intake.dart';
 import '../../features/intake_execution/application/usecases/get_daily_progress.dart';
 import '../../features/intake_execution/application/usecases/get_intake_detail.dart';
 import '../../features/intake_execution/application/usecases/get_next_intake.dart';
 import '../../features/intake_execution/application/usecases/get_week_agenda.dart';
+import '../../features/intake_execution/application/usecases/replay_pending_confirmations.dart';
+import '../../features/intake_execution/infrastructure/local/dao/intake_dao.dart';
+import '../../features/intake_execution/infrastructure/local/intake_database.dart';
 import '../../features/intake_execution/infrastructure/remote/intake_api.dart';
+import '../../features/intake_execution/infrastructure/repositories/offline_intake_repository.dart';
 import '../../features/intake_execution/infrastructure/repositories/remote_intake_confirmation.dart';
 import '../../features/intake_execution/infrastructure/repositories/remote_intake_reader.dart';
+import '../../features/intake_execution/infrastructure/sync/intake_sync_coordinator.dart';
 import '../../features/intake_execution/presentation/bloc/agenda/agenda_bloc.dart';
 import '../../features/intake_execution/presentation/bloc/dose/dose_bloc.dart';
 import '../../features/intake_execution/presentation/bloc/home/home_bloc.dart';
@@ -74,6 +83,10 @@ final class AppDependencies {
     this._intakes,
     this._adultProfiles,
     this._confirmations,
+    this._localIntakes,
+    this._intakeRepository,
+    this._intakeSync,
+    this._intakeDatabase,
     this._adherence,
   );
 
@@ -83,6 +96,29 @@ final class AppDependencies {
     final client = ApiClient(baseUrl: config.apiBaseUrl, client: http.Client());
     final store = SecureSessionStore(
       storage: const FlutterSecureStorage(),
+      clock: DateTime.now,
+    );
+    final database = IntakeDatabase.onDevice();
+    final localIntakes = IntakeDao(database);
+    final remoteConfirmations = RemoteIntakeConfirmation(
+      api: IntakeApi(client),
+      store: store,
+    );
+    final intakes = OfflineIntakeRepository(
+      remoteReader: RemoteIntakeReader(api: IntakeApi(client), store: store),
+      remoteConfirmation: remoteConfirmations,
+      local: localIntakes,
+      store: store,
+      clock: DateTime.now,
+    );
+    final sync = IntakeSyncCoordinator(
+      store: store,
+      repository: intakes,
+      replay: ReplayPendingConfirmations(
+        remoteConfirmations,
+        localIntakes,
+        (owner) => store.current?.owner == owner,
+      ),
       clock: DateTime.now,
     );
     return AppDependencies._(
@@ -109,9 +145,13 @@ final class AppDependencies {
       ),
       RemotePinAccess(api: PinApi(client), store: store, clock: DateTime.now),
       const SecureRememberedAdultStore(FlutterSecureStorage()),
-      RemoteIntakeReader(api: IntakeApi(client), store: store),
+      intakes,
       RemoteAdultProfileReader(api: CareLinkApi(client), store: store),
-      RemoteIntakeConfirmation(api: IntakeApi(client), store: store),
+      intakes,
+      localIntakes,
+      intakes,
+      sync,
+      database,
       RemoteAdherenceRepository(
         api: AnalyticsApi(client),
         store: store,
@@ -127,10 +167,17 @@ final class AppDependencies {
   final RemoteCareLinkConsent _consent;
   final RemotePinAccess _pins;
   final RememberedAdultStore _rememberedAdults;
-  final RemoteIntakeReader _intakes;
+  final IntakeReader _intakes;
   final RemoteAdultProfileReader _adultProfiles;
-  final RemoteIntakeConfirmation _confirmations;
+  final IntakeConfirmation _confirmations;
+  final IntakeLocalStore _localIntakes;
+  final OfflineIntakeRepository _intakeRepository;
+  final IntakeSyncCoordinator _intakeSync;
+  final IntakeDatabase _intakeDatabase;
   final RemoteAdherenceRepository _adherence;
+
+  /// Delivers confirmations saved while the device had no connection.
+  IntakeSync get intakeSync => _intakeSync;
 
   /// Adult remembered on this device after PIN enrollment, if any.
   Future<RememberedAdult?> readRememberedAdult() => _rememberedAdults.read();
@@ -139,8 +186,13 @@ final class AppDependencies {
   Future<void> rememberAdult(RememberedAdult adult) =>
       _rememberedAdults.remember(adult);
 
-  /// Removes the PIN shortcut, for example after consent withdrawal.
-  Future<void> forgetRememberedAdult() => _rememberedAdults.forget();
+  /// Removes the PIN shortcut and the adult's clinical data from this device,
+  /// for example after consent withdrawal.
+  Future<void> forgetRememberedAdult() async {
+    final adult = await _rememberedAdults.read();
+    await _rememberedAdults.forget();
+    if (adult != null) await _localIntakes.clearAdult(adult.id);
+  }
 
   /// Display name of the adult in the current session, or null if unreadable.
   Future<String?> readAdultName() async =>
@@ -242,5 +294,10 @@ final class AppDependencies {
     signOut: SignOut(_sessions),
   );
 
-  void dispose() => _client.close();
+  Future<void> dispose() async {
+    await _intakeSync.dispose();
+    await _intakeRepository.dispose();
+    await _intakeDatabase.close();
+    _client.close();
+  }
 }

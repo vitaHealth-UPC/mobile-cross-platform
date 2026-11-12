@@ -21,12 +21,14 @@ class PinScreen extends StatelessWidget {
     required this.onDigit,
     required this.onDelete,
     required this.onSubmit,
+    this.existingPin = false,
     this.errorTitle,
     this.errorText,
     this.onBack,
   });
 
   final PinMode mode;
+  final bool existingPin;
   final String? adultName;
   final int filled;
   final bool busy;
@@ -43,7 +45,7 @@ class PinScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = AppLocalizations.of(context);
     final setup = mode == PinMode.setup;
-    final keysEnabled = !busy && !locked;
+    final keysEnabled = !busy && !locked && !existingPin;
     return PopScope(
       canPop: !busy && onBack != null,
       child: Scaffold(
@@ -58,12 +60,20 @@ class PinScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      setup ? text.pinSetupTitle : text.pinAccessTitle,
+                      existingPin
+                          ? text.pinExistingTitle
+                          : setup
+                          ? text.pinSetupTitle
+                          : text.pinAccessTitle,
                       style: TataTypography.heading,
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      setup ? text.pinSetupSubtitle : text.pinAccessSubtitle,
+                      existingPin
+                          ? text.pinExistingBody
+                          : setup
+                          ? text.pinSetupSubtitle
+                          : text.pinAccessSubtitle,
                       style: TataTypography.subtitle,
                     ),
                     const SizedBox(height: 22),
@@ -96,15 +106,17 @@ class PinScreen extends StatelessWidget {
                             ? text.pinProcessing
                             : locked
                             ? text.pinTryLater
+                            : existingPin
+                            ? text.pinUseExisting
                             : setup
                             ? text.pinSubmitSetup
                             : text.pinSubmitAccess,
                       ),
                     ),
-                    if (errorTitle != null || setup) ...[
+                    if (!existingPin && (errorTitle != null || setup)) ...[
                       const SizedBox(height: 10),
                       _Notice(
-                        error: errorTitle != null,
+                        error: errorTitle != null && !existingPin,
                         title: errorTitle ?? text.pinSetupInfoTitle,
                         body: errorText ?? text.pinSetupInfoBody,
                       ),
@@ -171,24 +183,19 @@ class _AdultCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // The badge shares the name line so the hint keeps the full width.
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: Text(
-                          name ?? fallbackName,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: TataColors.ink,
-                          ),
-                        ),
+                    Text(
+                      name ?? fallbackName,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: TataColors.ink,
                       ),
                     ),
-                    const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 14,
