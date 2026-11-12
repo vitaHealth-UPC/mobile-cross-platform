@@ -19,7 +19,11 @@ class CaregiverProfilesScreen extends StatefulWidget {
     required this.onSignOut,
     this.errorText,
     this.onOpenProfile,
+    this.onOpenSettings,
   });
+
+  /// Opens the caregiver's own settings; null hides the entry.
+  final VoidCallback? onOpenSettings;
   final List<CaregiverLinkSummary> links;
 
   /// Opens what the host offers for a confirmed relationship; null hides it.
@@ -261,6 +265,11 @@ class _CaregiverProfilesScreenState extends State<CaregiverProfilesScreen> {
                       ),
                     ),
                   const SizedBox(height: 16),
+                  if (widget.onOpenSettings != null)
+                    TextButton(
+                      onPressed: widget.onOpenSettings,
+                      child: Text(text.pfSettings),
+                    ),
                   TextButton(
                     onPressed: widget.loading ? null : widget.onSignOut,
                     child: Text(text.signOut),

@@ -1,6 +1,16 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
+import '../../features/accessibility_preferences/application/ports/preferences_ports.dart';
+import '../../features/accessibility_preferences/application/usecases/preferences_usecases.dart';
+import '../../features/accessibility_preferences/infrastructure/local/shared_preferences_stores.dart';
+import '../../features/accessibility_preferences/infrastructure/remote/preferences_api.dart';
+import '../../features/accessibility_preferences/infrastructure/repositories/offline_first_user_preferences.dart';
+import '../../features/accessibility_preferences/infrastructure/repositories/remote_user_preferences.dart';
+import '../../features/accessibility_preferences/presentation/bloc/accessibility/accessibility_bloc.dart';
+import '../../features/accessibility_preferences/presentation/bloc/notifications/notification_preferences_bloc.dart';
+import '../../features/accessibility_preferences/presentation/cubit/appearance_cubit.dart';
+import '../../features/accessibility_preferences/presentation/navigation/preferences_navigation.dart';
 import '../../features/adherence_analytics/application/usecases/get_adherence_summary.dart';
 import '../../features/adherence_analytics/application/usecases/get_recommendations.dart';
 import '../../features/adherence_analytics/infrastructure/remote/analytics_api.dart';
@@ -65,6 +75,23 @@ import '../../features/intake_execution/infrastructure/sync/intake_sync_coordina
 import '../../features/intake_execution/presentation/bloc/agenda/agenda_bloc.dart';
 import '../../features/intake_execution/presentation/bloc/dose/dose_bloc.dart';
 import '../../features/intake_execution/presentation/bloc/home/home_bloc.dart';
+import '../../features/treatment_management/application/readmodels/treatment_readmodels.dart';
+import '../../features/treatment_management/application/usecases/medication_usecases.dart';
+import '../../features/treatment_management/application/usecases/regimen_usecases.dart';
+import '../../features/treatment_management/application/usecases/treatment_usecases.dart';
+import '../../features/treatment_management/infrastructure/remote/treatment_api.dart';
+import '../../features/treatment_management/infrastructure/repositories/remote_medication_management_repository.dart';
+import '../../features/treatment_management/infrastructure/repositories/remote_treatment_lifecycle_repository.dart';
+import '../../features/treatment_management/infrastructure/repositories/remote_treatment_readers.dart';
+import '../../features/treatment_management/infrastructure/repositories/remote_treatment_repository.dart';
+import '../../features/treatment_management/presentation/bloc/medication_management/medication_management_bloc.dart';
+import '../../features/treatment_management/presentation/bloc/medication_registration/medication_registration_bloc.dart';
+import '../../features/treatment_management/presentation/bloc/my_medications/my_medications_bloc.dart';
+import '../../features/treatment_management/presentation/bloc/treatment_list/treatment_list_bloc.dart';
+import '../../features/treatment_management/presentation/bloc/treatment_management/treatment_management_bloc.dart';
+import '../../features/treatment_management/presentation/bloc/treatment_setup/treatment_setup_bloc.dart';
+import '../../features/treatment_management/presentation/navigation/treatment_navigation.dart';
+import '../../shared/application/session/session_store.dart';
 import '../../shared/common/result/app_result.dart';
 import '../../shared/infrastructure/network/api_client.dart';
 import '../../shared/infrastructure/security/secure_session_store.dart';
@@ -88,6 +115,11 @@ final class AppDependencies {
     this._intakeSync,
     this._intakeDatabase,
     this._adherence,
+    this._treatmentApi,
+    this._preferencesApi,
+    this._sessionStore,
+    this._accessibilityStore,
+    this._languageStore,
   );
 
   /// Composes real HTTP and secure storage using environment configuration.
@@ -157,6 +189,11 @@ final class AppDependencies {
         store: store,
         zoneId: config.calendarZone,
       ),
+      TreatmentApi(client),
+      PreferencesApi(client),
+      store,
+      SharedPreferencesAccessibilityStore(),
+      SharedPreferencesLanguageStore(),
     );
   }
 
@@ -178,6 +215,136 @@ final class AppDependencies {
 
   /// Delivers confirmations saved while the device had no connection.
   IntakeSync get intakeSync => _intakeSync;
+
+  final TreatmentApi _treatmentApi;
+  final PreferencesApi _preferencesApi;
+  final SessionStore _sessionStore;
+  final AccessibilityLocalStore _accessibilityStore;
+  final ApplicationLanguageStore _languageStore;
+
+  /// Treatment Management blocs; each factory shares the captured session store.
+  TreatmentFactories get treatmentFactories {
+    final medications = RemoteMedicationManagementRepository(
+      api: _treatmentApi,
+      store: _sessionStore,
+    );
+    final lifecycle = RemoteTreatmentLifecycleRepository(
+      api: _treatmentApi,
+      store: _sessionStore,
+    );
+    final treatmentReader = RemoteTreatmentReader(
+      api: _treatmentApi,
+      store: _sessionStore,
+    );
+    final detail = GetTreatmentDetail(treatmentReader);
+    final list = ListMedications(medications);
+    final configure = ConfigureTreatment(lifecycle);
+    final changeStatus = ChangeTreatmentStatus(lifecycle);
+    return TreatmentFactories(
+      createListBloc: (olderAdultId) => TreatmentListBloc(
+        list: ListTreatments(treatmentReader),
+        olderAdultId: olderAdultId,
+      ),
+      createRegistrationBloc: (olderAdultId) => MedicationRegistrationBloc(
+        register: RegisterMedication(
+          RemoteTreatmentRepository(api: _treatmentApi, store: _sessionStore),
+        ),
+        olderAdultId: olderAdultId,
+      ),
+      createMedicationsBloc: (olderAdultId) => MedicationManagementBloc(
+        list: list,
+        update: UpdateMedication(medications),
+        deactivate: DeactivateMedication(medications),
+        reactivate: ReactivateMedication(medications),
+        olderAdultId: olderAdultId,
+      ),
+      createSetupBloc: (olderAdultId, medicationId) => TreatmentSetupBloc(
+        create: CreateTreatment(
+          RemoteTreatmentRepository(api: _treatmentApi, store: _sessionStore),
+        ),
+        basics: const SetDoseFrequency(),
+        schedule: const SetScheduleInstructions(),
+        reminder: const SetReminderPolicy(),
+        read: detail,
+        configure: configure,
+        changeStatus: changeStatus,
+        olderAdultId: olderAdultId,
+        medicationId: medicationId,
+      ),
+      createManagementBloc: (treatmentId, olderAdultId) =>
+          TreatmentManagementBloc(
+            detail: detail,
+            medications: list,
+            configure: configure,
+            changeStatus: changeStatus,
+            reactivate: ReactivateMedication(medications),
+            deactivate: DeactivateMedication(medications),
+            treatmentId: treatmentId,
+            olderAdultId: olderAdultId,
+          ),
+      createMyMedicationsBloc: () => MyMedicationsBloc(
+        overview: GetMyMedicationsOverview(
+          RemoteMyMedicationsReader(api: _treatmentApi, store: _sessionStore),
+          // The next dose belongs to the intake context; the app layer composes it.
+          () async => switch (await GetNextIntake(_intakes).call()) {
+            AppSuccess(:final value) => AppSuccess(
+              value == null
+                  ? null
+                  : MedicationNextDose(
+                      intakeId: value.id,
+                      medicationName: value.medicationName,
+                      scheduledAt: value.scheduledAt,
+                    ),
+            ),
+            AppFailure(:final code) => AppFailure(code),
+          },
+        ),
+      ),
+    );
+  }
+
+  /// One shared instance: it serializes every preference write of the process, and the
+  /// app-wide appearance observes the same device copy that the screens edit.
+  late final UserPreferencesRepository _preferences =
+      OfflineFirstUserPreferences(
+        remote: RemoteUserPreferences(
+          api: _preferencesApi,
+          store: _sessionStore,
+        ),
+        local: _accessibilityStore,
+      );
+
+  /// Accessibility & Preferences blocs.
+  PreferencesFactories get preferencesFactories {
+    final preferences = _preferences;
+    final notifications = RemoteNotificationPreferencesRepository(
+      api: _preferencesApi,
+      store: _sessionStore,
+    );
+    return PreferencesFactories(
+      createAccessibilityBloc: (userId) => AccessibilityBloc(
+        observe: ObserveAccessibility(preferences),
+        observeLanguage: ObserveApplicationLanguage(_languageStore),
+        update: UpdateAccessibility(preferences),
+        changeLanguage: ChangeApplicationLanguage(_languageStore),
+        sync: SyncUserPreferences(preferences),
+        userId: userId,
+      ),
+      createNotificationsBloc: (userId) => NotificationPreferencesBloc(
+        get: GetNotificationPreferences(notifications),
+        update: UpdateNotificationPreferences(notifications),
+        updatePolicy: UpdateNotificationPolicy(notifications),
+        userId: userId,
+      ),
+    );
+  }
+
+  /// App-wide appearance of the signed-in owner.
+  AppearanceCubit createAppearanceCubit() => AppearanceCubit(
+    observeAccessibility: ObserveAccessibility(_preferences),
+    observeLanguage: ObserveApplicationLanguage(_languageStore),
+    sync: SyncUserPreferences(_preferences),
+  );
 
   /// Adult remembered on this device after PIN enrollment, if any.
   Future<RememberedAdult?> readRememberedAdult() => _rememberedAdults.read();
