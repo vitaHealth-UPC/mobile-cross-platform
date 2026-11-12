@@ -1163,7 +1163,7 @@ Inventario de referencia:70 variantes. Estado inicial compartido:1 completa acep
 | 20 | Adherence Recommendations | 563:1767 | Parcial | Comparada, ajustes abiertos ("Aplicar ajustes" no se dibuja hasta que Treatment pueda recibir los ajustes) | RecommendationsBloc con adherence/insight de 30 días; estados contenido, evidencia insuficiente (563:4552), carga y error; sin recomendación local; tests de bloc, widget y flujo con Historial; falta Spring/Render y dispositivo |
 | 21 | Notes - Adult | 576:2785 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 22 | Add Medication - Caregiver | 563:453 | Parcial | Sin comparación visual certificada en este corte | Registro de medicamento del equipo, validación de campos y recibo real mediante repositorio; tests de contrato y flujo. Falta revisión Figma y prueba instalada. |
-| 23 | Create Treatment | 563:1490 | Parcial | Sin comparación visual certificada en este corte | Asistente del equipo para crear, configurar y activar tratamiento; conserva borrador y valida recibos; tests de flujo. Falta revisión Figma y prueba instalada. |
+| 23 | Create Treatment | 563:1490 | Parcial | Aceptada proporcionalmente en render ES (12-11-2026; revisión normal y layout 150 %) | Asistente con cuatro grupos visuales y validación separada de dosis/horarios; alta, configuración y activación conservan los contratos del equipo. Nombre guardado de solo lectura al regresar al borrador. Pruebas de flujo y capturas, sin nueva evidencia de Render/dispositivo. |
 | 24 | Treatment Management | 563:1554 | Parcial | Sin comparación visual certificada en este corte | Gestión del equipo con lectura, edición, pausa, reanudación y medicamento activo; tests de contrato y bloc. Falta contraste visual y Spring desplegado. |
 | 25 | Inventory & Restock | 563:1632 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 26 | Notification Preferences | 563:1219 | Parcial | Sin comparación visual certificada en este corte | Preferencias de notificación del equipo con contratos, estado y pruebas; falta contraste Figma y verificar el efecto del sistema de notificaciones en dispositivo. |
@@ -1252,6 +1252,24 @@ Las rutas de esta tabla son relativas a lib/features/treatment_management salvo 
 Verificación integrada: 407 pruebas aprobadas; flutter analyze --no-pub sin incidencias. Formato comprobado en 323 archivos sin cambios. APK debug construido correctamente con los plugins del equipo y el catálogo integrado (assembleDebug: 340,5 s). El código de este corte se publica en 2cdd341; la evidencia de build se registra en este checkpoint posterior. Capturas de catálogo y detalle revisadas contra los nodos correctos; los layouts con texto ampliado se prueban sin overflow. El botón de alta queda deshabilitado para el adulto, cuyo catálogo es de consulta. Cuando el próximo intake global pertenece a otro medicamento, la pantalla indica información de próxima toma no disponible en lugar de asegurar que ese medicamento no tiene tomas. La cola local antigua no fuerza una migración de base únicamente para obtener estas referencias.
 
 El catálogo no se declara probado contra Render ni en teléfono en este corte. Los flujos nuevos de tratamientos y preferencias pasan la suite integrada, pero conservan su contraste visual pendiente. El siguiente recorrido es revisar el asistente y la gestión de tratamientos con sus nodos Figma, manteniendo sus contratos existentes; después, preferencias y su efecto visual en las pantallas compartidas.
+
+## Fidelidad del asistente de tratamientos (12-11-2026)
+
+Sobre d8ee412 se contrasta Create Treatment con el contexto y captura del nodo 563:1490. La presentación muestra Datos, Pauta, Recordatorios y Revisar; las validaciones existentes de dosis/frecuencia y horarios permanecen separadas dentro de Pauta. Se conservan CreateTreatment, ConfigureTreatment y ChangeTreatmentStatus sin cambiar rutas ni duplicar casos de uso.
+
+| Archivo | Responsabilidad |
+| --- | --- |
+| presentation/screens/treatment_setup_screen.dart | Formulario con nombre, medicamento elegido y acciones; conserva controladores al volver. El nombre reconocido por el servidor queda de solo lectura y se presenta con su valor recibido. |
+| presentation/widgets/treatment_stepper.dart | Indicador nativo de cuatro grupos con semántica de selección; texto ampliado usa dos columnas para conservar las etiquetas completas. |
+| presentation/widgets/treatment_setup_review.dart | Tarjetas de dosis, frecuencia, horarios, indicaciones y seguimiento. TreatmentSchedulePreview muestra solo horarios introducidos, sin barras de cumplimiento o tomas inventadas. |
+| assets/icons/treatment_medication.svg | Recurso original de Figma, 24x24, usado como ilustración del medicamento; los demás controles se componen con widgets. |
+| l10n/app_es.arb y app_en.arb | Títulos, ayuda de seguimiento, resumen con parámetro de minutos y vista previa localizados. El valor vacío conserva la política predeterminada del servidor. |
+| test/treatment_management/treatment_setup_visual_test.dart | Cinco estados internos en 393x883 y 360x640, texto 100 % y 150 %, botones alcanzables y regreso al nombre ya guardado. |
+| test/treatment_management/treatment_screens_test.dart | Valida campos vacíos, horario inválido, orden normalizado, política predeterminada y activación reconocida, con viewport móvil y desplazamiento hasta la acción. |
+
+Las tres primeras rutas son relativas a lib/features/treatment_management. No se agrega un quinto paso visual ni un segundo flujo de configuración. La revisión no afirma recordatorios activos antes de activar el tratamiento y no rellena nombre de paciente, finalidad clínica, horas ni minutos con ejemplos productivos.
+
+La variante 23 se acepta visualmente de forma proporcional; el registro pasa a 16 aceptadas de 70, con 28 variantes implementadas total o parcialmente. El módulo conserva estado funcional parcial hasta validar los recorridos contra Spring desplegado y dispositivo. La suite de Treatment Management mantiene sus 60 pruebas aprobadas; se revisan las capturas de los cinco estados y su versión de texto ampliado. El siguiente nodo es Treatment Management (563:1554), manteniendo los contratos y permisos existentes.
 
 ## Procedimiento de implementación y revisión
 

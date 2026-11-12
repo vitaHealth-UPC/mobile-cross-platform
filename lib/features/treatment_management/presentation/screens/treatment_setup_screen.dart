@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
+import '../../../../shared/presentation/theme/tata_colors.dart';
 import '../../../../shared/presentation/widgets/async_states.dart';
 import '../bloc/treatment_setup/treatment_setup_bloc.dart';
 import '../bloc/treatment_setup/treatment_setup_event.dart';
 import '../bloc/treatment_setup/treatment_setup_state.dart';
 import '../texts/treatment_texts.dart';
+import '../widgets/treatment_setup_review.dart';
+import '../widgets/treatment_stepper.dart';
 
 /// Wizard from a registered medication to an active treatment: details, regimen, schedule,
 /// reminders and review. Field text lives here; validated values live in the bloc.
@@ -56,6 +60,9 @@ class _TreatmentSetupScreenState extends State<TreatmentSetupScreen> {
     final bloc = context.read<TreatmentSetupBloc>();
     return BlocConsumer<TreatmentSetupBloc, TreatmentSetupState>(
       listener: (context, state) {
+        if (state.treatmentId != null && state.treatmentName != _name.text) {
+          _name.text = state.treatmentName;
+        }
         if (isSessionFailure(state.errorCode)) {
           widget.onSessionInvalidated();
         } else if (state.activated) {
@@ -68,7 +75,6 @@ class _TreatmentSetupScreenState extends State<TreatmentSetupScreen> {
         final titles = [
           text.tmStepDetails,
           text.tmStepRegimen,
-          text.tmStepSchedule,
           text.tmStepReminders,
           text.tmStepReview,
         ];
@@ -81,7 +87,6 @@ class _TreatmentSetupScreenState extends State<TreatmentSetupScreen> {
             if (!didPop) bloc.add(const TreatmentSetupBackRequested());
           },
           child: Scaffold(
-            appBar: AppBar(title: Text(text.tmSetupTitle)),
             body: SafeArea(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(22),
@@ -90,25 +95,92 @@ class _TreatmentSetupScreenState extends State<TreatmentSetupScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Semantics(
-                        label: '${state.step.index + 1}/${titles.length}',
-                        child: LinearProgressIndicator(
-                          value: (state.step.index + 1) / titles.length,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '${state.step.index + 1}/${titles.length} · '
-                        '${titles[state.step.index]}',
-                        style: Theme.of(context).textTheme.titleMedium,
+                      Row(
+                        children: [
+                          IconButton(
+                            tooltip: text.back,
+                            onPressed: state.loading
+                                ? null
+                                : () {
+                                    if (state.step ==
+                                        TreatmentSetupStep.details) {
+                                      Navigator.of(context).maybePop();
+                                    } else {
+                                      bloc.add(
+                                        const TreatmentSetupBackRequested(),
+                                      );
+                                    }
+                                  },
+                            icon: const Icon(
+                              Icons.chevron_left,
+                              color: TataColors.primary,
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              text.tmSetupTitle,
+                              style: const TextStyle(
+                                fontFamily: 'DMSerifDisplay',
+                                fontSize: 29,
+                                color: TataColors.ink,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 4),
-                      Text(widget.medicationLabel),
-                      const SizedBox(height: 20),
+                      Text(
+                        text.tmSetupCaregiver,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: TataColors.muted,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TreatmentStepper(
+                        labels: titles,
+                        selected: switch (state.step) {
+                          TreatmentSetupStep.details => 0,
+                          TreatmentSetupStep.regimen ||
+                          TreatmentSetupStep.schedule => 1,
+                          TreatmentSetupStep.reminders => 2,
+                          TreatmentSetupStep.review => 3,
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      if (state.step != TreatmentSetupStep.details &&
+                          state.step != TreatmentSetupStep.review) ...[
+                        _medication(text),
+                        const SizedBox(height: 16),
+                      ],
                       ..._fields(context, text, state),
+                      if (state.step == TreatmentSetupStep.details) ...[
+                        const SizedBox(height: 16),
+                        _medication(text),
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF1ECFF),
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          child: Text(
+                            text.tmSetupDraftHint,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: TataColors.muted,
+                            ),
+                          ),
+                        ),
+                      ],
                       if (error != null) InlineError(error),
                       const SizedBox(height: 24),
                       _actions(context, text, state),
+                      if (state.step == TreatmentSetupStep.review &&
+                          state.scheduledTimes.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        TreatmentSchedulePreview(times: state.scheduledTimes),
+                      ],
                     ],
                   ),
                 ),
@@ -132,9 +204,11 @@ class _TreatmentSetupScreenState extends State<TreatmentSetupScreen> {
       case TreatmentSetupStep.details:
         return [
           TextFormField(
+            style: const TextStyle(fontSize: 14),
             key: const Key('treatment-name'),
             controller: _name,
             enabled: !state.loading,
+            readOnly: state.treatmentId != null,
             decoration: InputDecoration(labelText: text.tmTreatmentName),
             validator: (value) => _required(value, text),
           ),
@@ -142,6 +216,7 @@ class _TreatmentSetupScreenState extends State<TreatmentSetupScreen> {
       case TreatmentSetupStep.regimen:
         return [
           TextFormField(
+            style: const TextStyle(fontSize: 14),
             key: const Key('treatment-dose'),
             controller: _dose,
             decoration: InputDecoration(labelText: text.tmDose),
@@ -149,6 +224,7 @@ class _TreatmentSetupScreenState extends State<TreatmentSetupScreen> {
           ),
           const SizedBox(height: 16),
           TextFormField(
+            style: const TextStyle(fontSize: 14),
             key: const Key('treatment-frequency'),
             controller: _frequency,
             decoration: InputDecoration(labelText: text.tmFrequency),
@@ -158,6 +234,7 @@ class _TreatmentSetupScreenState extends State<TreatmentSetupScreen> {
       case TreatmentSetupStep.schedule:
         return [
           TextFormField(
+            style: const TextStyle(fontSize: 14),
             key: const Key('treatment-times'),
             controller: _times,
             keyboardType: TextInputType.datetime,
@@ -166,6 +243,7 @@ class _TreatmentSetupScreenState extends State<TreatmentSetupScreen> {
           ),
           const SizedBox(height: 16),
           TextFormField(
+            style: const TextStyle(fontSize: 14),
             key: const Key('treatment-instructions'),
             controller: _instructions,
             maxLines: 3,
@@ -175,51 +253,61 @@ class _TreatmentSetupScreenState extends State<TreatmentSetupScreen> {
       case TreatmentSetupStep.reminders:
         return [
           TextFormField(
+            style: const TextStyle(fontSize: 14),
             key: const Key('treatment-delay'),
             controller: _delay,
             keyboardType: TextInputType.number,
-            decoration: InputDecoration(labelText: text.tmFollowUpDelay),
+            decoration: InputDecoration(
+              labelText: text.tmFollowUpShort,
+              helperText: text.tmFollowUpHelp,
+              helperMaxLines: 4,
+            ),
           ),
         ];
       case TreatmentSetupStep.review:
         return [
-          Text(
-            text.tmReviewTitle,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 12),
-          _line(text.tmTreatmentName, state.treatmentName),
-          _line(text.tmDoseShort, state.dose),
-          _line(text.tmFrequencyShort, state.frequency),
-          _line(text.tmTimesShort, state.scheduledTimes.join(', ')),
-          if (state.instructions.isNotEmpty)
-            _line(text.tmInstructionsShort, state.instructions),
-          _line(
-            text.tmFollowUpShort,
-            state.followUpDelayMinutes == null
-                ? text.tmDefaultFollowUp
-                : '${state.followUpDelayMinutes} min',
-          ),
+          TreatmentSetupReview(state: state, medication: _medication(text)),
         ];
     }
   }
 
-  Widget _line(String label, String value) => Padding(
-    padding: const EdgeInsets.only(bottom: 8),
-    child: Semantics(
-      container: true,
-      child: Text.rich(
-        TextSpan(
-          children: [
-            TextSpan(
-              text: '$label: ',
-              style: const TextStyle(fontWeight: FontWeight.w600),
+  Widget _medication(AppLocalizations text) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        text.tmMedicationLabel,
+        style: const TextStyle(fontSize: 11, color: TataColors.muted),
+      ),
+      const SizedBox(height: 8),
+      Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x141A2138),
+              blurRadius: 18,
+              offset: Offset(0, 6),
             ),
-            TextSpan(text: value),
+          ],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                widget.medicationLabel,
+                style: const TextStyle(fontSize: 14),
+              ),
+            ),
+            const SizedBox(width: 12),
+            ExcludeSemantics(
+              child: SvgPicture.asset('assets/icons/treatment_medication.svg'),
+            ),
           ],
         ),
       ),
-    ),
+    ],
   );
 
   Widget _actions(

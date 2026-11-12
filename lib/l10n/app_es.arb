@@ -644,7 +644,7 @@
   "tmDeactivateTitle": "¿Desactivar este medicamento?",
   "tmDeactivateBody": "Dejará de generar nuevas tomas, pero su historial se conserva.",
   "tmRequiredField": "Completa este campo.",
-  "tmSetupTitle": "Configurar tratamiento",
+  "tmSetupTitle": "Crear tratamiento",
   "tmStepDetails": "Datos",
   "tmStepRegimen": "Pauta",
   "tmStepSchedule": "Horarios",
@@ -763,5 +763,17 @@
         "type": "int"
       }
     }
-  }
+  },
+  "tmSetupCaregiver": "Cuidador",
+  "tmSetupDraftHint": "El tratamiento se activa después de revisar la pauta y los recordatorios.",
+  "tmSchedulePreview": "Vista previa de agenda",
+  "tmFollowUpSummary": "Avisar {minutes} min después si no confirma.",
+  "@tmFollowUpSummary": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "tmFollowUpHelp": "Espera de 0 a 1440 minutos. Si lo dejas vacío, se usa la espera predeterminada."
 }

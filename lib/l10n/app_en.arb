@@ -637,7 +637,7 @@
   "tmDeactivateTitle": "Deactivate this medication?",
   "tmDeactivateBody": "It will stop producing new intakes, but its history is kept.",
   "tmRequiredField": "Fill in this field.",
-  "tmSetupTitle": "Set up treatment",
+  "tmSetupTitle": "Create treatment",
   "tmStepDetails": "Details",
   "tmStepRegimen": "Regimen",
   "tmStepSchedule": "Schedule",
@@ -756,5 +756,17 @@
         "type": "int"
       }
     }
-  }
+  },
+  "tmSetupCaregiver": "Caregiver",
+  "tmSetupDraftHint": "The treatment is activated after reviewing the regimen and reminders.",
+  "tmSchedulePreview": "Schedule preview",
+  "tmFollowUpSummary": "Notify after {minutes} min without confirmation.",
+  "@tmFollowUpSummary": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "tmFollowUpHelp": "Wait from 0 to 1440 minutes. Leave empty to use the default delay."
 }
