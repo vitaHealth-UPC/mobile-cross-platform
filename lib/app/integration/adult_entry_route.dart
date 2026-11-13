@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../features/accessibility_preferences/presentation/navigation/preferences_navigation.dart';
 import '../../features/care_link/presentation/bloc/consent/consent_bloc.dart';
 import '../../features/care_link/presentation/navigation/consent_management_route.dart';
+import '../../features/family_monitoring/presentation/navigation/family_monitoring_navigation.dart';
 import '../../features/identity_subscription/application/readmodels/remembered_adult.dart';
 import '../../features/identity_subscription/presentation/bloc/pin/pin_bloc.dart';
 import '../../features/identity_subscription/presentation/navigation/pin_route.dart';
@@ -13,6 +14,8 @@ import '../../features/intake_execution/presentation/bloc/home/home_bloc.dart';
 import '../../features/intake_execution/presentation/navigation/adult_home_route.dart';
 import '../../features/intake_execution/presentation/navigation/agenda_route.dart';
 import '../../features/intake_execution/presentation/navigation/dose_route.dart';
+import '../../features/omission_escalation/application/services/omission_push_facade.dart';
+import '../../features/omission_escalation/presentation/widgets/follow_omission_push.dart';
 import '../../features/treatment_management/presentation/navigation/treatment_navigation.dart';
 import '../../l10n/generated/app_localizations.dart';
 
@@ -37,6 +40,8 @@ class AdultEntryRoute extends StatefulWidget {
     this.intakeSync,
     this.treatments,
     this.preferences,
+    this.monitoring,
+    this.push,
   });
 
   final String olderAdultId;
@@ -64,6 +69,12 @@ class AdultEntryRoute extends StatefulWidget {
 
   /// Optional Accessibility & Preferences entry.
   final PreferencesNavigation? preferences;
+
+  /// Optional Family Monitoring entry: the adult's own notes.
+  final FamilyMonitoringNavigation? monitoring;
+
+  /// Optional Omission & Escalation entry: follows this adult's reinforced reminders.
+  final OmissionPushFacade? push;
 
   @override
   State<AdultEntryRoute> createState() => _AdultEntryRouteState();
@@ -128,6 +139,15 @@ class _AdultEntryRouteState extends State<AdultEntryRoute> {
                 onTap: () {
                   Navigator.of(sheetContext).pop();
                   _openMedications(this.context);
+                },
+              ),
+            if (widget.monitoring != null)
+              ListTile(
+                leading: const Icon(Icons.edit_note),
+                title: Text(text.adultTabNotes),
+                onTap: () {
+                  Navigator.of(sheetContext).pop();
+                  _openNotes(this.context);
                 },
               ),
             if (widget.preferences != null)
@@ -219,6 +239,38 @@ class _AdultEntryRouteState extends State<AdultEntryRoute> {
         ),
       );
 
+  /// The adult's own notes; their bar returns to the home or to the other destinations.
+  Future<void> _openNotes(BuildContext context) {
+    final monitoring = widget.monitoring;
+    if (monitoring == null) return Future<void>.value();
+    return Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (routeContext) {
+          void home() =>
+              Navigator.of(routeContext).popUntil((route) => route.isFirst);
+          return monitoring.personalNotes(
+            onHome: home,
+            onMedications: widget.treatments == null
+                ? null
+                : () {
+                    home();
+                    _openMedications(this.context);
+                  },
+            onAgenda: () {
+              home();
+              _openAgenda(this.context);
+            },
+            onMore: () {
+              home();
+              _openMore(this.context);
+            },
+            onSignIn: () => _leaveForRevalidation(routeContext),
+          );
+        },
+      ),
+    );
+  }
+
   Future<void> _openAgenda(BuildContext context) =>
       Navigator.of(context).push<void>(
         MaterialPageRoute(
@@ -274,6 +326,17 @@ class _AdultEntryRouteState extends State<AdultEntryRoute> {
     );
   }
 
+  /// Follows this adult's reminders while the home is shown, when push is configured.
+  Widget _following(Widget child) {
+    final push = widget.push;
+    if (push == null) return child;
+    return FollowOmissionPush(
+      followKey: widget.olderAdultId,
+      follow: () => push.followAdultReminders(widget.olderAdultId, _name ?? ''),
+      child: child,
+    );
+  }
+
   @override
   Widget build(BuildContext context) => switch (_phase) {
     _Phase.loading => const Scaffold(
@@ -285,17 +348,19 @@ class _AdultEntryRouteState extends State<AdultEntryRoute> {
       onCompleted: _pinSaved,
       onSessionInvalidated: widget.onSessionChanged,
     ),
-    _Phase.home => AdultHomeRoute(
-      createBloc: widget.createHomeBloc,
-      adultName: _name,
-      sync: widget.intakeSync,
-      onOpenMore: () => _openMore(context),
-      onOpenAgenda: () => _openAgenda(context),
-      onOpenMedications: widget.treatments == null
-          ? null
-          : () => _openMedications(context),
-      onOpenDose: (intakeId) => _openDose(context, intakeId),
-      onSessionInvalidated: widget.onSessionChanged,
+    _Phase.home => _following(
+      AdultHomeRoute(
+        createBloc: widget.createHomeBloc,
+        adultName: _name,
+        sync: widget.intakeSync,
+        onOpenMore: () => _openMore(context),
+        onOpenAgenda: () => _openAgenda(context),
+        onOpenMedications: widget.treatments == null
+            ? null
+            : () => _openMedications(context),
+        onOpenDose: (intakeId) => _openDose(context, intakeId),
+        onSessionInvalidated: widget.onSessionChanged,
+      ),
     ),
   };
 }

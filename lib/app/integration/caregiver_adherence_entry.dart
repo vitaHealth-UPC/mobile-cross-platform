@@ -10,11 +10,10 @@ import '../../features/care_link/application/readmodels/caregiver_link_summary.d
 ///
 /// Care Link only hands over the confirmed relationship and Adherence Analytics
 /// only receives the adult identifier, so neither context knows the other.
-/// This stands in for the "Historial" action of the Family Summary until
-/// Family Monitoring exists in Flutter.
+/// It is what the "Historial" action of the Family Summary opens.
 ///
-/// Every bottom tab returns to the caregiver area, since the destinations the
-/// other tabs stand for do not exist yet. A credential the server rejects
+/// Every bottom tab returns to the caregiver area, which owns the
+/// destinations the tabs lead to. A credential the server rejects
 /// closes the flow and is reported through [onSessionInvalidated].
 Future<void> openAdherenceFlow(
   BuildContext context, {

@@ -30,6 +30,23 @@ import '../../features/care_link/infrastructure/repositories/remote_care_link_co
 import '../../features/care_link/infrastructure/repositories/remote_care_link_repository.dart';
 import '../../features/care_link/presentation/bloc/consent/consent_bloc.dart';
 import '../../features/care_link/presentation/bloc/profiles/profiles_bloc.dart';
+import '../../features/family_monitoring/application/usecases/alert_usecases.dart';
+import '../../features/family_monitoring/application/usecases/note_usecases.dart';
+import '../../features/family_monitoring/application/usecases/summary_usecases.dart';
+import '../../features/family_monitoring/infrastructure/launcher/url_contact_launcher.dart';
+import '../../features/family_monitoring/infrastructure/remote/family_monitoring_api.dart';
+import '../../features/family_monitoring/infrastructure/repositories/remote_alerts_repository.dart';
+import '../../features/family_monitoring/infrastructure/repositories/remote_contact_repository.dart';
+import '../../features/family_monitoring/infrastructure/repositories/remote_family_monitoring_repository.dart';
+import '../../features/family_monitoring/infrastructure/repositories/remote_monitoring_readers.dart';
+import '../../features/family_monitoring/infrastructure/repositories/remote_notes_repositories.dart';
+import '../../features/family_monitoring/presentation/bloc/alert_detail/alert_detail_bloc.dart';
+import '../../features/family_monitoring/presentation/bloc/alerts/alerts_bloc.dart';
+import '../../features/family_monitoring/presentation/bloc/notes/note_composer_cubit.dart';
+import '../../features/family_monitoring/presentation/bloc/notes/notes_bloc.dart';
+import '../../features/family_monitoring/presentation/bloc/personal_notes/personal_notes_bloc.dart';
+import '../../features/family_monitoring/presentation/bloc/summary/family_summary_bloc.dart';
+import '../../features/family_monitoring/presentation/navigation/family_monitoring_navigation.dart';
 import '../../features/identity_subscription/application/ports/remembered_adult_store.dart';
 import '../../features/identity_subscription/application/readmodels/remembered_adult.dart';
 import '../../features/identity_subscription/application/usecases/complete_password_recovery.dart';
@@ -75,6 +92,15 @@ import '../../features/intake_execution/infrastructure/sync/intake_sync_coordina
 import '../../features/intake_execution/presentation/bloc/agenda/agenda_bloc.dart';
 import '../../features/intake_execution/presentation/bloc/dose/dose_bloc.dart';
 import '../../features/intake_execution/presentation/bloc/home/home_bloc.dart';
+import '../../features/omission_escalation/application/policies/omission_push_access_policy.dart';
+import '../../features/omission_escalation/application/services/omission_notification_session_cleanup.dart';
+import '../../features/omission_escalation/application/services/omission_push_facade.dart';
+import '../../features/omission_escalation/application/services/push_device_registration_coordinator.dart';
+import '../../features/omission_escalation/application/usecases/omission_usecases.dart';
+import '../../features/omission_escalation/infrastructure/local/push_local_stores.dart';
+import '../../features/omission_escalation/infrastructure/push/not_configured_push_token_source.dart';
+import '../../features/omission_escalation/infrastructure/remote/push_device_api.dart';
+import '../../features/omission_escalation/infrastructure/repositories/remote_device_token_registry.dart';
 import '../../features/treatment_management/application/readmodels/treatment_readmodels.dart';
 import '../../features/treatment_management/application/usecases/medication_usecases.dart';
 import '../../features/treatment_management/application/usecases/regimen_usecases.dart';
@@ -472,6 +498,98 @@ final class AppDependencies {
     restore: RestoreSession(_sessions),
     signOut: SignOut(_sessions),
   );
+
+  /// Family Monitoring blocs; every repository shares the captured session store, and the
+  /// caregiver is always the owner of that session.
+  FamilyMonitoringFactories get familyMonitoringFactories {
+    final api = FamilyMonitoringApi(_client);
+    final monitoring = RemoteFamilyMonitoringRepository(
+      api: api,
+      store: _sessionStore,
+    );
+    final alerts = RemoteAlertsRepository(api: api, store: _sessionStore);
+    final contact = RemoteContactRepository(api: api, store: _sessionStore);
+    final notes = RemoteNotesRepository(api: api, store: _sessionStore);
+    final personalNotes = RemotePersonalNotesRepository(
+      api: api,
+      store: _sessionStore,
+    );
+    final timeline = RemoteAlertTimelineReader(api: api, store: _sessionStore);
+    final history = RemoteAlertHistoryReader(api: api, store: _sessionStore);
+    final doses = RemoteMonitoredDoseReader(api: api, store: _sessionStore);
+    final people = RemoteMonitoredPersonReader(api: api, store: _sessionStore);
+    return FamilyMonitoringFactories(
+      launcher: const UrlContactLauncher(),
+      createSummaryBloc: (olderAdultId, olderAdultName) => FamilySummaryBloc(
+        summary: GetFamilySummary(monitoring),
+        contact: GetContactOption(contact),
+        olderAdultId: olderAdultId,
+        olderAdultName: olderAdultName,
+      ),
+      createAlertsBloc: (olderAdultId) => AlertsBloc(
+        timeline: GetAlertTimeline(timeline),
+        olderAdultId: olderAdultId,
+      ),
+      createAlertDetailBloc: (olderAdultId, alertId) => AlertDetailBloc(
+        detail: GetAlertDetail(alerts),
+        update: UpdateAlertStatus(alerts),
+        contact: GetContactOption(contact),
+        people: people,
+        doses: doses,
+        history: history,
+        olderAdultId: olderAdultId,
+        alertId: alertId,
+      ),
+      createNotesBloc: (olderAdultId) => NotesBloc(
+        notes: GetFollowUpNotes(notes),
+        people: people,
+        olderAdultId: olderAdultId,
+      ),
+      createComposerCubit: (olderAdultId) => NoteComposerCubit(
+        register: RegisterFollowUpNote(notes),
+        olderAdultId: olderAdultId,
+      ),
+      createPersonalNotesBloc: () => PersonalNotesBloc(
+        list: GetPersonalNotes(personalNotes),
+        create: CreatePersonalNote(personalNotes),
+      ),
+    );
+  }
+
+  /// Omission & Escalation facade. The Firebase and local-notification adapters are not
+  /// configured in this build, so the device is never registered and nothing is displayed;
+  /// the follow-up targets and the session cleanup still run. Call it once: the facade holds
+  /// the state of its coordinator.
+  OmissionPushFacade omissionPush({required String installationId}) {
+    final targets = SharedPreferencesPushTargetStore();
+    const notifier = NotConfiguredOmissionNotifier();
+    final policy = OmissionPushAccessPolicy(
+      sessions: _sessionStore,
+      targets: targets,
+    );
+    return OmissionPushFacade(
+      policy: policy,
+      followCaregiver: FollowCaregiverAlerts(targets),
+      followReminders: FollowDoseReminders(targets),
+      resolve: ResolvePushDestination(targets),
+      handle: HandleIncomingOmissionPush(policy, notifier),
+      registration: PushDeviceRegistrationCoordinator(
+        sessions: _sessionStore,
+        tokens: const NotConfiguredPushTokenSource(),
+        registry: RemoteDeviceTokenRegistry(
+          api: PushDeviceApi(_client),
+          store: _sessionStore,
+          installationId: installationId,
+        ),
+      ),
+      cleanup: OmissionNotificationSessionCleanup(notifier: notifier),
+      registrationEnabled: false,
+    );
+  }
+
+  /// Opaque identity of this installation for the push registry.
+  Future<String> readPushInstallationId() =>
+      SharedPreferencesPushInstallationStore().getOrCreate();
 
   Future<void> dispose() async {
     await _intakeSync.dispose();
