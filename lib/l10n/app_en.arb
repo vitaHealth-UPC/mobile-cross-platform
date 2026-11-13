@@ -837,5 +837,308 @@
         "type": "String"
       }
     }
-  }
+  },
+  "fmAlertsTitle": "Alerts",
+  "fmAlertsSubtitle": "Missed doses that need your follow-up.",
+  "fmFilterAll": "All",
+  "fmFilterPending": "Pending",
+  "fmFilterUpcoming": "Upcoming",
+  "fmFilterCompleted": "Completed",
+  "fmPendingSummary": "{count, plural, =1{1 pending alert} other{{count} pending alerts}}",
+  "@fmPendingSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fmAlertsEmptyTitle": "No alerts",
+  "fmAlertsEmptyMessage": "Everything is under control. We will let you know if a dose is missed.",
+  "fmAlertsFilterEmpty": "There are no alerts in this filter.",
+  "fmAlertScheduled": "Scheduled for {time}",
+  "@fmAlertScheduled": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "fmOpenDetail": "Open alert detail",
+  "fmAlertsLoading": "Loading alerts…",
+  "fmRetry": "Try again",
+  "fmNoPending": "No pending alerts",
+  "fmStatusOpen": "Pending",
+  "fmStatusAttended": "Attended",
+  "fmStatusClosed": "Closed",
+  "fmTitleOpen": "Pending alert",
+  "fmTitleAttended": "Attended alert",
+  "fmTitleClosed": "Closed alert",
+  "fmDetailTitle": "Alert detail",
+  "fmDetailSection": "Alert information",
+  "fmDetailScheduled": "Scheduled dose",
+  "fmDetailReason": "Reason",
+  "fmDetailReasonMissing": "Not reported",
+  "fmDetailStatus": "Status",
+  "fmDetailOpened": "Opened",
+  "fmDetailClosed": "Closed",
+  "fmDetailLoading": "Loading the alert…",
+  "fmActionsTitle": "Follow-up actions",
+  "fmActionsSubtitle": "Update the alert according to the follow-up result.",
+  "fmActionsSubtitleNamed": "Contact {name} and update the alert according to the result.",
+  "@fmActionsSubtitleNamed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fmActionAttend": "Mark as attended",
+  "fmActionAttended": "Attended",
+  "fmActionClose": "Close alert",
+  "fmActionSaving": "Saving…",
+  "fmClosedNote": "This alert is closed and stays in the history.",
+  "fmCloseConfirmTitle": "Close this alert?",
+  "fmCloseConfirmMessage": "It will leave the pending list and stay in the history. It cannot be reopened.",
+  "fmCancel": "Cancel",
+  "fmFeedbackAttended": "Alert marked as attended.",
+  "fmFeedbackClosed": "Alert closed.",
+  "fmFeedbackConflict": "The alert had already changed. This is its current status.",
+  "fmFeedbackFailed": "We could not update the alert. Try again.",
+  "fmErrorAccess": "The care link is not active or consent is missing, so the follow-up cannot be shown.",
+  "fmErrorListNotFound": "This person has no active follow-up.",
+  "fmErrorDetailNotFound": "This alert does not exist or is no longer available.",
+  "fmErrorUnknown": "We could not load the follow-up. Try again.",
+  "fmDoseUpcoming": "Upcoming reminder",
+  "fmDoseConfirmed": "Dose confirmed",
+  "fmDoseLate": "Dose confirmed late",
+  "fmDosePending": "Pending dose",
+  "fmViewDose": "View dose in summary",
+  "fmConfirmedBadge": "Confirmed",
+  "fmTimelinePerson": "{time}, {name}",
+  "@fmTimelinePerson": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fmDueMinutes": "In {minutes} min",
+  "@fmDueMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "fmDueHoursMinutes": "In {hours} h {minutes} min",
+  "@fmDueHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "fmPersonSummary": "View summary",
+  "fmPersonAge": "{age} years old",
+  "@fmPersonAge": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "fmEventsTitle": "Alert timeline",
+  "fmEventScheduled": "Scheduled dose",
+  "fmEventReinforced": "Reinforced reminder sent",
+  "fmEventOpened": "Alert generated",
+  "fmEventClosed": "Alert closed",
+  "fmContactAction": "Contact",
+  "fmContactActionNamed": "Contact {name}",
+  "@fmContactActionNamed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fmContactUnavailable": "Contact unavailable",
+  "fmContactLoading": "Checking contact…",
+  "fmContactPhone": "Phone: {value}",
+  "@fmContactPhone": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "fmContactWhatsapp": "WhatsApp: {value}",
+  "@fmContactWhatsapp": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "fmContactRetry": "Check contact again",
+  "fmContactNoApp": "No app on this device can open this contact.",
+  "fmContactNone": "No contact channel is registered.",
+  "fmOpenPhone": "Open phone",
+  "fmOpenWhatsapp": "Open WhatsApp",
+  "fmClose": "Close",
+  "fmNotesTitle": "Notes",
+  "fmNotesSubtitle": "Follow-up and observations about the person you care for.",
+  "fmNotesSubtitlePerson": "Follow-up and observations about {name}.",
+  "@fmNotesSubtitlePerson": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fmNotesSection": "Caregiver notes",
+  "fmNotesAdd": "Add note",
+  "fmNotesEmptyTitle": "No notes yet",
+  "fmNotesEmptyMessage": "Write what you did or noticed so the follow-up has a history.",
+  "fmNotesLoading": "Loading notes…",
+  "fmNotesAuthorYou": "You",
+  "fmNotesAuthorOther": "Another caregiver",
+  "fmNotesMeta": "{author} · {date}",
+  "@fmNotesMeta": {
+    "placeholders": {
+      "author": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "fmNotesSharedHistory": "Shared history",
+  "fmNotesSharedHistoryBody": "Notes are linked to the person and the caregiver who records them.",
+  "fmPersonActive": "Active",
+  "fmPersonLinkActive": "Active link",
+  "fmPersonAgeActive": "{age} years old · active link",
+  "@fmPersonAgeActive": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "fmNoteSaved": "Note saved",
+  "fmNoteAddFollowUp": "Add follow-up note",
+  "fmNoteDialogTitle": "New follow-up note",
+  "fmNoteDialogLabel": "What did you do or notice?",
+  "fmNoteDialogCounter": "{count}/{max} characters",
+  "@fmNoteDialogCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "fmNoteDialogSave": "Save note",
+  "fmNoteErrorBlank": "Write the note before saving it.",
+  "fmNoteErrorTooLong": "The note can have up to {max} characters.",
+  "@fmNoteErrorTooLong": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "fmNoteErrorRejected": "The server did not accept the note. Review it and try again.",
+  "fmNoteErrorSave": "We could not save the note. Try again.",
+  "fmSummaryTitle": "Family summary",
+  "fmSummaryLoading": "Loading the summary…",
+  "fmRestrictedTitle": "Restricted follow-up",
+  "fmRestrictedBody": "An active link and the consent of {name} are required to share this information.",
+  "@fmRestrictedBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fmWeeklyAdherence": "Adherence this week",
+  "fmNoData": "No data",
+  "fmNoResolved": "No resolved doses yet",
+  "fmWeeklyConfirmed": "{confirmed} of {total} doses confirmed",
+  "@fmWeeklyConfirmed": {
+    "placeholders": {
+      "confirmed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "fmToday": "Today",
+  "fmDosesCompleted": "doses completed",
+  "fmTodayProgress": "{confirmed} / {total}",
+  "@fmTodayProgress": {
+    "placeholders": {
+      "confirmed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "fmNextDose": "Next dose",
+  "fmNoNextDose": "No upcoming doses",
+  "fmAttention": "Attention",
+  "fmLowStock": "{remaining} units of {name} left.",
+  "@fmLowStock": {
+    "placeholders": {
+      "remaining": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fmNoRestock": "No restock alerts.",
+  "fmInventoryUnavailable": "We could not check the inventory.",
+  "fmCheckMedications": "Review the medications and their quantities.",
+  "fmConsiderRestock": "Consider requesting a restock.",
+  "fmQuickMonitoring": "Quick monitoring",
+  "fmQuickHistory": "History",
+  "fmQuickContact": "Contact",
+  "fmAddMedication": "Add medication",
+  "fmSeeAlerts": "View alerts",
+  "fmMoreTitle": "More options",
+  "fmMoreLinkPerson": "Link another person",
+  "fmMoreRefresh": "Refresh summary",
+  "pnTitle": "Notes",
+  "pnSubtitle": "Notes to support your routine.",
+  "pnToday": "Today",
+  "pnAll": "All",
+  "pnMedications": "Medications",
+  "pnRoutine": "Routine",
+  "pnRecent": "Recent notes",
+  "pnTip": "Tip",
+  "pnTipText": "Notes can help you remember instructions beyond your dose.",
+  "pnAdd": "Add note",
+  "pnEmpty": "No notes in this category.",
+  "pnLoadError": "Could not load your notes.",
+  "pnRetry": "Retry",
+  "pnSignIn": "Sign in with PIN",
+  "pnSaveError": "Your note was not saved. Retry without losing your text.",
+  "pnSubject": "Title",
+  "pnBody": "Note",
+  "pnSave": "Save",
+  "pnCancel": "Cancel"
 }

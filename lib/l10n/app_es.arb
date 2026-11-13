@@ -844,5 +844,308 @@
         "type": "String"
       }
     }
-  }
+  },
+  "fmAlertsTitle": "Alertas",
+  "fmAlertsSubtitle": "Tomas no confirmadas que necesitan tu seguimiento.",
+  "fmFilterAll": "Todas",
+  "fmFilterPending": "Pendientes",
+  "fmFilterUpcoming": "Próximas",
+  "fmFilterCompleted": "Completadas",
+  "fmPendingSummary": "{count, plural, =1{1 alerta pendiente} other{{count} alertas pendientes}}",
+  "@fmPendingSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fmAlertsEmptyTitle": "Sin alertas",
+  "fmAlertsEmptyMessage": "Todo bajo control. Te avisaremos si una toma no se confirma.",
+  "fmAlertsFilterEmpty": "No hay alertas en este filtro.",
+  "fmAlertScheduled": "Programada: {time}",
+  "@fmAlertScheduled": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "fmOpenDetail": "Abrir detalle de la alerta",
+  "fmAlertsLoading": "Consultando alertas…",
+  "fmRetry": "Reintentar",
+  "fmNoPending": "Sin alertas pendientes",
+  "fmStatusOpen": "Pendiente",
+  "fmStatusAttended": "Atendida",
+  "fmStatusClosed": "Cerrada",
+  "fmTitleOpen": "Alerta pendiente",
+  "fmTitleAttended": "Alerta atendida",
+  "fmTitleClosed": "Alerta cerrada",
+  "fmDetailTitle": "Detalle de la alerta",
+  "fmDetailSection": "Información de la alerta",
+  "fmDetailScheduled": "Toma programada",
+  "fmDetailReason": "Motivo",
+  "fmDetailReasonMissing": "No informado",
+  "fmDetailStatus": "Estado",
+  "fmDetailOpened": "Abierta",
+  "fmDetailClosed": "Cerrada",
+  "fmDetailLoading": "Consultando la alerta…",
+  "fmActionsTitle": "Acciones de seguimiento",
+  "fmActionsSubtitle": "Actualiza la alerta según el resultado del seguimiento.",
+  "fmActionsSubtitleNamed": "Contacta a {name} y actualiza la alerta según el resultado.",
+  "@fmActionsSubtitleNamed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fmActionAttend": "Marcar como atendida",
+  "fmActionAttended": "Atendida",
+  "fmActionClose": "Cerrar alerta",
+  "fmActionSaving": "Guardando…",
+  "fmClosedNote": "Esta alerta está cerrada y se conserva en el historial.",
+  "fmCloseConfirmTitle": "¿Cerrar esta alerta?",
+  "fmCloseConfirmMessage": "Saldrá de la lista de pendientes y quedará en el historial. No se puede reabrir.",
+  "fmCancel": "Cancelar",
+  "fmFeedbackAttended": "Alerta marcada como atendida.",
+  "fmFeedbackClosed": "Alerta cerrada.",
+  "fmFeedbackConflict": "La alerta ya había cambiado. Este es su estado actual.",
+  "fmFeedbackFailed": "No pudimos actualizar la alerta. Inténtalo nuevamente.",
+  "fmErrorAccess": "El vínculo de cuidado no está activo o falta el consentimiento, por eso no podemos mostrar el seguimiento.",
+  "fmErrorListNotFound": "Esta persona no tiene un seguimiento activo.",
+  "fmErrorDetailNotFound": "Esta alerta no existe o ya no está disponible.",
+  "fmErrorUnknown": "No pudimos consultar el seguimiento. Inténtalo nuevamente.",
+  "fmDoseUpcoming": "Recordatorio próximo",
+  "fmDoseConfirmed": "Toma confirmada",
+  "fmDoseLate": "Toma confirmada con retraso",
+  "fmDosePending": "Toma pendiente",
+  "fmViewDose": "Ver toma en el resumen",
+  "fmConfirmedBadge": "Confirmada",
+  "fmTimelinePerson": "{time}, {name}",
+  "@fmTimelinePerson": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fmDueMinutes": "En {minutes} min",
+  "@fmDueMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "fmDueHoursMinutes": "En {hours} h {minutes} min",
+  "@fmDueHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "fmPersonSummary": "Ver resumen",
+  "fmPersonAge": "{age} años",
+  "@fmPersonAge": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "fmEventsTitle": "Línea de tiempo de la alerta",
+  "fmEventScheduled": "Toma programada",
+  "fmEventReinforced": "Recordatorio reforzado enviado",
+  "fmEventOpened": "Alerta generada",
+  "fmEventClosed": "Alerta cerrada",
+  "fmContactAction": "Contactar",
+  "fmContactActionNamed": "Contactar a {name}",
+  "@fmContactActionNamed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fmContactUnavailable": "Contacto no disponible",
+  "fmContactLoading": "Consultando contacto…",
+  "fmContactPhone": "Teléfono: {value}",
+  "@fmContactPhone": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "fmContactWhatsapp": "WhatsApp: {value}",
+  "@fmContactWhatsapp": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "fmContactRetry": "Volver a consultar el contacto",
+  "fmContactNoApp": "Ninguna app de este dispositivo puede abrir este contacto.",
+  "fmContactNone": "No hay un canal de contacto registrado.",
+  "fmOpenPhone": "Abrir teléfono",
+  "fmOpenWhatsapp": "Abrir WhatsApp",
+  "fmClose": "Cerrar",
+  "fmNotesTitle": "Notas",
+  "fmNotesSubtitle": "Seguimiento y observaciones sobre la persona que cuidas.",
+  "fmNotesSubtitlePerson": "Seguimiento y observaciones sobre {name}.",
+  "@fmNotesSubtitlePerson": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fmNotesSection": "Notas del cuidador",
+  "fmNotesAdd": "Agregar nota",
+  "fmNotesEmptyTitle": "Aún no hay notas",
+  "fmNotesEmptyMessage": "Registra lo que hiciste u observaste para que el seguimiento tenga historial.",
+  "fmNotesLoading": "Consultando notas…",
+  "fmNotesAuthorYou": "Tú",
+  "fmNotesAuthorOther": "Otro cuidador",
+  "fmNotesMeta": "{author} · {date}",
+  "@fmNotesMeta": {
+    "placeholders": {
+      "author": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "fmNotesSharedHistory": "Historial compartido",
+  "fmNotesSharedHistoryBody": "Las notas quedan asociadas a la persona y al cuidador que las registra.",
+  "fmPersonActive": "Activa",
+  "fmPersonLinkActive": "Vínculo activo",
+  "fmPersonAgeActive": "{age} años · vínculo activo",
+  "@fmPersonAgeActive": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "fmNoteSaved": "Nota guardada",
+  "fmNoteAddFollowUp": "Agregar nota de seguimiento",
+  "fmNoteDialogTitle": "Nueva nota de seguimiento",
+  "fmNoteDialogLabel": "¿Qué hiciste u observaste?",
+  "fmNoteDialogCounter": "{count}/{max} caracteres",
+  "@fmNoteDialogCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "fmNoteDialogSave": "Guardar nota",
+  "fmNoteErrorBlank": "Escribe la nota antes de guardarla.",
+  "fmNoteErrorTooLong": "La nota puede tener hasta {max} caracteres.",
+  "@fmNoteErrorTooLong": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "fmNoteErrorRejected": "El servidor no aceptó la nota. Revísala e inténtalo nuevamente.",
+  "fmNoteErrorSave": "No pudimos guardar la nota. Inténtalo nuevamente.",
+  "fmSummaryTitle": "Resumen familiar",
+  "fmSummaryLoading": "Consultando el resumen…",
+  "fmRestrictedTitle": "Seguimiento restringido",
+  "fmRestrictedBody": "Se requiere un vínculo activo y el consentimiento de {name} para compartir su información.",
+  "@fmRestrictedBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fmWeeklyAdherence": "Adherencia esta semana",
+  "fmNoData": "Sin datos",
+  "fmNoResolved": "Aún no hay tomas resueltas",
+  "fmWeeklyConfirmed": "{confirmed} de {total} tomas confirmadas",
+  "@fmWeeklyConfirmed": {
+    "placeholders": {
+      "confirmed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "fmToday": "Hoy",
+  "fmDosesCompleted": "dosis completadas",
+  "fmTodayProgress": "{confirmed} / {total}",
+  "@fmTodayProgress": {
+    "placeholders": {
+      "confirmed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "fmNextDose": "Próxima dosis",
+  "fmNoNextDose": "No hay próximas tomas",
+  "fmAttention": "Atención",
+  "fmLowStock": "Quedan {remaining} unidades de {name}.",
+  "@fmLowStock": {
+    "placeholders": {
+      "remaining": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fmNoRestock": "No hay alertas de reposición.",
+  "fmInventoryUnavailable": "No pudimos consultar el inventario.",
+  "fmCheckMedications": "Revisa los medicamentos y sus cantidades.",
+  "fmConsiderRestock": "Considera solicitar tu reabastecimiento.",
+  "fmQuickMonitoring": "Monitoreo rápido",
+  "fmQuickHistory": "Historial",
+  "fmQuickContact": "Contactar",
+  "fmAddMedication": "Agregar medicamento",
+  "fmSeeAlerts": "Ver alertas",
+  "fmMoreTitle": "Más opciones",
+  "fmMoreLinkPerson": "Vincular otra persona",
+  "fmMoreRefresh": "Actualizar resumen",
+  "pnTitle": "Notas",
+  "pnSubtitle": "Apuntes para acompañar tu rutina.",
+  "pnToday": "Hoy",
+  "pnAll": "Todas",
+  "pnMedications": "Medicamentos",
+  "pnRoutine": "Rutina",
+  "pnRecent": "Notas recientes",
+  "pnTip": "Consejo",
+  "pnTipText": "Las notas pueden ayudarte a recordar indicaciones que no forman parte de la dosis.",
+  "pnAdd": "Agregar nota",
+  "pnEmpty": "No hay notas en esta categoría.",
+  "pnLoadError": "No pudimos cargar tus notas.",
+  "pnRetry": "Reintentar",
+  "pnSignIn": "Ingresar con PIN",
+  "pnSaveError": "No se guardó la nota. Reintenta conservando tu texto.",
+  "pnSubject": "Título",
+  "pnBody": "Nota",
+  "pnSave": "Guardar",
+  "pnCancel": "Cancelar"
 }
