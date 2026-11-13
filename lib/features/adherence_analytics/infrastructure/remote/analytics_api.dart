@@ -14,10 +14,13 @@ final class AnalyticsApi {
     String olderAdultId,
     int days,
     String zone,
-    String token,
-  ) => _client.request(
+    String token, {
+    String? treatmentId,
+  }) => _client.request(
     'GET',
-    'api/v1/older-adults/${Uri.encodeComponent(olderAdultId)}/adherence/summary',
+    treatmentId == null
+        ? 'api/v1/older-adults/${Uri.encodeComponent(olderAdultId)}/adherence/summary'
+        : 'api/v1/older-adults/${Uri.encodeComponent(olderAdultId)}/adherence/treatments/${Uri.encodeComponent(treatmentId)}/summary',
     token: token,
     queryParameters: {'days': '$days', 'zone': zone},
   );

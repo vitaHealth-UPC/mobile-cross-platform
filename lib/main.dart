@@ -36,6 +36,10 @@ void main() {
                 builder: (_) => CaregiverCareRoute(
                   profile: link,
                   treatments: treatments,
+                  createPersonAdherenceBloc:
+                      dependencies.createAdherenceWeekBloc,
+                  createTreatmentAdherenceBloc:
+                      dependencies.createTreatmentAdherenceBloc,
                   onOpenAdherence: (careContext) => openAdherenceFlow(
                     careContext,
                     link: link,

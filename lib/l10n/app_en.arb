@@ -768,5 +768,50 @@
       }
     }
   },
-  "tmFollowUpHelp": "Wait from 0 to 1440 minutes. Leave empty to use the default delay."
+  "tmFollowUpHelp": "Wait from 0 to 1440 minutes. Leave empty to use the default delay.",
+  "tmTreatmentAdherence": "Adherence for this treatment",
+  "tmTreatmentFor": "Treatment for {name}",
+  "tmManagementSubtitle": "Manage the regimen while preserving history.",
+  "tmActiveMedicationCount": "{count, plural, =1{1 active medication} other{{count} active medications}}",
+  "tmHistoryProtected": "History preserved",
+  "tmHistoryProtectedBody": "Regimen changes preserve recorded intakes.",
+  "tmDeactivateMedication": "Deactivate medication",
+  "@tmTreatmentFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@tmActiveMedicationCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tmAccessRestricted": "Restricted access",
+  "tmAccessRestrictedBody": "This treatment does not belong to a person linked to your account.",
+  "tmReturnToPerson": "Return to linked person",
+  "tmPausedNotice": "Treatment paused",
+  "tmPausedNoticeBody": "New intakes will not be generated while the treatment is paused.",
+  "tmConfigurationIncomplete": "Incomplete configuration",
+  "tmCompleteConfiguration": "Complete configuration",
+  "tmCompleteConfigurationBody": "Review the dose, frequency, times and reminders before activating.",
+  "tmFollowUpCompact": "follow-up +{minutes} min",
+  "@tmFollowUpCompact": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "adherencePercentBadge": "{percent}% adherence",
+  "@adherencePercentBadge": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  }
 }

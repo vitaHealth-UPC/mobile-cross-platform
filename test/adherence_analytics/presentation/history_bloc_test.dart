@@ -21,8 +21,9 @@ final class _Reader implements AdherenceReader {
   @override
   Future<AppResult<AdherenceSummary?>> summary(
     String olderAdultId,
-    int periodDays,
-  ) {
+    int periodDays, {
+    String? treatmentId,
+  }) {
     requests.add((olderAdultId, periodDays));
     return handler(periodDays);
   }

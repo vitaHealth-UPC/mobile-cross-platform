@@ -40,6 +40,18 @@ class _TreatmentSetupScreenState extends State<TreatmentSetupScreen> {
   final _form = GlobalKey<FormState>();
 
   @override
+  void initState() {
+    super.initState();
+    final state = context.read<TreatmentSetupBloc>().state;
+    _name.text = state.treatmentName;
+    _dose.text = state.dose;
+    _frequency.text = state.frequency;
+    _times.text = state.scheduleText;
+    _instructions.text = state.instructions;
+    _delay.text = state.followUpDelayMinutes?.toString() ?? '';
+  }
+
+  @override
   void dispose() {
     for (final controller in [
       _name,
@@ -173,7 +185,36 @@ class _TreatmentSetupScreenState extends State<TreatmentSetupScreen> {
                           ),
                         ),
                       ],
-                      if (error != null) InlineError(error),
+                      if (state.configurationIncomplete)
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFF5DB),
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                text.tmConfigurationIncomplete,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                text.tmCompleteConfigurationBody,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: TataColors.muted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      else if (error != null)
+                        InlineError(error),
                       const SizedBox(height: 24),
                       _actions(context, text, state),
                       if (state.step == TreatmentSetupStep.review &&
@@ -325,6 +366,10 @@ class _TreatmentSetupScreenState extends State<TreatmentSetupScreen> {
           onPressed: state.loading
               ? null
               : () {
+                  if (last && state.configurationIncomplete) {
+                    bloc.add(const TreatmentConfigurationCorrectionRequested());
+                    return;
+                  }
                   if (last) {
                     bloc.add(const TreatmentActivationRequested());
                     return;
@@ -349,6 +394,8 @@ class _TreatmentSetupScreenState extends State<TreatmentSetupScreen> {
           child: Text(
             state.loading
                 ? text.processing
+                : last && state.configurationIncomplete
+                ? text.tmCompleteConfiguration
                 : last
                 ? text.tmActivate
                 : text.tmNext,

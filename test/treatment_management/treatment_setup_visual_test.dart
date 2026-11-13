@@ -123,6 +123,63 @@ void main() {
       });
     }
   }
+  for (final scale in [1.0, 1.5]) {
+    testWidgets(
+      'server-rejected configuration returns to the saved regimen at scale $scale',
+      (tester) async {
+        final backend = FakeBackend();
+        final bloc = setupBloc(backend);
+        addTearDown(bloc.close);
+        bloc.add(const TreatmentDraftSubmitted('Control de presión'));
+        await tester.pump();
+        bloc.add(const RegimenBasicsSubmitted('1 comprimido', 'Cada día'));
+        await tester.pump();
+        bloc.add(const ScheduleSubmitted('08:00', 'Con agua'));
+        await tester.pump();
+        bloc.add(const ReminderSubmitted('10'));
+        await tester.pump();
+        backend.configureFailure = 'INVALID_TREATMENT_CONFIGURATION';
+        await pump(tester, bloc, scale);
+        final activate = find.widgetWithText(
+          ElevatedButton,
+          'Activar tratamiento',
+        );
+        await tester.ensureVisible(activate);
+        await tester.pumpAndSettle();
+        await tester.tap(activate);
+        await tester.pumpAndSettle();
+        expect(find.text('Configuración incompleta'), findsOneWidget);
+        await tester.drag(
+          find.byType(SingleChildScrollView).first,
+          const Offset(0, 1000),
+        );
+        await tester.pumpAndSettle();
+        await captureWidget(
+          tester,
+          find.byKey(const Key('setup-capture')),
+          'treatment_incomplete_${scale == 1 ? 'normal' : 'large'}',
+        );
+        final complete = find.widgetWithText(
+          ElevatedButton,
+          'Completar configuración',
+        );
+        await tester.ensureVisible(complete);
+        await tester.pumpAndSettle();
+        await tester.tap(complete);
+        await tester.pumpAndSettle();
+        expect(bloc.state.step, TreatmentSetupStep.regimen);
+        expect(
+          tester
+              .widget<TextFormField>(find.byKey(const Key('treatment-dose')))
+              .controller!
+              .text,
+          '1 comprimido',
+        );
+        expect(backend.createCalls, 1);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
   testWidgets('returning to saved draft shows an immutable acknowledged name', (
     tester,
   ) async {

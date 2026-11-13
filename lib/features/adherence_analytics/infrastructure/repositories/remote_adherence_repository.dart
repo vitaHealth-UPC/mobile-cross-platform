@@ -30,12 +30,18 @@ final class RemoteAdherenceRepository
   @override
   Future<AppResult<AdherenceSummary?>> summary(
     String olderAdultId,
-    int periodDays,
-  ) => analyticsSessionRequest(
+    int periodDays, {
+    String? treatmentId,
+  }) => analyticsSessionRequest(
     _store,
     olderAdultId,
-    (session) =>
-        _api.summary(olderAdultId, periodDays, _zoneId, session.accessToken),
+    (session) => _api.summary(
+      olderAdultId,
+      periodDays,
+      _zoneId,
+      session.accessToken,
+      treatmentId: treatmentId,
+    ),
     (response) => _read(
       response,
       (body) => AdherenceMapper.summary(body, periodDays: periodDays),

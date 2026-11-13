@@ -775,5 +775,50 @@
       }
     }
   },
-  "tmFollowUpHelp": "Espera de 0 a 1440 minutos. Si lo dejas vacío, se usa la espera predeterminada."
+  "tmFollowUpHelp": "Espera de 0 a 1440 minutos. Si lo dejas vacío, se usa la espera predeterminada.",
+  "tmTreatmentAdherence": "Adherencia de este tratamiento",
+  "tmTreatmentFor": "Tratamiento de {name}",
+  "tmManagementSubtitle": "Gestiona la pauta sin perder historial.",
+  "tmActiveMedicationCount": "{count, plural, =1{1 medicamento activo} other{{count} medicamentos activos}}",
+  "tmHistoryProtected": "Historial protegido",
+  "tmHistoryProtectedBody": "Los cambios de pauta conservan las tomas registradas.",
+  "tmDeactivateMedication": "Desactivar medicamento",
+  "@tmTreatmentFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@tmActiveMedicationCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tmAccessRestricted": "Acceso restringido",
+  "tmAccessRestrictedBody": "Este tratamiento no pertenece a una persona vinculada a tu cuenta.",
+  "tmReturnToPerson": "Volver a Persona vinculada",
+  "tmPausedNotice": "Tratamiento pausado",
+  "tmPausedNoticeBody": "No se generarán nuevas tomas mientras permanezca pausado.",
+  "tmConfigurationIncomplete": "Configuración incompleta",
+  "tmCompleteConfiguration": "Completar configuración",
+  "tmCompleteConfigurationBody": "Revisa dosis, frecuencia, horario y recordatorios antes de activar.",
+  "tmFollowUpCompact": "aviso +{minutes} min",
+  "@tmFollowUpCompact": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "adherencePercentBadge": "{percent}% adherencia",
+  "@adherencePercentBadge": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  }
 }

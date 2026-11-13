@@ -7,6 +7,7 @@ abstract interface class AdherenceReader {
   /// the period has no definitive intakes ("insufficient data"), not an error.
   Future<AppResult<AdherenceSummary?>> summary(
     String olderAdultId,
-    int periodDays,
-  );
+    int periodDays, {
+    String? treatmentId,
+  });
 }

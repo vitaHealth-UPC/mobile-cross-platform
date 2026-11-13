@@ -416,6 +416,17 @@ final class AppDependencies {
     periodDays: adherenceWeekPeriodDays,
   );
 
+  /// Seven-day evidence filtered by the selected treatment, never the adult aggregate.
+  LevelBloc createTreatmentAdherenceBloc(
+    String olderAdultId,
+    String treatmentId,
+  ) => LevelBloc(
+    olderAdultId: olderAdultId,
+    summary: GetAdherenceSummary(_adherence),
+    periodDays: adherenceWeekPeriodDays,
+    treatmentId: treatmentId,
+  );
+
   /// Creates the recommendations state of [olderAdultId]; the server insight is
   /// shown as received and never derived locally.
   RecommendationsBloc createAdherenceRecommendationsBloc(String olderAdultId) =>

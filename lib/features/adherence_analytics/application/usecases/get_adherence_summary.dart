@@ -12,8 +12,9 @@ final class GetAdherenceSummary {
   /// `INVALID_PERIOD` outside 1 to 31 days, before any request is made.
   Future<AppResult<AdherenceSummary?>> call(
     String olderAdultId,
-    int periodDays,
-  ) {
+    int periodDays, {
+    String? treatmentId,
+  }) {
     final adult = olderAdultId.trim();
     if (adult.isEmpty) {
       return Future.value(const AppFailure('INVALID_OLDER_ADULT_REFERENCE'));
@@ -21,6 +22,9 @@ final class GetAdherenceSummary {
     if (periodDays < 1 || periodDays > 31) {
       return Future.value(const AppFailure('INVALID_PERIOD'));
     }
-    return _reader.summary(adult, periodDays);
+    if (treatmentId != null && treatmentId.trim().isEmpty) {
+      return Future.value(const AppFailure('INVALID_TREATMENT_REFERENCE'));
+    }
+    return _reader.summary(adult, periodDays, treatmentId: treatmentId?.trim());
   }
 }

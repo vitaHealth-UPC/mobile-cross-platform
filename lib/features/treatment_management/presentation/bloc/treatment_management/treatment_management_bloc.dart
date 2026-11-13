@@ -136,6 +136,7 @@ final class TreatmentManagementBloc
               instructions: detail.instructions,
               reminderLeadMinutes: detail.reminderLeadMinutes,
               followUpDelayMinutes: detail.followUpDelayMinutes,
+              recurrenceZone: detail.recurrenceZone,
             ),
           ),
         );

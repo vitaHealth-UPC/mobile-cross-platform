@@ -59,8 +59,13 @@ final class TreatmentNavigation {
   Future<void> openTreatments(
     BuildContext context,
     String olderAdultId,
-    VoidCallback onSessionInvalidated,
-  ) => Navigator.of(context).push<void>(
+    VoidCallback onSessionInvalidated, {
+    String? personName,
+    Widget Function(VoidCallback onInvalidated)? personBadgeBuilder,
+    Widget Function(String treatmentId, VoidCallback onInvalidated)?
+    adherenceBuilder,
+    Widget Function(BuildContext context)? navigationBuilder,
+  }) => Navigator.of(context).push<void>(
     MaterialPageRoute(
       builder: (_) => BlocProvider(
         create: (_) =>
@@ -83,6 +88,21 @@ final class TreatmentNavigation {
                     )..add(const TreatmentManagementRequested()),
                     child: Builder(
                       builder: (detailContext) => TreatmentDetailScreen(
+                        personName: personName,
+                        onReturnToPerson: () {
+                          final personRoute = ModalRoute.of(context);
+                          Navigator.of(detailContext).popUntil(
+                            (route) => route == personRoute || route.isFirst,
+                          );
+                        },
+                        personAdherenceBadge: personBadgeBuilder?.call(
+                          _invalidate(detailContext, onSessionInvalidated),
+                        ),
+                        adherence: adherenceBuilder?.call(
+                          treatment.id,
+                          _invalidate(detailContext, onSessionInvalidated),
+                        ),
+                        navigationBar: navigationBuilder?.call(detailContext),
                         onSessionInvalidated: _invalidate(
                           detailContext,
                           onSessionInvalidated,

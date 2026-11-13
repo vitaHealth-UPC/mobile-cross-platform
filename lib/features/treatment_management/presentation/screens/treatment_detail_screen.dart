@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
+import '../../../../shared/presentation/theme/tata_colors.dart';
 import '../../../../shared/presentation/widgets/async_states.dart';
 import '../../application/readmodels/treatment_readmodels.dart';
 import '../../domain/value_objects/treatment_status.dart';
@@ -9,124 +10,68 @@ import '../bloc/treatment_management/treatment_management_bloc.dart';
 import '../bloc/treatment_management/treatment_management_event.dart';
 import '../bloc/treatment_management/treatment_management_state.dart';
 import '../texts/treatment_texts.dart';
+import '../widgets/managed_person_card.dart';
+import '../widgets/regimen_editor.dart';
+import '../widgets/treatment_management_card.dart';
 
 /// Shows one treatment and offers pause, resume, regimen editing and medication
 /// availability. A draft or inactive-medication treatment is shown read-only.
 class TreatmentDetailScreen extends StatelessWidget {
-  const TreatmentDetailScreen({super.key, required this.onSessionInvalidated});
+  const TreatmentDetailScreen({
+    super.key,
+    required this.onSessionInvalidated,
+    this.personName,
+    this.onReturnToPerson,
+    this.personAdherenceBadge,
+    this.adherence,
+    this.navigationBar,
+  });
 
   final VoidCallback onSessionInvalidated;
+  final String? personName;
+  final VoidCallback? onReturnToPerson;
+  final Widget? personAdherenceBadge;
+
+  /// Host-composed treatment-scoped analytics, without a cross-context import.
+  final Widget? adherence;
+  final Widget? navigationBar;
 
   Future<void> _editRegimen(
     BuildContext context,
     TreatmentDetail detail,
   ) async {
     final bloc = context.read<TreatmentManagementBloc>();
-    final text = AppLocalizations.of(context);
-    final dose = TextEditingController(text: detail.dose);
-    final frequency = TextEditingController(text: detail.frequency);
-    final times = TextEditingController(text: detail.scheduledTimes.join(', '));
-    final instructions = TextEditingController(text: detail.instructions);
-    final delay = TextEditingController(
-      text: detail.followUpDelayMinutes?.toString() ?? '',
+    final event = await showDialog<RegimenEdited>(
+      context: context,
+      builder: (_) => RegimenEditor(detail: detail),
     );
-    final form = GlobalKey<FormState>();
-    String? required(String? value) =>
-        value == null || value.trim().isEmpty ? text.tmRequiredField : null;
+    if (event != null && context.mounted) bloc.add(event);
+  }
+
+  Future<void> _deactivateMedication(BuildContext context) async {
+    final bloc = context.read<TreatmentManagementBloc>();
+    final text = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(text.tmEditRegimen),
-        content: SingleChildScrollView(
-          child: Form(
-            key: form,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  key: const Key('edit-dose'),
-                  controller: dose,
-                  decoration: InputDecoration(labelText: text.tmDose),
-                  validator: required,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  key: const Key('edit-frequency'),
-                  controller: frequency,
-                  decoration: InputDecoration(labelText: text.tmFrequency),
-                  validator: required,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  key: const Key('edit-times'),
-                  controller: times,
-                  decoration: InputDecoration(labelText: text.tmScheduleTimes),
-                  validator: required,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  key: const Key('edit-instructions'),
-                  controller: instructions,
-                  maxLines: 3,
-                  decoration: InputDecoration(labelText: text.tmInstructions),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  key: const Key('edit-delay'),
-                  controller: delay,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(labelText: text.tmFollowUpDelay),
-                ),
-              ],
-            ),
-          ),
-        ),
+        title: Text(text.tmDeactivateTitle),
+        content: Text(text.tmDeactivateBody),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
+            onPressed: () => Navigator.of(dialogContext).pop(false),
             child: Text(text.tmCancel),
           ),
           TextButton(
-            onPressed: () {
-              if (form.currentState!.validate()) {
-                Navigator.pop(dialogContext, true);
-              }
-            },
-            child: Text(text.tmSave),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(text.tmDeactivate),
           ),
         ],
       ),
     );
-    final event = RegimenEdited(
-      dose: dose.text,
-      frequency: frequency.text,
-      scheduleText: times.text,
-      instructions: instructions.text,
-      delayMinutes: delay.text,
-    );
-    for (final controller in [dose, frequency, times, instructions, delay]) {
-      controller.dispose();
+    if (confirmed == true && context.mounted) {
+      bloc.add(const TreatmentMedicationDeactivated());
     }
-    if (confirmed == true) bloc.add(event);
   }
-
-  Widget _line(String label, String value) => Padding(
-    padding: const EdgeInsets.only(bottom: 8),
-    child: Semantics(
-      container: true,
-      child: Text.rich(
-        TextSpan(
-          children: [
-            TextSpan(
-              text: '$label: ',
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-            TextSpan(text: value),
-          ],
-        ),
-      ),
-    ),
-  );
 
   @override
   Widget build(BuildContext context) {
@@ -142,71 +87,185 @@ class TreatmentDetailScreen extends StatelessWidget {
       },
       builder: (context, state) {
         final bloc = context.read<TreatmentManagementBloc>();
-        final detail = state.detail;
+        final name = personName?.trim();
+        final knownName = name != null && name.isNotEmpty;
         return Scaffold(
-          appBar: AppBar(title: Text(detail?.name ?? text.tmDetailTitle)),
-          body: switch (state.status) {
-            TreatmentManagementStatus.loading => const Center(
-              child: CircularProgressIndicator(),
-            ),
-            TreatmentManagementStatus.failure => ErrorRetry(
-              message: treatmentErrorText(text, state.errorCode)!,
-              retryLabel: text.tmRetry,
-              onRetry: () => bloc.add(const TreatmentManagementRequested()),
-            ),
-            TreatmentManagementStatus.ready => SafeArea(
-              child: ListView(
-                padding: const EdgeInsets.all(22),
-                children: [
-                  _line(
-                    text.tmDetailTitle,
-                    treatmentStatusText(text, detail!.status),
-                  ),
-                  if (state.medication != null)
-                    _line(text.tmMedicationLabel, state.medication!.label),
-                  if (!state.manageable) Text(text.tmDraftIncomplete),
-                  if (detail.configured) ...[
-                    _line(text.tmDoseShort, detail.dose!),
-                    _line(text.tmFrequencyShort, detail.frequency!),
-                    _line(text.tmTimesShort, detail.scheduledTimes.join(', ')),
-                    if (detail.instructions.trim().isNotEmpty)
-                      _line(text.tmInstructionsShort, detail.instructions),
-                    _line(
-                      text.tmFollowUpShort,
-                      detail.followUpDelayMinutes == null
-                          ? text.tmDefaultFollowUp
-                          : '${detail.followUpDelayMinutes} min',
-                    ),
-                  ],
-                  if (state.medicationInactive) ...[
-                    const SizedBox(height: 8),
-                    Text(text.tmMedicationInactiveNotice),
-                  ],
-                  const SizedBox(height: 16),
-                  if (state.manageable && !state.medicationInactive) ...[
-                    if (detail.status == TreatmentStatus.active)
-                      ElevatedButton(
-                        onPressed: state.busy
-                            ? null
-                            : () => bloc.add(const TreatmentPauseRequested()),
-                        child: Text(text.tmPause),
-                      ),
-                    if (detail.status == TreatmentStatus.paused)
-                      ElevatedButton(
-                        onPressed: state.busy
-                            ? null
-                            : () => bloc.add(const TreatmentResumeRequested()),
-                        child: Text(text.tmResume),
-                      ),
-                    const SizedBox(height: 8),
-                    OutlinedButton(
+          bottomNavigationBar: navigationBar,
+          body: SafeArea(
+            bottom: navigationBar == null,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(22, 28, 22, 24),
+              children: [
+                Row(
+                  children: [
+                    IconButton(
+                      tooltip: text.back,
                       onPressed: state.busy
                           ? null
-                          : () => _editRegimen(context, detail),
-                      child: Text(text.tmEditRegimen),
+                          : () => Navigator.of(context).maybePop(),
+                      icon: const Icon(
+                        Icons.chevron_left,
+                        color: TataColors.primary,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        knownName &&
+                                state.status !=
+                                    TreatmentManagementStatus.failure
+                            ? text.tmTreatmentFor(
+                                name.split(RegExp(r'\s+')).first,
+                              )
+                            : text.tmDetailTitle,
+                        style: const TextStyle(
+                          fontFamily: 'DMSerifDisplay',
+                          fontSize: 29,
+                          color: TataColors.ink,
+                        ),
+                      ),
                     ),
                   ],
-                  if (state.medicationInactive)
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  text.tmManagementSubtitle,
+                  style: const TextStyle(fontSize: 12, color: TataColors.muted),
+                ),
+                const SizedBox(height: 20),
+                if (state.status == TreatmentManagementStatus.loading)
+                  const Center(child: CircularProgressIndicator())
+                else if (state.status == TreatmentManagementStatus.failure &&
+                    state.errorCode == 'ACCESS_DENIED')
+                  Column(
+                    children: [
+                      const SizedBox(height: 40),
+                      Container(
+                        width: 62,
+                        height: 62,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF5DB),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: const Color(0xFFC2944D)),
+                        ),
+                        child: const Text(
+                          '!',
+                          style: TextStyle(
+                            fontSize: 30,
+                            color: Color(0xFFAD2E3D),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        width: double.infinity,
+                        constraints: const BoxConstraints(minHeight: 226),
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFCE8EB),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              text.tmAccessRestricted,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 21,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            Text(
+                              text.tmAccessRestrictedBody,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: TataColors.muted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed:
+                              onReturnToPerson ??
+                              () => Navigator.of(context).maybePop(),
+                          child: Text(text.tmReturnToPerson),
+                        ),
+                      ),
+                    ],
+                  )
+                else if (state.status == TreatmentManagementStatus.failure)
+                  ErrorRetry(
+                    message: treatmentErrorText(text, state.errorCode)!,
+                    retryLabel: text.tmRetry,
+                    onRetry: () =>
+                        bloc.add(const TreatmentManagementRequested()),
+                  )
+                else ...[
+                  if (knownName) ...[
+                    ManagedPersonCard(
+                      name: name,
+                      activeMedicationCount: state.activeMedicationCount,
+                      adherenceBadge: personAdherenceBadge,
+                    ),
+                    const SizedBox(height: 18),
+                  ],
+                  TreatmentManagementCard(
+                    state: state,
+                    onEdit: () => _editRegimen(context, state.detail!),
+                    onPause: () => bloc.add(const TreatmentPauseRequested()),
+                    onResume: () => bloc.add(const TreatmentResumeRequested()),
+                  ),
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF3E2),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          text.tmHistoryProtected,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          text.tmHistoryProtectedBody,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: TataColors.muted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  if (state.medication?.active == true)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton(
+                        key: const Key('deactivate-treatment-medication'),
+                        style: TextButton.styleFrom(
+                          foregroundColor: const Color(0xFFC72E3D),
+                        ),
+                        onPressed: state.busy
+                            ? null
+                            : () => _deactivateMedication(context),
+                        child: Text(text.tmDeactivateMedication),
+                      ),
+                    )
+                  else if (state.medicationInactive)
                     OutlinedButton(
                       onPressed: state.busy
                           ? null
@@ -217,10 +276,45 @@ class TreatmentDetailScreen extends StatelessWidget {
                     ),
                   if (state.errorCode != null)
                     InlineError(treatmentErrorText(text, state.errorCode)!),
+                  if (adherence != null) ...[
+                    const SizedBox(height: 8),
+                    adherence!,
+                  ],
+                  if (state.detail?.status == TreatmentStatus.paused) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF5E0),
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            text.tmPausedNotice,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF855E1F),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            text.tmPausedNoticeBody,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: TataColors.muted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
-              ),
+              ],
             ),
-          },
+          ),
         );
       },
     );
