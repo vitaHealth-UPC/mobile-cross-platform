@@ -820,5 +820,29 @@
         "type": "int"
       }
     }
+  },
+  "oeChannelReminders": "Recordatorios de medicamentos",
+  "oeChannelRemindersDescription": "Segundo recordatorio mientras una toma sigue pendiente.",
+  "oeChannelAlerts": "Alertas para el cuidador",
+  "oeChannelAlertsDescription": "Tomas que no se confirmaron a tiempo.",
+  "oeReminderTitle": "Segundo recordatorio",
+  "oeReminderText": "La toma sigue pendiente. Confírmala cuando la realices.",
+  "oeReminderTextNamed": "{medication} sigue pendiente. Confírmala cuando la realices.",
+  "@oeReminderTextNamed": {
+    "placeholders": {
+      "medication": {
+        "type": "String"
+      }
+    }
+  },
+  "oeAlertTitle": "Toma no confirmada",
+  "oeAlertText": "Una toma no se confirmó a tiempo. Revisa la alerta y cómo se encuentra.",
+  "oeAlertTextNamed": "{medication} no se confirmó a tiempo. Revisa la alerta y cómo se encuentra.",
+  "@oeAlertTextNamed": {
+    "placeholders": {
+      "medication": {
+        "type": "String"
+      }
+    }
   }
 }

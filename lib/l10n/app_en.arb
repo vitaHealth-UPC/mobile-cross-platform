@@ -813,5 +813,29 @@
         "type": "int"
       }
     }
+  },
+  "oeChannelReminders": "Medication reminders",
+  "oeChannelRemindersDescription": "Second reminder while a dose is still pending.",
+  "oeChannelAlerts": "Caregiver alerts",
+  "oeChannelAlertsDescription": "Doses that were not confirmed in time.",
+  "oeReminderTitle": "Second reminder",
+  "oeReminderText": "The dose is still pending. Confirm it when you take it.",
+  "oeReminderTextNamed": "{medication} is still pending. Confirm it when you take it.",
+  "@oeReminderTextNamed": {
+    "placeholders": {
+      "medication": {
+        "type": "String"
+      }
+    }
+  },
+  "oeAlertTitle": "Dose not confirmed",
+  "oeAlertText": "A dose was not confirmed in time. Check the alert and how they are doing.",
+  "oeAlertTextNamed": "{medication} was not confirmed in time. Check the alert and how they are doing.",
+  "@oeAlertTextNamed": {
+    "placeholders": {
+      "medication": {
+        "type": "String"
+      }
+    }
   }
 }
