@@ -1147,5 +1147,33 @@
   "pnSubject": "Título",
   "pnBody": "Nota",
   "pnSave": "Guardar",
-  "pnCancel": "Cancelar"
+  "pnCancel": "Cancelar",
+  "voiceTitle": "Confirmar con voz",
+  "voiceSubtitle": "Di la frase en voz alta",
+  "voiceReady": "Listo para escuchar",
+  "voiceListening": "Escuchando...",
+  "voiceProcessing": "Validando...",
+  "voiceNotRecognized": "No reconocida",
+  "voiceUnavailable": "No disponible",
+  "voicePermissionOff": "Micrófono desactivado",
+  "voiceSuggested": "Frase sugerida",
+  "voicePhrase": "“Confirmo que tomé {medication}.”",
+  "voiceNotSaved": "Confirmación no registrada",
+  "voiceRetryHint": "Reintenta o confirma por toque desde Inicio.",
+  "voicePermissionHint": "Permite el micrófono para confirmar por voz o vuelve para confirmar por toque.",
+  "voiceUnavailableHint": "El reconocimiento de voz no está disponible ahora. Confirma por toque desde Inicio.",
+  "voiceDisabledHint": "La confirmación por voz está desactivada en tus preferencias.",
+  "voiceOfflineHint": "La voz necesita conexión. Sin internet, confirma por toque y la enviaremos después.",
+  "voiceRetry": "Reintentar",
+  "voiceStart": "Comenzar",
+  "voiceCancel": "Cancelar",
+  "voiceListen": "Escuchar la frase",
+  "voiceStopSemantics": "Terminar y enviar",
+  "@voicePhrase": {
+    "placeholders": {
+      "medication": {
+        "type": "String"
+      }
+    }
+  }
 }

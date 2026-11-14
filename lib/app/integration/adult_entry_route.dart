@@ -8,12 +8,15 @@ import '../../features/identity_subscription/application/readmodels/remembered_a
 import '../../features/identity_subscription/presentation/bloc/pin/pin_bloc.dart';
 import '../../features/identity_subscription/presentation/navigation/pin_route.dart';
 import '../../features/intake_execution/application/ports/intake_sync.dart';
+import '../../features/intake_execution/application/ports/voice_confirmation.dart';
 import '../../features/intake_execution/presentation/bloc/agenda/agenda_bloc.dart';
 import '../../features/intake_execution/presentation/bloc/dose/dose_bloc.dart';
 import '../../features/intake_execution/presentation/bloc/home/home_bloc.dart';
+import '../../features/intake_execution/presentation/bloc/voice/voice_bloc.dart';
 import '../../features/intake_execution/presentation/navigation/adult_home_route.dart';
 import '../../features/intake_execution/presentation/navigation/agenda_route.dart';
 import '../../features/intake_execution/presentation/navigation/dose_route.dart';
+import '../../features/intake_execution/presentation/navigation/voice_route.dart';
 import '../../features/omission_escalation/application/services/omission_push_facade.dart';
 import '../../features/omission_escalation/presentation/widgets/follow_omission_push.dart';
 import '../../features/treatment_management/presentation/navigation/treatment_navigation.dart';
@@ -34,6 +37,8 @@ class AdultEntryRoute extends StatefulWidget {
     required this.createHomeBloc,
     required this.createAgendaBloc,
     required this.createDoseBloc,
+    this.createVoiceBloc,
+    this.createPhraseSpeaker,
     required this.createConsentBloc,
     required this.onSignOut,
     required this.onSessionChanged,
@@ -57,6 +62,10 @@ class AdultEntryRoute extends StatefulWidget {
   final HomeBloc Function() createHomeBloc;
   final AgendaBloc Function() createAgendaBloc;
   final DoseBloc Function(String intakeId) createDoseBloc;
+
+  /// Spoken confirmation; without it the home shortcut stays disabled.
+  final VoiceBloc Function(String intakeId)? createVoiceBloc;
+  final PhraseSpeaker Function()? createPhraseSpeaker;
   final ConsentBloc Function() createConsentBloc;
   final IntakeSync? intakeSync;
   final VoidCallback onSignOut;
@@ -211,6 +220,23 @@ class _AdultEntryRouteState extends State<AdultEntryRoute> {
     );
   }
 
+  Future<void> _openVoice(BuildContext context, String intakeId) {
+    final create = widget.createVoiceBloc!;
+    final speaker = widget.createPhraseSpeaker?.call();
+    return Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (routeContext) => VoiceRoute(
+          createBloc: () => create(intakeId),
+          speaker: speaker,
+          onBack: () => Navigator.of(routeContext).pop(),
+          onBackHome: () =>
+              Navigator.of(routeContext).popUntil((route) => route.isFirst),
+          onSessionInvalidated: () => _leaveForRevalidation(routeContext),
+        ),
+      ),
+    );
+  }
+
   Future<void> _openDose(BuildContext context, String intakeId) =>
       Navigator.of(context).push<void>(
         MaterialPageRoute(
@@ -359,6 +385,9 @@ class _AdultEntryRouteState extends State<AdultEntryRoute> {
             ? null
             : () => _openMedications(context),
         onOpenDose: (intakeId) => _openDose(context, intakeId),
+        onOpenVoice: widget.createVoiceBloc == null
+            ? null
+            : (intakeId) => _openVoice(context, intakeId),
         onSessionInvalidated: widget.onSessionChanged,
       ),
     ),
