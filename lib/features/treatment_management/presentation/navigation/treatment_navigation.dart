@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../domain/entities/medication.dart';
 import '../bloc/medication_management/medication_management_bloc.dart';
 import '../bloc/medication_management/medication_management_event.dart';
 import '../bloc/medication_registration/medication_registration_bloc.dart';
@@ -131,15 +132,18 @@ final class TreatmentNavigation {
   );
 
   /// Medication catalog of [olderAdultId] with registration, edition and treatments.
+  /// [onOpenInventory] lets the host open the stock of a medication.
   Future<void> openMedications(
     BuildContext context,
     String olderAdultId,
-    VoidCallback onSessionInvalidated,
-  ) => _openMedicationManagement(
+    VoidCallback onSessionInvalidated, {
+    void Function(BuildContext context, Medication medication)? onOpenInventory,
+  }) => _openMedicationManagement(
     context,
     olderAdultId,
     onSessionInvalidated,
     picking: false,
+    onOpenInventory: onOpenInventory,
   );
 
   Future<void> _openMedicationManagement(
@@ -147,6 +151,7 @@ final class TreatmentNavigation {
     String olderAdultId,
     VoidCallback onSessionInvalidated, {
     required bool picking,
+    void Function(BuildContext context, Medication medication)? onOpenInventory,
   }) => Navigator.of(context).push<void>(
     MaterialPageRoute(
       builder: (_) => BlocProvider(
@@ -156,6 +161,10 @@ final class TreatmentNavigation {
         child: Builder(
           builder: (medicationsContext) => MedicationManagementScreen(
             pickingForTreatment: picking,
+            onOpenInventory: onOpenInventory == null
+                ? null
+                : (medication) =>
+                      onOpenInventory(medicationsContext, medication),
             onSessionInvalidated: _invalidate(
               medicationsContext,
               onSessionInvalidated,

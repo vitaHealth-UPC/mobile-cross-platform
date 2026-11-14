@@ -11,6 +11,7 @@ import 'features/care_link/presentation/navigation/caregiver_setup_route.dart';
 import 'features/care_link/presentation/navigation/consent_route.dart';
 import 'features/family_monitoring/presentation/navigation/family_monitoring_navigation.dart';
 import 'features/identity_subscription/presentation/bloc/access/access_bloc.dart';
+import 'features/inventory_replenishment/presentation/navigation/inventory_navigation.dart';
 import 'features/treatment_management/presentation/navigation/treatment_navigation.dart';
 
 /// Initializes Flutter platform bindings and composes production dependencies.
@@ -19,6 +20,7 @@ Future<void> main() async {
   final dependencies = AppDependencies.production();
   final treatments = TreatmentNavigation(dependencies.treatmentFactories);
   final preferences = PreferencesNavigation(dependencies.preferencesFactories);
+  final inventory = InventoryNavigation(dependencies.createInventoryBloc);
   final monitoring = FamilyMonitoringNavigation(
     dependencies.familyMonitoringFactories,
   );
@@ -77,6 +79,7 @@ Future<void> main() async {
                     treatments: treatments,
                     monitoring: monitoring,
                     push: push,
+                    inventory: inventory,
                     createPersonAdherenceBloc:
                         dependencies.createAdherenceWeekBloc,
                     createTreatmentAdherenceBloc:
