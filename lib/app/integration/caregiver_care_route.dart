@@ -5,6 +5,7 @@ import '../../features/adherence_analytics/presentation/bloc/level/level_bloc.da
 import '../../features/adherence_analytics/presentation/navigation/adherence_badge_view.dart';
 import '../../features/adherence_analytics/presentation/navigation/treatment_adherence_view.dart';
 import '../../features/care_link/application/readmodels/caregiver_link_summary.dart';
+import '../../features/family_monitoring/application/readmodels/monitoring_readmodels.dart';
 import '../../features/family_monitoring/presentation/navigation/family_monitoring_navigation.dart';
 import '../../features/inventory_replenishment/presentation/navigation/inventory_navigation.dart';
 import '../../features/omission_escalation/application/services/omission_push_facade.dart';
@@ -69,6 +70,14 @@ class CaregiverCareRoute extends StatelessWidget {
         onPerson: () => Navigator.of(inner).maybePop(),
         onMore: () => _openMore(inner),
         onSessionInvalidated: onSessionInvalidated,
+        onOpenStock: inventory == null
+            ? null
+            : (StockAttention stock) => _openInventory(
+                inner,
+                inner,
+                stock.medicationId,
+                stock.medicationName,
+              ),
       ),
     ),
   );
@@ -77,29 +86,36 @@ class CaregiverCareRoute extends StatelessWidget {
   void Function(BuildContext, Medication)? _inventoryOpener(
     BuildContext personContext,
   ) {
-    final navigation = inventory;
-    if (navigation == null) return null;
-    return (context, medication) => navigation.open(
-      context,
-      medicationId: medication.id,
-      medicationLabel: medication.label,
-      personName: profile.fullName,
-      onSessionInvalidated: onSessionInvalidated,
-      navigationBuilder: (inventoryContext) => CaregiverTabBar(
-        selected: CaregiverTab.person,
-        enabledTabs: const {CaregiverTab.home, CaregiverTab.person},
-        onSelected: (tab) {
-          final navigator = Navigator.of(inventoryContext);
-          if (tab == CaregiverTab.home) {
-            navigator.popUntil((route) => route.isFirst);
-          } else {
-            final person = ModalRoute.of(personContext);
-            navigator.popUntil((route) => route == person || route.isFirst);
-          }
-        },
-      ),
-    );
+    if (inventory == null) return null;
+    return (context, medication) =>
+        _openInventory(context, personContext, medication.id, medication.label);
   }
+
+  Future<void> _openInventory(
+    BuildContext context,
+    BuildContext personContext,
+    String medicationId,
+    String medicationLabel,
+  ) => inventory!.open(
+    context,
+    medicationId: medicationId,
+    medicationLabel: medicationLabel,
+    personName: profile.fullName,
+    onSessionInvalidated: onSessionInvalidated,
+    navigationBuilder: (inventoryContext) => CaregiverTabBar(
+      selected: CaregiverTab.person,
+      enabledTabs: const {CaregiverTab.home, CaregiverTab.person},
+      onSelected: (tab) {
+        final navigator = Navigator.of(inventoryContext);
+        if (tab == CaregiverTab.home) {
+          navigator.popUntil((route) => route.isFirst);
+        } else {
+          final person = ModalRoute.of(personContext);
+          navigator.popUntil((route) => route == person || route.isFirst);
+        }
+      },
+    ),
+  );
 
   void _openMore(BuildContext context) {
     final text = AppLocalizations.of(context);

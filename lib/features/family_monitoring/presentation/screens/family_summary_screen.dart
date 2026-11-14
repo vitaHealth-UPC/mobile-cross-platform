@@ -23,6 +23,7 @@ class FamilySummaryScreen extends StatelessWidget {
     this.onAddMedication,
     this.onOpenAlerts,
     this.onLinkAnother,
+    this.onOpenStock,
   });
 
   final ContactLauncher launcher;
@@ -31,6 +32,9 @@ class FamilySummaryScreen extends StatelessWidget {
   final VoidCallback? onAddMedication;
   final VoidCallback? onOpenAlerts;
   final VoidCallback? onLinkAnother;
+
+  /// Opens the stock of a medication that needs restocking; owned by the host.
+  final ValueChanged<StockAttention>? onOpenStock;
 
   @override
   Widget build(BuildContext context) {
@@ -81,6 +85,7 @@ class FamilySummaryScreen extends StatelessWidget {
                         onAddMedication: onAddMedication,
                         onOpenAlerts: onOpenAlerts,
                         onLinkAnother: onLinkAnother,
+                        onOpenStock: onOpenStock,
                       ),
                   ],
                 ),
@@ -147,6 +152,7 @@ class _Content extends StatelessWidget {
     this.onAddMedication,
     this.onOpenAlerts,
     this.onLinkAnother,
+    this.onOpenStock,
   });
 
   final FamilySummary summary;
@@ -154,6 +160,7 @@ class _Content extends StatelessWidget {
   final VoidCallback? onAddMedication;
   final VoidCallback? onOpenAlerts;
   final VoidCallback? onLinkAnother;
+  final ValueChanged<StockAttention>? onOpenStock;
 
   @override
   Widget build(BuildContext context) {
@@ -295,7 +302,18 @@ class _Content extends StatelessWidget {
                 Text(text.fmNoRestock)
               else
                 for (final stock in summary.stockAttention)
-                  Text(text.fmLowStock(stock.remaining, stock.medicationName)),
+                  if (onOpenStock case final open?)
+                    _StockLine(
+                      label: text.fmLowStock(
+                        stock.remaining,
+                        stock.medicationName,
+                      ),
+                      onTap: () => open(stock),
+                    )
+                  else
+                    Text(
+                      text.fmLowStock(stock.remaining, stock.medicationName),
+                    ),
             ],
           ),
         ),
@@ -339,6 +357,33 @@ class _Content extends StatelessWidget {
     final value = counts.percentage;
     return value == null ? text.fmNoData : '${value.round()}%';
   }
+}
+
+/// Low-stock line that leads to the medication's inventory (US-42 to US-43).
+class _StockLine extends StatelessWidget {
+  const _StockLine({required this.label, required this.onTap});
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 48),
+        child: Row(
+          children: [
+            Expanded(child: Text(label)),
+            const ExcludeSemantics(
+              child: Icon(Icons.chevron_right, color: TataColors.infoText),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 class _QuickAction extends StatelessWidget {

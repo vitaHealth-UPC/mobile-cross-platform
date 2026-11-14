@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tata/features/family_monitoring/application/ports/contact_launcher.dart';
@@ -153,6 +155,8 @@ void main() {
     VoidCallback? onMore,
     VoidCallback? onInvalidated,
     VoidCallback? onHistory,
+    FutureOr<void> Function()? onAddMedication,
+    FutureOr<void> Function(StockAttention stock)? onOpenStock,
   }) async {
     tester.view.physicalSize = const Size(393, 883);
     tester.view.devicePixelRatio = 1;
@@ -168,10 +172,11 @@ void main() {
           olderAdultId: 'adult-1',
           olderAdultName: 'Rosa Vargas',
           onHistory: onHistory ?? () {},
-          onAddMedication: () {},
+          onAddMedication: onAddMedication ?? () {},
           onPerson: onPerson ?? () {},
           onMore: onMore ?? () {},
           onSessionInvalidated: onInvalidated ?? () {},
+          onOpenStock: onOpenStock,
         ),
       ),
     );
@@ -219,6 +224,62 @@ void main() {
     expect((person, more), (1, 1));
     // The shell stays where it was.
     expect(find.text('Resumen familiar'), findsOneWidget);
+  });
+
+  testWidgets('a low stock line opens its inventory and refreshes on return', (
+    tester,
+  ) async {
+    final home = navigation();
+    summaries.result = AppSuccess(
+      FamilySummary(
+        olderAdultName: 'Rosa Vargas',
+        date: DateTime(2026, 11, 13),
+        weekly: AdherenceCounts(5, 7),
+        today: AdherenceCounts(1, 2),
+        nextDose: null,
+        stockAttention: const [
+          StockAttention(
+            medicationId: 'med-1',
+            medicationName: 'Losartán',
+            remaining: 5,
+          ),
+        ],
+        openAlerts: const [],
+        inventoryAvailable: true,
+      ),
+    );
+    final opened = <String>[];
+    final inventory = Completer<void>();
+    await pumpHome(
+      tester,
+      home,
+      onOpenStock: (stock) {
+        opened.add(stock.medicationId);
+        return inventory.future;
+      },
+    );
+    await tester.tap(find.text('Quedan 5 unidades de Losartán.'));
+    await tester.pump();
+    expect(opened, ['med-1']);
+    final readsBefore = summaries.reads;
+
+    inventory.complete();
+    await tester.pumpAndSettle();
+    expect(summaries.reads, readsBefore + 1);
+  });
+
+  testWidgets('returning from the medications reads the summary again', (
+    tester,
+  ) async {
+    final home = navigation();
+    final medications = Completer<void>();
+    await pumpHome(tester, home, onAddMedication: () => medications.future);
+    await tester.tap(find.text('Agregar medicamento'));
+    await tester.pump();
+    final readsBefore = summaries.reads;
+    medications.complete();
+    await tester.pumpAndSettle();
+    expect(summaries.reads, readsBefore + 1);
   });
 
   testWidgets('opens an alert and refreshes the lists on return', (
