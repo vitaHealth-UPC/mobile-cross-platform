@@ -71,7 +71,10 @@ class FamilySummaryScreen extends StatelessWidget {
                   children: [
                     MonitoringHeader(
                       title: text.fmSummaryTitle,
-                      subtitle: summary?.olderAdultName,
+                      // The name stays visible even when the summary is refused.
+                      subtitle:
+                          summary?.olderAdultName ??
+                          context.read<FamilySummaryBloc>().olderAdultName,
                     ),
                     const SizedBox(height: 20),
                     if (state.status == FamilySummaryStatus.failure)
@@ -119,21 +122,33 @@ class _Failure extends StatelessWidget {
     final text = AppLocalizations.of(context);
     final code = state.errorCode;
     if (isAccessFailure(code)) {
-      return MonitoringCard(
-        color: TataColors.lavender,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              text.fmRestrictedTitle,
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              text.fmErrorAccess,
-              style: const TextStyle(color: TataColors.muted),
-            ),
-          ],
+      // Figma 563:2308: a warm, centred card that names the person.
+      final name = context.read<FamilySummaryBloc>().olderAdultName;
+      return Semantics(
+        liveRegion: true,
+        container: true,
+        child: MonitoringCard(
+          color: const Color(0xFFFFF4E2),
+          padding: const EdgeInsets.fromLTRB(24, 56, 24, 64),
+          child: Column(
+            children: [
+              Text(
+                text.fmRestrictedTitle,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 20,
+                  color: TataColors.ink,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                text.fmRestrictedBody(name),
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 14, color: Color(0xFF4F5B70)),
+              ),
+            ],
+          ),
         ),
       );
     }

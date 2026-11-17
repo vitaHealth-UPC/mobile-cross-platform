@@ -655,6 +655,8 @@ void main() {
       );
       expect(find.text('Seguimiento restringido'), findsOneWidget);
       expect(find.text('71%'), findsNothing);
+      // Figma 563:2308 names the person, and the header keeps the name.
+      expect(find.textContaining('consentimiento de Rosa'), findsOneWidget);
     });
 
     testWidgets('the history action is handed to the host', (tester) async {
