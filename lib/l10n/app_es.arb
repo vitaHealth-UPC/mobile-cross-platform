@@ -1270,5 +1270,72 @@
   "invErrInvalidResponse": "El servicio devolvió datos inesperados.",
   "invErrGeneric": "No pudimos completar la solicitud. Inténtalo de nuevo.",
   "homeAgendaClearTitle": "Agenda al día",
-  "homeAgendaClearBody": "No existen próximas tomas pendientes."
+  "homeAgendaClearBody": "No existen próximas tomas pendientes.",
+  "subTitle": "Plan y suscripción",
+  "subSubtitle": "Administra las capacidades de tu cuenta.",
+  "subCurrentPlan": "Plan {name}",
+  "@subCurrentPlan": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "subPerMonth": "{price} / mes",
+  "@subPerMonth": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "subActiveRenews": "Activo, renovación {date}",
+  "@subActiveRenews": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "subActive": "Activo",
+  "subInactive": "Inactivo",
+  "subCurrentBadge": "Plan actual",
+  "subSelectedBadge": "Seleccionado",
+  "subChange": "Cambiar plan",
+  "subChanging": "Cambiando…",
+  "subSelectHint": "Elige otro plan para cambiarlo.",
+  "subNextRenewal": "Próxima renovación",
+  "subKeepsHistory": "El cambio de plan conserva tu historial y vínculos.",
+  "subUpdatedTitle": "Suscripción actualizada",
+  "subUpdatedBody": "Las capacidades del nuevo plan ya están disponibles.",
+  "subConfirmTitle": "¿Cambiar al plan {name}?",
+  "@subConfirmTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "subConfirmBody": "Tu plan pasará a costar {price} al mes. El cambio conserva tu historial y vínculos.",
+  "@subConfirmBody": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "subCancel": "Cancelar",
+  "subConfirm": "Cambiar",
+  "subRetry": "Reintentar",
+  "subCapReminders": "Recordatorios",
+  "subCapAgenda": "Agenda",
+  "subCapConfirmation": "Confirmación",
+  "subCapAlerts": "Alertas",
+  "subCapMonitoring": "Seguimiento",
+  "subCapInsights": "Insights",
+  "subDescEssential": "Recordatorios, agenda y confirmación.",
+  "subDescFamily": "Alertas, seguimiento e insights para la familia.",
+  "subErrPlan": "Ese plan ya no está disponible. Actualiza la lista.",
+  "subErrInvalidResponse": "El servicio devolvió datos inesperados.",
+  "subErrGeneric": "No pudimos completar la solicitud. Inténtalo de nuevo."
 }

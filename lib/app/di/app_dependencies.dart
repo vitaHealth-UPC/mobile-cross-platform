@@ -58,20 +58,24 @@ import '../../features/identity_subscription/application/usecases/restore_sessio
 import '../../features/identity_subscription/application/usecases/sign_in.dart';
 import '../../features/identity_subscription/application/usecases/sign_in_with_pin.dart';
 import '../../features/identity_subscription/application/usecases/sign_out.dart';
+import '../../features/identity_subscription/application/usecases/subscription_usecases.dart';
 import '../../features/identity_subscription/application/usecases/verify_email.dart';
 import '../../features/identity_subscription/infrastructure/local/secure_remembered_adult_store.dart';
 import '../../features/identity_subscription/infrastructure/remote/password_recovery_api.dart';
 import '../../features/identity_subscription/infrastructure/remote/pin_api.dart';
 import '../../features/identity_subscription/infrastructure/remote/registration_api.dart';
 import '../../features/identity_subscription/infrastructure/remote/session_api.dart';
+import '../../features/identity_subscription/infrastructure/remote/subscription_api.dart';
 import '../../features/identity_subscription/infrastructure/repositories/remote_account_registration.dart';
 import '../../features/identity_subscription/infrastructure/repositories/remote_password_recovery.dart';
 import '../../features/identity_subscription/infrastructure/repositories/remote_pin_access.dart';
 import '../../features/identity_subscription/infrastructure/repositories/remote_session_repository.dart';
+import '../../features/identity_subscription/infrastructure/repositories/remote_subscription_repository.dart';
 import '../../features/identity_subscription/presentation/bloc/access/access_bloc.dart';
 import '../../features/identity_subscription/presentation/bloc/pin/pin_bloc.dart';
 import '../../features/identity_subscription/presentation/bloc/recovery/recovery_bloc.dart';
 import '../../features/identity_subscription/presentation/bloc/registration/registration_bloc.dart';
+import '../../features/identity_subscription/presentation/bloc/subscription/subscription_bloc.dart';
 import '../../features/intake_execution/application/ports/intake_confirmation.dart';
 import '../../features/intake_execution/application/ports/intake_local_store.dart';
 import '../../features/intake_execution/application/ports/intake_reader.dart';
@@ -257,6 +261,18 @@ final class AppDependencies {
   final SessionStore _sessionStore;
   final AccessibilityLocalStore _accessibilityStore;
   final ApplicationLanguageStore _languageStore;
+
+  /// Plan and subscription of the signed-in caregiver's account (US-44, US-45).
+  SubscriptionBloc createSubscriptionBloc() {
+    final repository = RemoteSubscriptionRepository(
+      api: SubscriptionApi(_client),
+      store: _sessionStore,
+    );
+    return SubscriptionBloc(
+      overview: GetSubscriptionOverview(repository),
+      change: ChangeSubscriptionPlan(repository),
+    );
+  }
 
   /// Stock of one medication for the caregiver (Inventory & Replenishment).
   InventoryBloc createInventoryBloc(String medicationId) {

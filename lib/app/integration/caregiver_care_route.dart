@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../features/accessibility_preferences/presentation/navigation/preferences_navigation.dart';
 import '../../features/adherence_analytics/presentation/bloc/level/level_bloc.dart';
@@ -7,6 +8,9 @@ import '../../features/adherence_analytics/presentation/navigation/treatment_adh
 import '../../features/care_link/application/readmodels/caregiver_link_summary.dart';
 import '../../features/family_monitoring/application/readmodels/monitoring_readmodels.dart';
 import '../../features/family_monitoring/presentation/navigation/family_monitoring_navigation.dart';
+import '../../features/identity_subscription/presentation/bloc/subscription/subscription_bloc.dart';
+import '../../features/identity_subscription/presentation/bloc/subscription/subscription_event.dart';
+import '../../features/identity_subscription/presentation/screens/plan_subscription_screen.dart';
 import '../../features/inventory_replenishment/presentation/navigation/inventory_navigation.dart';
 import '../../features/omission_escalation/application/services/omission_push_facade.dart';
 import '../../features/omission_escalation/presentation/widgets/follow_omission_push.dart';
@@ -214,11 +218,35 @@ class CaregiverSettingsRoute extends StatelessWidget {
     required this.caregiverId,
     required this.preferences,
     required this.onSessionInvalidated,
+    this.createSubscriptionBloc,
   });
 
   final String caregiverId;
   final PreferencesNavigation preferences;
   final VoidCallback onSessionInvalidated;
+
+  /// Plan and subscription of the caregiver's account; absent when not wired.
+  final SubscriptionBloc Function()? createSubscriptionBloc;
+
+  void _openSubscription(
+    BuildContext context,
+    SubscriptionBloc Function() create,
+  ) => Navigator.of(context).push<void>(
+    MaterialPageRoute(
+      builder: (_) => BlocProvider(
+        create: (_) => create()..add(const SubscriptionRequested()),
+        child: Builder(
+          builder: (inner) => PlanSubscriptionScreen(
+            clock: DateTime.now,
+            onSessionInvalidated: () {
+              Navigator.of(inner).popUntil((route) => route.isFirst);
+              onSessionInvalidated();
+            },
+          ),
+        ),
+      ),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -243,6 +271,13 @@ class CaregiverSettingsRoute extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => preferences.openAccessibility(context, caregiverId),
           ),
+          if (createSubscriptionBloc case final create?)
+            ListTile(
+              leading: const Icon(Icons.workspace_premium_outlined),
+              title: Text(text.subTitle),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => _openSubscription(context, create),
+            ),
         ],
       ),
     );
