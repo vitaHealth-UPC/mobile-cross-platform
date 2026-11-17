@@ -1,4 +1,7 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/presentation/theme/tata_colors.dart';
@@ -151,7 +154,7 @@ class VoiceConfirmationScreen extends StatelessWidget {
                         style: TextStyle(fontSize: 14, color: statusColor),
                       ),
                       const SizedBox(width: 10),
-                      const ExcludeSemantics(child: _Bars()),
+                      ExcludeSemantics(child: _Bars(moving: recording)),
                     ],
                   ),
                 ),
@@ -262,10 +265,10 @@ class _Orb extends StatelessWidget {
                       height: 40,
                       child: CircularProgressIndicator(strokeWidth: 3),
                     )
-                  : const Icon(
-                      Icons.mic_none_rounded,
-                      size: 58,
-                      color: TataColors.primary,
+                  : SvgPicture.asset(
+                      'assets/icons/home_mic.svg',
+                      width: 58,
+                      height: 58,
                     ),
             ),
           ),
@@ -275,25 +278,90 @@ class _Orb extends StatelessWidget {
   }
 }
 
-class _Bars extends StatelessWidget {
-  const _Bars();
+/// Figma 563:262 level bars: they move only while the microphone is open,
+/// and stay still when the system asks to reduce motion.
+class _Bars extends StatefulWidget {
+  const _Bars({required this.moving});
+
+  final bool moving;
 
   @override
-  Widget build(BuildContext context) => Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      for (final height in const [10.0, 18.0, 26.0, 18.0, 10.0])
-        Container(
-          width: 3,
-          height: height,
-          margin: const EdgeInsets.symmetric(horizontal: 2),
-          decoration: BoxDecoration(
-            color: const Color(0xFF8C7BE0),
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-    ],
+  State<_Bars> createState() => _BarsState();
+}
+
+class _BarsState extends State<_Bars> with SingleTickerProviderStateMixin {
+  static const _heights = [10.0, 18.0, 26.0, 18.0, 10.0];
+  static const _colors = [
+    Color(0xFFC9BEF2),
+    Color(0xFF8C7BE0),
+    Color(0xFF5B48C2),
+    Color(0xFF8C7BE0),
+    Color(0xFFC9BEF2),
+  ];
+
+  late final AnimationController _wave = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
   );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _sync();
+  }
+
+  @override
+  void didUpdateWidget(_Bars oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _sync();
+  }
+
+  void _sync() {
+    final still = MediaQuery.disableAnimationsOf(context);
+    if (widget.moving && !still) {
+      if (!_wave.isAnimating) _wave.repeat();
+    } else {
+      _wave
+        ..stop()
+        ..value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _wave.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    height: 26,
+    child: AnimatedBuilder(
+      animation: _wave,
+      builder: (_, _) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (var index = 0; index < _heights.length; index++)
+            Container(
+              width: 4,
+              height: _height(index),
+              margin: const EdgeInsets.symmetric(horizontal: 2),
+              decoration: BoxDecoration(
+                color: _colors[index],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+        ],
+      ),
+    ),
+  );
+
+  /// Each bar breathes between 45% and 100% of its Figma height, offset in phase.
+  double _height(int index) {
+    if (!_wave.isAnimating) return _heights[index];
+    final phase = (_wave.value - index / _heights.length) * 2 * math.pi;
+    return _heights[index] * (0.725 + 0.275 * math.sin(phase));
+  }
 }
 
 class _PhraseCard extends StatelessWidget {

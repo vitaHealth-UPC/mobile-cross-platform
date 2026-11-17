@@ -407,6 +407,7 @@ class DailyProgressCard extends StatelessWidget {
 }
 
 /// Figma 563:58 shortcut tile for voice confirmation or the full agenda.
+/// Without [onTap] the tile is drawn faded and announced as disabled.
 class HomeShortcut extends StatelessWidget {
   const HomeShortcut({
     super.key,
@@ -425,11 +426,20 @@ class HomeShortcut extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final enabled = onTap != null;
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      child: Opacity(opacity: enabled ? 1 : 0.55, child: _tile(enabled)),
+    );
+  }
+
+  Widget _tile(bool enabled) {
     return Material(
       color: color,
       borderRadius: BorderRadius.circular(18),
       shadowColor: const Color(0x33173B70),
-      elevation: 2,
+      elevation: enabled ? 2 : 0,
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
         onTap: onTap,

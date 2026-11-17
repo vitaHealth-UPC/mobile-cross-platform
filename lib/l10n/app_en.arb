@@ -211,6 +211,7 @@
   "homeProgressEncouragement": "Every dose counts",
   "homeVoiceTitle": "Confirm by voice",
   "homeVoiceSubtitle": "Quick and easy",
+  "homeVoiceNoIntake": "No dose to confirm right now.",
   "homeAgendaTitle": "See all my doses",
   "homeAgendaSubtitle": "Full schedule",
   "homeTipTitle": "Tip of the day",

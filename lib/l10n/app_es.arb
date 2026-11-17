@@ -211,6 +211,7 @@
   "homeProgressEncouragement": "Cada toma cuenta",
   "homeVoiceTitle": "Confirmar con voz",
   "homeVoiceSubtitle": "Es rápido y fácil",
+  "homeVoiceNoIntake": "No hay una toma por confirmar ahora.",
   "homeAgendaTitle": "Ver todas mis tomas",
   "homeAgendaSubtitle": "Horario completo",
   "homeTipTitle": "Consejo del día",

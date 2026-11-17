@@ -436,8 +436,16 @@ void main() {
   });
 
   group('screen', () {
-    Widget screen(VoiceState state, {VoidCallback? onStop}) => MaterialApp(
+    Widget screen(
+      VoiceState state, {
+      VoidCallback? onStop,
+      bool reduceMotion = false,
+    }) => MaterialApp(
       theme: TataTheme.light,
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(disableAnimations: reduceMotion),
+        child: child!,
+      ),
       locale: const Locale('es'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -466,6 +474,46 @@ void main() {
       expect(find.text('Cancelar'), findsOneWidget);
       await tester.tap(find.bySemanticsLabel('Terminar y enviar'));
       expect(stopped, isTrue);
+    });
+
+    List<double> bars(WidgetTester tester) => tester
+        .widgetList<Container>(
+          find.descendant(
+            of: find.byType(ExcludeSemantics),
+            matching: find.byType(Container),
+          ),
+        )
+        .map((bar) => bar.constraints?.maxHeight ?? 0)
+        .where((height) => height > 0 && height <= 26)
+        .toList();
+
+    testWidgets('the level bars move only while listening', (tester) async {
+      final listening = VoiceState(phase: VoicePhase.recording, intake: dose());
+      await tester.pumpWidget(screen(listening));
+      await tester.pump(const Duration(milliseconds: 200));
+      final first = bars(tester);
+      await tester.pump(const Duration(milliseconds: 250));
+      expect(first, hasLength(5));
+      expect(bars(tester), isNot(first));
+
+      await tester.pumpWidget(
+        screen(VoiceState(phase: VoicePhase.notRecognized, intake: dose())),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(bars(tester), [10.0, 18.0, 26.0, 18.0, 10.0]);
+    });
+
+    testWidgets('the level bars stay still when motion is reduced', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        screen(
+          VoiceState(phase: VoicePhase.recording, intake: dose()),
+          reduceMotion: true,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(bars(tester), [10.0, 18.0, 26.0, 18.0, 10.0]);
     });
 
     testWidgets('a failed attempt says nothing was recorded', (tester) async {
