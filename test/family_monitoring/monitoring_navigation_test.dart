@@ -152,7 +152,7 @@ void main() {
     WidgetTester tester,
     FamilyMonitoringNavigation navigation, {
     VoidCallback? onPerson,
-    VoidCallback? onMore,
+    FutureOr<void> Function()? onMore,
     VoidCallback? onInvalidated,
     VoidCallback? onHistory,
     FutureOr<void> Function()? onAddMedication,
@@ -278,6 +278,21 @@ void main() {
     await tester.pump();
     final readsBefore = summaries.reads;
     medications.complete();
+    await tester.pumpAndSettle();
+    expect(summaries.reads, readsBefore + 1);
+  });
+
+  testWidgets('returning from the More menu reads the summary again', (
+    tester,
+  ) async {
+    final more = Completer<void>();
+    await pumpHome(tester, navigation(), onMore: () => more.future);
+    await tester.tap(find.text('Más'));
+    await tester.pump();
+    final readsBefore = summaries.reads;
+    // Still inside a More flow: nothing is read yet.
+    expect(summaries.reads, readsBefore);
+    more.complete();
     await tester.pumpAndSettle();
     expect(summaries.reads, readsBefore + 1);
   });
