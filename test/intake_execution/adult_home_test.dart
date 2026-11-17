@@ -137,7 +137,30 @@ void main() {
       ),
     );
     expect(find.text('Sin próxima toma'), findsOneWidget);
+    expect(find.text('No hay tomas pendientes programadas.'), findsOneWidget);
     expect(find.text('Sin tomas programadas'), findsOneWidget);
+    // Figma 563:3178: the home closes with the agenda notice, never a time.
+    await tester.scrollUntilVisible(find.text('Agenda al día'), 200);
+    expect(find.text('No existen próximas tomas pendientes.'), findsOneWidget);
+    expect(find.textContaining('En '), findsNothing);
+  });
+
+  testWidgets('a pending intake does not show the agenda notice', (
+    tester,
+  ) async {
+    final pending = intake(
+      'next',
+      IntakeStatus.pending,
+      DateTime(2026, 11, 3, 8),
+    );
+    await pumpHome(
+      tester,
+      FakeIntakeReader(
+        nextResult: AppSuccess(pending),
+        agendaResult: AppSuccess([pending]),
+      ),
+    );
+    expect(find.text('Agenda al día'), findsNothing);
   });
 
   testWidgets('a failure can be retried and lost access is reported', (

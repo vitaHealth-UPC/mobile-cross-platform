@@ -157,10 +157,7 @@ class _AdultHomeScreenState extends State<AdultHomeScreen> {
                   action: text.homeRetry,
                   onAction: widget.onRefresh,
                 ),
-                (HomeStatus.ready, null) => HomeMessageCard(
-                  title: text.homeEmptyTitle,
-                  body: text.homeEmptyDescription,
-                ),
+                (HomeStatus.ready, null) => const NoNextIntakeCard(),
                 (HomeStatus.ready, final Intake intake) => NextIntakeCard(
                   intake: intake,
                   now: now,
@@ -184,6 +181,10 @@ class _AdultHomeScreenState extends State<AdultHomeScreen> {
               if (_showTip) ...[
                 const SizedBox(height: 18),
                 DailyTipCard(onDismiss: () => setState(() => _showTip = false)),
+              ],
+              if (state.status == HomeStatus.ready && next == null) ...[
+                const SizedBox(height: 18),
+                const AgendaClearNotice(),
               ],
             ],
           ),

@@ -1202,5 +1202,7 @@
   "invErrMedicationInactive": "This medication is inactive. Reactivate it to register its stock.",
   "invErrConcurrent": "The inventory changed while you were saving. Try again.",
   "invErrInvalidResponse": "The service returned unexpected data.",
-  "invErrGeneric": "We couldn't complete the request. Try again."
+  "invErrGeneric": "We couldn't complete the request. Try again.",
+  "homeAgendaClearTitle": "Schedule up to date",
+  "homeAgendaClearBody": "There are no upcoming doses pending."
 }

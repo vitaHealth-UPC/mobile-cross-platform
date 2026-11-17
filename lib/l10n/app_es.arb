@@ -1268,5 +1268,7 @@
   "invErrMedicationInactive": "Este medicamento está inactivo. Reactívalo para registrar su stock.",
   "invErrConcurrent": "El inventario cambió mientras guardabas. Inténtalo de nuevo.",
   "invErrInvalidResponse": "El servicio devolvió datos inesperados.",
-  "invErrGeneric": "No pudimos completar la solicitud. Inténtalo de nuevo."
+  "invErrGeneric": "No pudimos completar la solicitud. Inténtalo de nuevo.",
+  "homeAgendaClearTitle": "Agenda al día",
+  "homeAgendaClearBody": "No existen próximas tomas pendientes."
 }
