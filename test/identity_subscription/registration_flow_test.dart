@@ -136,13 +136,18 @@ void main() {
       await tester.ensureVisible(find.text('Verificar correo'));
       await tester.tap(find.text('Verificar correo'));
       await tester.pumpAndSettle();
+      // Figma 563:2208: the expired code is named and the main action asks for a new one.
+      expect(find.text('Verificación vencida'), findsOneWidget);
       expect(
-        find.text('El código venció. Solicita uno nuevo.'),
+        find.text('Solicita un nuevo código para habilitar la cuenta.'),
         findsOneWidget,
       );
-      await tester.ensureVisible(find.text('Reenviar código'));
-      await tester.tap(find.text('Reenviar código'));
+      expect(find.text('Verificar correo'), findsNothing);
+      expect(find.text('Reenviar código'), findsNothing);
+      await tester.ensureVisible(find.text('Solicitar nuevo código'));
+      await tester.tap(find.text('Solicitar nuevo código'));
       await tester.pumpAndSettle();
+      expect(find.text('Verificación vencida'), findsNothing);
       expect(
         tester
             .widget<TextField>(find.byKey(const Key('registration-code')))

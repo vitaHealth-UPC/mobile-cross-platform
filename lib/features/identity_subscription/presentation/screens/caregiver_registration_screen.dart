@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/presentation/theme/tata_colors.dart';
 import '../../../../shared/presentation/theme/tata_typography.dart';
+import '../../../../shared/presentation/widgets/status_notice.dart';
 import '../widgets/registration_form.dart';
 
 /// Editable caregiver account and verification form matching Figma 563:1398.
@@ -17,6 +18,8 @@ class CaregiverRegistrationScreen extends StatefulWidget {
     this.busy = false,
     this.hasAccount = false,
     this.errorText,
+    this.errorTitle,
+    this.codeExpired = false,
     this.resent = false,
   });
   final void Function(String name, String email, String password) onRegister;
@@ -26,6 +29,12 @@ class CaregiverRegistrationScreen extends StatefulWidget {
   final bool hasAccount;
   final bool resent;
   final String? errorText;
+
+  /// Names the problem above [errorText] (Figma 563:2162 and 563:2208).
+  final String? errorTitle;
+
+  /// The code can no longer be used: the main action asks for a new one.
+  final bool codeExpired;
 
   @override
   State<CaregiverRegistrationScreen> createState() =>
@@ -219,25 +228,37 @@ class _CaregiverRegistrationScreenState
                         ),
                         onPressed: widget.busy
                             ? null
+                            : widget.codeExpired
+                            ? widget.onResend
                             : () => widget.onVerify(_code.text),
-                        child: Text(text.verifyEmail),
+                        child: Text(
+                          widget.codeExpired
+                              ? text.regRequestNewCode
+                              : text.verifyEmail,
+                        ),
                       ),
-                      TextButton(
-                        onPressed: widget.busy ? null : widget.onResend,
-                        child: Text(text.resendCode),
-                      ),
+                      if (!widget.codeExpired)
+                        TextButton(
+                          onPressed: widget.busy ? null : widget.onResend,
+                          child: Text(text.resendCode),
+                        ),
                     ],
-                    if (widget.errorText != null || widget.resent) ...[
+                    if (widget.errorText case final error?) ...[
+                      const SizedBox(height: 16),
+                      StatusNotice(
+                        title: widget.errorTitle,
+                        body: error,
+                        tone: widget.codeExpired
+                            ? NoticeTone.warning
+                            : NoticeTone.error,
+                      ),
+                    ] else if (widget.resent) ...[
                       const SizedBox(height: 12),
                       Semantics(
                         liveRegion: true,
                         child: Text(
-                          widget.errorText ?? text.codeResent,
-                          style: TextStyle(
-                            color: widget.errorText == null
-                                ? TataColors.primary
-                                : Theme.of(context).colorScheme.error,
-                          ),
+                          text.codeResent,
+                          style: const TextStyle(color: TataColors.primary),
                         ),
                       ),
                     ],

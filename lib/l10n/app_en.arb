@@ -39,8 +39,6 @@
   "invalidName": "Enter your name, up to 120 characters.",
   "registrationPasswordHint": "At least 8 characters",
   "registrationPasswordError": "Use at least 8 characters and no more than 72 bytes.",
-  "duplicateEmail": "This email is already registered. Sign in to your account.",
-  "verificationExpired": "The code expired. Request a new one.",
   "invalidVerification": "Enter a valid 6-digit code.",
   "backToSignIn": "Back to sign in",
   "recoveryTitle": "Recover your access",
@@ -1237,5 +1235,11 @@
   "subDescFamily": "Alerts, follow-up and insights for the family.",
   "subErrPlan": "That plan is no longer available. Refresh the list.",
   "subErrInvalidResponse": "The service returned unexpected data.",
-  "subErrGeneric": "We couldn't complete the request. Try again."
+  "subErrGeneric": "We couldn't complete the request. Try again.",
+  "regDuplicateEmailTitle": "Email already registered",
+  "regDuplicateEmailBody": "Use another email or sign in with the existing account.",
+  "regVerificationExpiredTitle": "Verification expired",
+  "regVerificationExpiredBody": "Request a new code to enable the account.",
+  "regRequestNewCode": "Request a new code",
+  "linkFailedTitle": "Could not link"
 }
