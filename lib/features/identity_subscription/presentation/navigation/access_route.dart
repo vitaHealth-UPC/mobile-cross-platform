@@ -8,12 +8,14 @@ import '../bloc/access/access_bloc.dart';
 import '../bloc/access/access_event.dart';
 import '../bloc/access/access_state.dart';
 import '../bloc/pin/pin_bloc.dart';
+import '../bloc/plan_choice/plan_choice_cubit.dart';
 import '../bloc/recovery/recovery_bloc.dart';
 import '../bloc/registration/registration_bloc.dart';
 import '../screens/login_screen.dart';
 import '../screens/onboarding_screen.dart';
 import '../screens/password_recovery_screen.dart';
 import 'pin_route.dart';
+import 'plan_choice_route.dart';
 import 'registration_route.dart';
 
 /// Adapts public session state to widgets without exposing credentials to the UI.
@@ -28,6 +30,10 @@ class AccessRoute extends StatefulWidget {
     this.adultBuilder,
     this.loadRememberedAdult,
     this.createPinAccessBloc,
+    this.createPlanChoiceCubit,
+    this.contactUri,
+    this.openContact,
+    this.applyChosenPlan,
   });
   final RegistrationBloc Function()? createRegistrationBloc;
   final RecoveryBloc Function()? createRecoveryBloc;
@@ -43,6 +49,14 @@ class AccessRoute extends StatefulWidget {
 
   /// Creates PIN access state for the remembered adult identifier.
   final PinBloc Function(String olderAdultId)? createPinAccessBloc;
+
+  /// Plans shown before registration; without it Start opens registration.
+  final PlanChoiceCubit Function()? createPlanChoiceCubit;
+  final Uri? contactUri;
+  final Future<bool> Function(Uri uri)? openContact;
+
+  /// Activates the chosen plan once the new account is verified.
+  final Future<bool> Function(String planCode)? applyChosenPlan;
 
   @override
   State<AccessRoute> createState() => _AccessRouteState();
@@ -93,7 +107,24 @@ class _AccessRouteState extends State<AccessRoute> {
     }
   }
 
-  Future<void> _register(BuildContext context) async {
+  /// Start: compare plans first when they are available (US-48, US-49).
+  Future<void> _start(BuildContext context) async {
+    final plans = widget.createPlanChoiceCubit;
+    if (plans == null) return _register(context);
+    final choice = await Navigator.of(context).push<PlanChoice>(
+      MaterialPageRoute(
+        builder: (_) => PlanChoiceRoute(
+          createCubit: plans,
+          contactUri: widget.contactUri,
+          openContact: widget.openContact,
+        ),
+      ),
+    );
+    if (choice == null || !context.mounted) return;
+    await _register(context, planCode: choice.plan?.code);
+  }
+
+  Future<void> _register(BuildContext context, {String? planCode}) async {
     setState(() => _showOnboarding = false);
     final factory = widget.createRegistrationBloc;
     if (factory == null) return;
@@ -105,9 +136,17 @@ class _AccessRouteState extends State<AccessRoute> {
         ),
       ),
     );
-    if (verified == true && context.mounted) {
-      context.read<AccessBloc>().add(const AccessRestoreRequested());
+    if (verified != true || !context.mounted) return;
+    final apply = widget.applyChosenPlan;
+    if (planCode != null && apply != null) {
+      final messenger = ScaffoldMessenger.of(context);
+      final failed = AppLocalizations.of(context).planChoiceApplyFailed;
+      if (!await apply(planCode)) {
+        messenger.showSnackBar(SnackBar(content: Text(failed)));
+      }
+      if (!context.mounted) return;
     }
+    context.read<AccessBloc>().add(const AccessRestoreRequested());
   }
 
   @override
@@ -184,7 +223,7 @@ class _AccessRouteState extends State<AccessRoute> {
 
         if (state.status == AccessStatus.anonymous && _showOnboarding) {
           return OnboardingScreen(
-            onStart: () => _register(context),
+            onStart: () => _start(context),
             onSignIn: () => setState(() => _showOnboarding = false),
           );
         }

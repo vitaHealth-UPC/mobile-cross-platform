@@ -59,6 +59,10 @@ Future<void> main() async {
       loadRememberedAdult: dependencies.readRememberedAdult,
       createPinAccessBloc: dependencies.createPinAccessBloc,
       createAppearanceCubit: dependencies.createAppearanceCubit,
+      createPlanChoiceCubit: dependencies.createPlanChoiceCubit,
+      contactUri: dependencies.contactUri,
+      openContact: dependencies.openContact,
+      applyChosenPlan: dependencies.applyChosenPlan,
       authenticatedBuilder: (context, signOut, invalidated) =>
           CaregiverSetupRoute(
             createBloc: dependencies.createProfilesBloc,
