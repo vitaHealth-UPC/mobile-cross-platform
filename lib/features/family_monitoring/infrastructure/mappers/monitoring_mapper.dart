@@ -2,6 +2,7 @@ import '../../application/readmodels/monitoring_readmodels.dart';
 import '../../domain/entities/caregiver_alert.dart';
 import '../../domain/entities/notes.dart';
 import '../../domain/value_objects/adherence_counts.dart';
+import '../../domain/value_objects/alert_severity.dart';
 import '../../domain/value_objects/alert_status.dart';
 import '../../domain/value_objects/contact_channel.dart';
 import '../../domain/value_objects/note_values.dart';
@@ -52,6 +53,8 @@ abstract final class MonitoringMapper {
 
   static CaregiverAlert alert(Object? body) {
     final data = _object(body);
+    final severity = AlertSeverity.fromWire(data['severity']);
+    if (severity == null) throw const FormatException('Unknown alert severity');
     final status = AlertStatus.fromWire(data['status']);
     if (status == null) throw const FormatException('Unknown alert status');
     final closed = data['closedAt'];
@@ -64,6 +67,7 @@ abstract final class MonitoringMapper {
       status: status,
       openedAt: _instant(data, 'openedAt'),
       closedAt: closed == null ? null : _instant(data, 'closedAt'),
+      severity: severity,
     );
   }
 
@@ -73,6 +77,12 @@ abstract final class MonitoringMapper {
     if (!MonitoredDose.statuses.contains(status)) {
       throw const FormatException('Unknown intake status');
     }
+    final confirmedAt = data['confirmedAt'] == null
+        ? null
+        : _instant(data, 'confirmedAt');
+    if (confirmedAt != null && status != 'CONFIRMED' && status != 'LATE') {
+      throw const FormatException('Confirmation without a confirmed outcome');
+    }
     return DoseReading(
       dose: MonitoredDose(
         id: _text(data, 'id'),
@@ -81,6 +91,7 @@ abstract final class MonitoringMapper {
         dose: _text(data, 'dose'),
         scheduledAt: _instant(data, 'scheduledAt'),
         status: status,
+        confirmedAt: confirmedAt,
       ),
       olderAdultId: _optionalText(data, 'olderAdultId'),
     );

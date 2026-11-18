@@ -9,6 +9,7 @@ import 'package:tata/features/family_monitoring/application/usecases/summary_use
 import 'package:tata/features/family_monitoring/domain/entities/caregiver_alert.dart';
 import 'package:tata/features/family_monitoring/domain/entities/notes.dart';
 import 'package:tata/features/family_monitoring/domain/repositories/monitoring_repositories.dart';
+import 'package:tata/features/family_monitoring/domain/value_objects/alert_severity.dart';
 import 'package:tata/features/family_monitoring/domain/value_objects/alert_status.dart';
 import 'package:tata/features/family_monitoring/domain/value_objects/contact_channel.dart';
 import 'package:tata/features/family_monitoring/domain/value_objects/note_values.dart';
@@ -24,6 +25,7 @@ CaregiverAlert anAlert({
   AlertStatus status = AlertStatus.open,
   DateTime? scheduledAt,
   String intakeId = 'intake-1',
+  AlertSeverity severity = AlertSeverity.standard,
 }) {
   final at = scheduledAt ?? DateTime.utc(2026, 11, 13, 12);
   return CaregiverAlert(
@@ -32,6 +34,7 @@ CaregiverAlert anAlert({
     medicationName: 'Losartán',
     scheduledAt: at,
     reason: 'No respondió',
+    severity: severity,
     status: status,
     openedAt: at.add(const Duration(minutes: 30)),
     closedAt: status == AlertStatus.closed
@@ -329,12 +332,15 @@ void main() {
         ..add(const AlertsRequested());
       await b.stream.firstWhere((s) => s.status == AlertsStatus.ready);
       expect([for (final a in b.state.visibleAlerts) a.id], [1, 2]);
-      expect([for (final d in b.state.visibleDoses) d.id], ['past', 'next']);
+      expect(
+        [for (final d in b.state.visibleDoses) d.id],
+        ['past', 'next', 'missed'],
+      );
 
       b.add(const AlertsFilterSelected(AlertFilter.pending));
       await b.stream.first;
       expect([for (final a in b.state.visibleAlerts) a.id], [1]);
-      expect(b.state.visibleDoses, isEmpty);
+      expect([for (final d in b.state.visibleDoses) d.id], ['missed']);
 
       b.add(const AlertsFilterSelected(AlertFilter.upcoming));
       await b.stream.first;
@@ -346,6 +352,39 @@ void main() {
       expect([for (final a in b.state.visibleAlerts) a.id], [2]);
       expect([for (final d in b.state.visibleDoses) d.id], ['past']);
       expect(b.state.pendingCount, 1);
+      await b.close();
+    });
+
+    test('unrepresented overdue doses remain visible without duplicating a recorded alert', () async {
+      final recorded = anAlert(id: 1);
+      final data = AlertTimeline(
+        alerts: [recorded],
+        doses: [
+          dose(
+            recorded.intakeId,
+            'PENDING',
+            now.subtract(const Duration(hours: 1)),
+          ),
+          dose(
+            'not-yet-alerted',
+            'PENDING',
+            now.subtract(const Duration(minutes: 2)),
+          ),
+          dose('omitted', 'OMITTED', now.subtract(const Duration(hours: 2))),
+        ],
+        olderAdultName: 'Rosa',
+        day: DateTime(2026, 11, 13),
+      );
+      final b = bloc(FakeTimeline(AppSuccess(data)))
+        ..add(const AlertsRequested());
+      await b.stream.firstWhere((s) => s.status == AlertsStatus.ready);
+      expect(
+        [for (final d in b.state.visibleDoses) d.id],
+        ['not-yet-alerted', 'omitted'],
+      );
+      b.add(const AlertsFilterSelected(AlertFilter.pending));
+      await b.stream.first;
+      expect([for (final d in b.state.visibleDoses) d.id], ['not-yet-alerted']);
       await b.close();
     });
 

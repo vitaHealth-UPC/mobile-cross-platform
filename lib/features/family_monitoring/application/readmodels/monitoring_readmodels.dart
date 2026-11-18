@@ -11,6 +11,7 @@ final class MonitoredDose {
     required this.dose,
     required this.scheduledAt,
     required this.status,
+    this.confirmedAt,
   });
 
   /// `PENDING`, `CONFIRMED`, `LATE` or `OMITTED`, as the intake resource states it.
@@ -22,6 +23,9 @@ final class MonitoredDose {
   final String dose;
   final DateTime scheduledAt;
   final String status;
+
+  /// Server-recorded confirmation instant; absence never implies the scheduled time.
+  final DateTime? confirmedAt;
 
   bool get isDone => status == 'CONFIRMED' || status == 'LATE';
 }

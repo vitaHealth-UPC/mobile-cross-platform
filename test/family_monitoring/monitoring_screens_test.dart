@@ -7,8 +7,10 @@ import 'package:tata/features/family_monitoring/application/readmodels/monitorin
 import 'package:tata/features/family_monitoring/application/usecases/alert_usecases.dart';
 import 'package:tata/features/family_monitoring/application/usecases/note_usecases.dart';
 import 'package:tata/features/family_monitoring/application/usecases/summary_usecases.dart';
+import 'package:tata/features/family_monitoring/domain/entities/caregiver_alert.dart';
 import 'package:tata/features/family_monitoring/domain/entities/notes.dart';
 import 'package:tata/features/family_monitoring/domain/value_objects/adherence_counts.dart';
+import 'package:tata/features/family_monitoring/domain/value_objects/alert_severity.dart';
 import 'package:tata/features/family_monitoring/domain/value_objects/alert_status.dart';
 import 'package:tata/features/family_monitoring/domain/value_objects/contact_channel.dart';
 import 'package:tata/features/family_monitoring/domain/value_objects/note_values.dart';
@@ -110,10 +112,201 @@ void main() {
         ),
       );
     }
+    if (find.byType(AlertsScreen).evaluate().isNotEmpty) {
+      await tester.runAsync(() async {
+        final context = tester.element(find.byType(AlertsScreen).first);
+        await precacheImage(
+          const AssetImage('assets/illustrations/alerts_glow.png'),
+          context,
+        );
+        await precacheImage(
+          const AssetImage('assets/illustrations/alerts_botanical.png'),
+          context,
+        );
+      });
+    }
     await tester.pump();
   }
 
   group('alerts screen', () {
+    testWidgets(
+      'foreground refresh receives escalation and pauses with the app',
+      (tester) async {
+        final now = DateTime(2026, 7, 20, 9, 15);
+        AlertTimeline timeline(AlertSeverity severity) => AlertTimeline(
+          alerts: [anAlert(severity: severity)],
+          doses: const [],
+          olderAdultName: 'Rosa Vargas',
+          day: DateTime(2026, 7, 20),
+        );
+        final reader = FakeTimeline(
+          AppSuccess(timeline(AlertSeverity.standard)),
+        );
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.resumed,
+        );
+        await pump(
+          tester,
+          BlocProvider(
+            create: (_) => AlertsBloc(
+              timeline: GetAlertTimeline(reader),
+              olderAdultId: 'adult-1',
+              clock: () => now,
+            )..add(const AlertsRequested()),
+            child: AlertsScreen(onTab: (_) {}, onOpenAlert: (_) {}),
+          ),
+        );
+        expect(reader.reads, 1);
+        expect(find.text('Sin alertas críticas'), findsOneWidget);
+        reader.result = AppSuccess(timeline(AlertSeverity.critical));
+        await tester.pump(const Duration(minutes: 1));
+        await tester.pump();
+        expect(reader.reads, 2);
+        expect(find.text('Sin alertas críticas'), findsNothing);
+
+        tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+        await tester.pump(const Duration(minutes: 2));
+        expect(reader.reads, 2);
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.resumed,
+        );
+        await tester.pump();
+        await tester.pump();
+        expect(reader.reads, 3);
+
+        reader.result = const AppFailure('ACCESS_DENIED');
+        await tester.pump(const Duration(minutes: 1));
+        await tester.pump();
+        expect(reader.reads, 4);
+        await tester.pump(const Duration(minutes: 2));
+        expect(reader.reads, 4);
+      },
+    );
+
+    for (final scale in [1.0, 1.5]) {
+      testWidgets(
+        'alerts compose recorded priorities and dose evidence at scale $scale',
+        (tester) async {
+          final now = DateTime(2026, 7, 20, 9, 15);
+          final person = 'Rosa Morales';
+          final pending = CaregiverAlert(
+            id: 1,
+            intakeId: 'pending-dose',
+            medicationName: 'Losartán 50 mg',
+            scheduledAt: DateTime(2026, 7, 20, 8),
+            reason: 'No confirmation',
+            status: AlertStatus.open,
+            openedAt: DateTime(2026, 7, 20, 8, 30),
+            closedAt: null,
+            severity: AlertSeverity.standard,
+          );
+          final data = AlertTimeline(
+            alerts: [pending],
+            doses: [
+              MonitoredDose(
+                id: 'confirmed',
+                medicationId: 'm1',
+                medicationName: 'Levotiroxina 75 mcg',
+                dose: '1 comprimido',
+                scheduledAt: DateTime(2026, 7, 20, 8),
+                status: 'CONFIRMED',
+                confirmedAt: DateTime(2026, 7, 20, 7, 58),
+              ),
+              MonitoredDose(
+                id: 'upcoming',
+                medicationId: 'm2',
+                medicationName: 'Metformina 500 mg',
+                dose: '1 comprimido',
+                scheduledAt: DateTime(2026, 7, 20, 12, 30),
+                status: 'PENDING',
+              ),
+            ],
+            olderAdultName: person,
+            day: DateTime(2026, 7, 20),
+          );
+          await pump(
+            tester,
+            BlocProvider(
+              create: (_) => AlertsBloc(
+                timeline: GetAlertTimeline(FakeTimeline(AppSuccess(data))),
+                olderAdultId: 'adult-1',
+                clock: () => now,
+              )..add(const AlertsRequested()),
+              child: AlertsScreen(
+                onTab: (_) {},
+                onOpenAlert: (_) {},
+                tickEvery: const Duration(days: 1),
+              ),
+            ),
+            scale: scale,
+          );
+          await tester.pumpAndSettle();
+          await captureWidget(
+            tester,
+            find.byKey(const Key('summary-capture')),
+            'alerts_$scale',
+          );
+          expect(find.text('Sin alertas críticas'), findsOneWidget);
+          expect(find.textContaining('Rosa Morales'), findsNWidgets(3));
+          await tester.scrollUntilVisible(find.text('Metformina 500 mg'), 150);
+          await tester.tap(find.text('Metformina 500 mg'));
+          await tester.pumpAndSettle();
+          expect(find.byType(AlertDialog), findsOneWidget);
+          expect(find.text('Confirmar toma'), findsNothing);
+          expect(tester.takeException(), isNull);
+        },
+      );
+    }
+
+    testWidgets(
+      'critical and unknown follow-ups never show an all-clear banner',
+      (tester) async {
+        for (final severity in [
+          AlertSeverity.critical,
+          AlertSeverity.unknown,
+        ]) {
+          final now = DateTime(2026, 11, 18, 10);
+          final data = AlertTimeline(
+            alerts: [anAlert(severity: severity)],
+            doses: const [],
+            olderAdultName: 'Rosa',
+            day: DateTime(2026, 11, 18),
+          );
+          await pump(
+            tester,
+            BlocProvider(
+              create: (_) => AlertsBloc(
+                timeline: GetAlertTimeline(FakeTimeline(AppSuccess(data))),
+                olderAdultId: 'adult-1',
+                clock: () => now,
+              )..add(const AlertsRequested()),
+              child: AlertsScreen(
+                onTab: (_) {},
+                onOpenAlert: (_) {},
+                tickEvery: const Duration(days: 1),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          expect(find.text('Sin alertas críticas'), findsNothing);
+          expect(
+            find.text(
+              severity == AlertSeverity.critical
+                  ? '1 alerta crítica'
+                  : 'Prioridad por verificar',
+            ),
+            findsOneWidget,
+          );
+          await captureWidget(
+            tester,
+            find.byKey(const Key('summary-capture')),
+            'alerts_${severity.name}',
+          );
+          await tester.pumpWidget(const SizedBox.shrink());
+        }
+      },
+    );
+
     final now = DateTime(2026, 11, 13, 10);
 
     AlertsBloc bloc(AlertTimeline timeline) => AlertsBloc(
@@ -153,7 +346,7 @@ void main() {
         expect(find.text('Alerta pendiente'), findsOneWidget);
         expect(find.text('Alerta cerrada'), findsOneWidget);
         expect(find.text('Recordatorio próximo'), findsOneWidget);
-        expect(find.text('1 alerta pendiente'), findsOneWidget);
+        expect(find.text('Sin alertas críticas'), findsOneWidget);
         expect(find.text('En 2 h 30 min'), findsOneWidget);
         expect(tester.takeException(), isNull);
       });
@@ -369,6 +562,7 @@ void main() {
           notes: notes,
         ),
       );
+      await tester.ensureVisible(find.text('Agregar nota de seguimiento'));
       await tester.tap(find.text('Agregar nota de seguimiento'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Guardar nota'));

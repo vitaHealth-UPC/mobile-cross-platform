@@ -222,10 +222,7 @@ void main() {
 
     await tester.tap(find.text('Alertas'));
     await tester.pumpAndSettle();
-    expect(
-      find.text('Tomas no confirmadas que necesitan tu seguimiento.'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('Hoy,'), findsOneWidget);
 
     await tester.tap(find.text('Notas'));
     await tester.pumpAndSettle();

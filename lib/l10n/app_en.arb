@@ -852,7 +852,7 @@
     }
   },
   "fmAlertsEmptyTitle": "No alerts",
-  "fmAlertsEmptyMessage": "Everything is under control. We will let you know if a dose is missed.",
+  "fmAlertsEmptyMessage": "There are no follow-up alerts or doses to show for this day.",
   "fmAlertsFilterEmpty": "There are no alerts in this filter.",
   "fmAlertScheduled": "Scheduled for {time}",
   "@fmAlertScheduled": {
@@ -1307,5 +1307,69 @@
   "fmTodayAgenda": "Today's schedule",
   "fmAgendaEmpty": "No doses are scheduled for this day.",
   "fmDoseOmitted": "Missed dose",
-  "fmRestockHint": "Consider recording a replenishment."
+  "fmRestockHint": "Consider recording a replenishment.",
+  "fmAlertsTodayDate": "Today, {date}",
+  "fmAlertsClearBody": "There are no follow-up alerts to attend to.",
+  "fmAlertsPendingBody": "Review the details and record the follow-up.",
+  "fmElapsedMinutes": "{minutes} min ago",
+  "fmElapsedHoursMinutes": "{hours} h {minutes} min ago",
+  "@fmAlertsTodayDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "@fmElapsedMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "@fmElapsedHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "fmNoCriticalAlerts": "No critical alerts",
+  "fmCriticalAlerts": "{count, plural, one{1 critical alert} other{{count} critical alerts}}",
+  "fmSeverityUnknownTitle": "Priority not yet verified",
+  "fmSeverityUnknownBody": "Priority is not yet available for these alerts.",
+  "fmSeverityLabel": "Follow-up priority",
+  "fmSeverityStandard": "Standard",
+  "fmSeverityHigh": "High",
+  "fmSeverityCritical": "Critical",
+  "@fmCriticalAlerts": {
+    "description": "Open or attended critical follow-ups not yet closed.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fmElapsedDaysHours": "{days} d {hours} h ago",
+  "fmConfirmationRecorded": "Confirmed at {time}",
+  "@fmElapsedDaysHours": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "@fmConfirmationRecorded": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  }
 }

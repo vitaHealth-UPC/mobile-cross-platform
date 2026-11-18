@@ -5,6 +5,7 @@ import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/presentation/theme/tata_colors.dart';
 import '../../application/ports/contact_launcher.dart';
 import '../../application/readmodels/monitoring_readmodels.dart';
+import '../../domain/value_objects/alert_severity.dart';
 import '../../domain/value_objects/alert_status.dart';
 import '../bloc/alert_detail/alert_detail_bloc.dart';
 import '../bloc/notes/note_composer_cubit.dart';
@@ -192,6 +193,12 @@ class _Ready extends StatelessWidget {
                     : alert.reason,
               ),
               _Row(text.fmDetailStatus, alertStatusLabel(text, alert.status)),
+              _Row(text.fmSeverityLabel, switch (alert.severity) {
+                AlertSeverity.standard => text.fmSeverityStandard,
+                AlertSeverity.high => text.fmSeverityHigh,
+                AlertSeverity.critical => text.fmSeverityCritical,
+                AlertSeverity.unknown => text.fmSeverityUnknownTitle,
+              }),
               _Row(
                 text.fmDetailOpened,
                 monitoringDateTime(locale, alert.openedAt),
