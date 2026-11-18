@@ -470,7 +470,9 @@ class _ContactDialog extends StatelessWidget {
             children: [
               Text(monitoringErrorText(text, dialog.errorCode)),
               TextButton(
-                onPressed: () => bloc.add(const FamilyContactRequested()),
+                onPressed: () => bloc.add(
+                  FamilyContactRequested(channelType: dialog.channelType),
+                ),
                 child: Text(text.fmContactRetry),
               ),
             ],

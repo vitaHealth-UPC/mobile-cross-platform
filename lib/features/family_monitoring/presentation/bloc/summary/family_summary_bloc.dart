@@ -5,6 +5,7 @@ import '../../../../../shared/common/result/app_result.dart';
 import '../../../application/ports/monitoring_ports.dart';
 import '../../../application/readmodels/monitoring_readmodels.dart';
 import '../../../application/usecases/summary_usecases.dart';
+import '../../../domain/value_objects/contact_channel.dart';
 import '../../texts/monitoring_texts.dart';
 
 /// Intents of the family summary.
@@ -17,9 +18,16 @@ final class FamilySummaryRequested extends FamilySummaryEvent {
   const FamilySummaryRequested();
 }
 
+/// A profile edit acknowledged by Care Link updates the summary's display name.
+final class FamilySummaryNameUpdated extends FamilySummaryEvent {
+  const FamilySummaryNameUpdated(this.name);
+  final String name;
+}
+
 /// Open the contact dialog; the channel is read when it is asked for.
 final class FamilyContactRequested extends FamilySummaryEvent {
-  const FamilyContactRequested();
+  const FamilyContactRequested({this.channelType});
+  final ContactChannelType? channelType;
 }
 
 final class FamilyContactDismissed extends FamilySummaryEvent {
@@ -30,9 +38,10 @@ enum FamilySummaryStatus { loading, ready, failure }
 
 /// Content and loading state of the contact dialog.
 final class FamilyContactDialog {
-  const FamilyContactDialog({this.option, this.errorCode});
+  const FamilyContactDialog({this.option, this.errorCode, this.channelType});
   final ContactOption? option;
   final String? errorCode;
+  final ContactChannelType? channelType;
 
   bool get loading => option == null && errorCode == null;
 }
@@ -60,11 +69,16 @@ final class FamilySummaryBloc
     required this._summary,
     required this._contact,
     required this.olderAdultId,
-    required this.olderAdultName,
+    required this._olderAdultName,
     Clock? clock,
   }) : _clock = clock ?? DateTime.now,
        super(const FamilySummaryState()) {
     on<FamilySummaryRequested>(_load);
+    on<FamilySummaryNameUpdated>((event, emit) {
+      if (event.name.trim().isEmpty) return;
+      _olderAdultName = event.name.trim();
+      add(const FamilySummaryRequested());
+    });
     on<FamilyContactRequested>(_openContact);
     on<FamilyContactDismissed>((event, emit) {
       _contactRevision++;
@@ -81,7 +95,10 @@ final class FamilySummaryBloc
   final GetFamilySummary _summary;
   final ContactOptionReader _contact;
   final String olderAdultId;
-  final String olderAdultName;
+  String _olderAdultName;
+
+  /// Current display name, including a profile update acknowledged by Care Link.
+  String get olderAdultName => _olderAdultName;
   final Clock _clock;
   int _revision = 0;
   int _contactRevision = 0;
@@ -136,7 +153,7 @@ final class FamilySummaryBloc
         status: state.status,
         summary: state.summary,
         errorCode: state.errorCode,
-        contact: const FamilyContactDialog(),
+        contact: FamilyContactDialog(channelType: event.channelType),
       ),
     );
     final result = await _contact(olderAdultId);
@@ -148,7 +165,14 @@ final class FamilySummaryBloc
             status: state.status,
             summary: state.summary,
             errorCode: state.errorCode,
-            contact: FamilyContactDialog(option: value),
+            contact: FamilyContactDialog(
+              option:
+                  event.channelType == null ||
+                      value.channel?.type == event.channelType
+                  ? value
+                  : ContactOption(channel: null, firstName: value.firstName),
+              channelType: event.channelType,
+            ),
           ),
         );
       case AppFailure(:final code) when isAccessFailure(code):
@@ -166,7 +190,10 @@ final class FamilySummaryBloc
             status: state.status,
             summary: state.summary,
             errorCode: state.errorCode,
-            contact: FamilyContactDialog(errorCode: code),
+            contact: FamilyContactDialog(
+              errorCode: code,
+              channelType: event.channelType,
+            ),
           ),
         );
     }

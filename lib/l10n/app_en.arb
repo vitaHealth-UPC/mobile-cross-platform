@@ -1300,5 +1300,7 @@
   "lpNoteEmpty": "No notes yet. Tap to write the first one.",
   "lpNoteLoading": "Checking notes…",
   "lpNoteError": "We could not load the notes.",
-  "lpOpenNotes": "Open notes"
+  "lpOpenNotes": "Open notes",
+  "clEditProfileTitle": "Edit profile",
+  "clSaveProfile": "Save changes"
 }

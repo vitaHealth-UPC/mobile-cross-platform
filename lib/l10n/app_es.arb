@@ -1358,7 +1358,9 @@
   "homeDueBody": "{medication} · Confirma cuando la hayas tomado.",
   "@homeDueBody": {
     "placeholders": {
-      "medication": {"type": "String"}
+      "medication": {
+        "type": "String"
+      }
     }
   },
   "homeReinforcedTitle": "Segundo recordatorio",
@@ -1370,7 +1372,13 @@
   "planChoiceLoadErrorBody": "Inténtalo nuevamente o continúa con tu registro.",
   "planChoiceContinue": "Continuar al registro",
   "planChoiceChoose": "Elegir {name}",
-  "@planChoiceChoose": {"placeholders": {"name": {"type": "String"}}},
+  "@planChoiceChoose": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "planChoiceRecommended": "Recomendado",
   "planChoiceDescEssential": "Recordatorios, agenda y confirmación accesible.",
   "planChoiceDescFamily": "Incluye seguimiento, alertas e insights para cuidadores.",
@@ -1384,26 +1392,77 @@
   "planChoiceRowMonitoring": "Seguimiento familiar",
   "planChoiceRowInsights": "Insights de adherencia",
   "planChoiceIncluded": "Incluido en {name}",
-  "@planChoiceIncluded": {"placeholders": {"name": {"type": "String"}}},
+  "@planChoiceIncluded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "planChoiceNotIncluded": "No incluido en {name}",
-  "@planChoiceNotIncluded": {"placeholders": {"name": {"type": "String"}}},
+  "@planChoiceNotIncluded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "planChoiceApplyFailed": "Tu cuenta está lista. No pudimos activar el plan elegido; puedes cambiarlo en Ajustes.",
   "reminderChannelName": "Recordatorios de tomas",
   "reminderChannelDescription": "Avisos a la hora de cada toma y si sigue pendiente.",
   "reminderDueBody": "{medication} · {dose}. Confírmala cuando la hayas tomado.",
-  "@reminderDueBody": {"placeholders": {"medication": {"type": "String"}, "dose": {"type": "String"}}},
+  "@reminderDueBody": {
+    "placeholders": {
+      "medication": {
+        "type": "String"
+      },
+      "dose": {
+        "type": "String"
+      }
+    }
+  },
   "reminderReinforcedBody": "{medication} sigue pendiente. Confírmala cuando la tomes.",
-  "@reminderReinforcedBody": {"placeholders": {"medication": {"type": "String"}}},
+  "@reminderReinforcedBody": {
+    "placeholders": {
+      "medication": {
+        "type": "String"
+      }
+    }
+  },
   "lpAge": "{years} años",
-  "@lpAge": {"placeholders": {"years": {"type": "int"}}},
+  "@lpAge": {
+    "placeholders": {
+      "years": {
+        "type": "int"
+      }
+    }
+  },
   "lpBirthday": "Cumpleaños: {date}",
-  "@lpBirthday": {"placeholders": {"date": {"type": "String"}}},
+  "@lpBirthday": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "lpLinked": "Vinculada",
   "lpLinkedSince": "Desde {date}",
-  "@lpLinkedSince": {"placeholders": {"date": {"type": "String"}}},
+  "@lpLinkedSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "lpTreatmentTitle": "Tratamiento actual",
   "lpMedicationsActive": "{count, plural, =1{1 medicamento activo} other{{count} medicamentos activos}}",
-  "@lpMedicationsActive": {"placeholders": {"count": {"type": "int"}}},
+  "@lpMedicationsActive": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "lpMedicationsNone": "Sin medicamentos activos",
   "lpMedicationsLoading": "Consultando medicación…",
   "lpMedicationsError": "No pudimos cargar la medicación.",
@@ -1415,5 +1474,7 @@
   "lpNoteEmpty": "Aún no hay notas. Toca para escribir la primera.",
   "lpNoteLoading": "Consultando notas…",
   "lpNoteError": "No pudimos cargar las notas.",
-  "lpOpenNotes": "Abrir notas"
+  "lpOpenNotes": "Abrir notas",
+  "clEditProfileTitle": "Editar perfil",
+  "clSaveProfile": "Guardar cambios"
 }

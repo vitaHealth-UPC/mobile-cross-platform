@@ -25,12 +25,14 @@ import '../../features/care_link/application/usecases/accept_care_link.dart';
 import '../../features/care_link/application/usecases/generate_linking_code.dart';
 import '../../features/care_link/application/usecases/register_consent.dart';
 import '../../features/care_link/application/usecases/register_older_adult.dart';
+import '../../features/care_link/application/usecases/update_caregiver_profile.dart';
 import '../../features/care_link/application/usecases/withdraw_consent.dart';
 import '../../features/care_link/infrastructure/remote/care_link_api.dart';
 import '../../features/care_link/infrastructure/repositories/remote_adult_profile_reader.dart';
 import '../../features/care_link/infrastructure/repositories/remote_care_link_consent.dart';
 import '../../features/care_link/infrastructure/repositories/remote_care_link_repository.dart';
 import '../../features/care_link/presentation/bloc/consent/consent_bloc.dart';
+import '../../features/care_link/presentation/bloc/profile_editor/profile_editor_cubit.dart';
 import '../../features/care_link/presentation/bloc/profiles/profiles_bloc.dart';
 import '../../features/family_monitoring/application/usecases/alert_usecases.dart';
 import '../../features/family_monitoring/application/usecases/note_usecases.dart';
@@ -588,6 +590,14 @@ final class AppDependencies {
     register: RegisterOlderAdult(_careLinks, DateTime.now),
     generate: GenerateLinkingCode(_careLinks),
   );
+
+  /// Care Link owns the basic profile form and its server-validated update.
+  ProfileEditorCubit createProfileEditorCubit(String olderAdultId) =>
+      ProfileEditorCubit(
+        editor: _careLinks,
+        update: UpdateCaregiverProfile(_careLinks, DateTime.now),
+        olderAdultId: olderAdultId,
+      );
 
   /// Creates route-owned recovery state without session persistence capabilities.
   RecoveryBloc createRecoveryBloc() {

@@ -7,6 +7,8 @@ import '../../features/adherence_analytics/presentation/navigation/adherence_bad
 import '../../features/adherence_analytics/presentation/navigation/adherence_level_view.dart';
 import '../../features/adherence_analytics/presentation/navigation/treatment_adherence_view.dart';
 import '../../features/care_link/application/readmodels/caregiver_link_summary.dart';
+import '../../features/care_link/presentation/bloc/profile_editor/profile_editor_cubit.dart';
+import '../../features/care_link/presentation/navigation/profile_editor_route.dart';
 import '../../features/family_monitoring/application/readmodels/monitoring_readmodels.dart';
 import '../../features/family_monitoring/presentation/navigation/family_monitoring_navigation.dart';
 import '../../features/identity_subscription/presentation/bloc/subscription/subscription_bloc.dart';
@@ -36,6 +38,7 @@ class CaregiverCareRoute extends StatelessWidget {
     this.createTreatmentAdherenceBloc,
     this.createPersonAdherenceBloc,
     this.inventory,
+    this.createProfileEditorCubit,
   });
 
   final CaregiverLinkSummary profile;
@@ -46,6 +49,8 @@ class CaregiverCareRoute extends StatelessWidget {
 
   /// Stock of each medication (US-40 to US-43); absent when not wired.
   final InventoryNavigation? inventory;
+  final ProfileEditorCubit Function(String olderAdultId)?
+  createProfileEditorCubit;
   final LevelBloc Function(String olderAdultId)? createPersonAdherenceBloc;
   final LevelBloc Function(String olderAdultId, String treatmentId)?
   createTreatmentAdherenceBloc;
@@ -75,6 +80,14 @@ class CaregiverCareRoute extends StatelessWidget {
         onPerson: () => Navigator.of(inner).maybePop(),
         person: LinkedPersonSlots(
           linkedSince: profile.confirmedAt,
+          onEdit: switch (createProfileEditorCubit) {
+            final create? => (context) async => (await openProfileEditor(
+              context,
+              createCubit: () => create(profile.olderAdultId),
+              onSessionInvalidated: onSessionInvalidated,
+            ))?.fullName,
+            null => null,
+          },
           adherence: switch (createPersonAdherenceBloc) {
             final create? => (_) => AdherenceLevelView(
               createBloc: () => create(profile.olderAdultId),

@@ -1169,7 +1169,7 @@ Inventario de referencia:70 variantes. Estado inicial compartido:1 completa acep
 | 13 | Dose Confirmed | 563:291 | Parcial | Aceptada proporcionalmente en render ES (11-11-2026; normal y texto 150 %) | Resultado con hora registrada y próxima toma real; tests, sonda Spring local, emulador y teléfono físico POCO X6 Pro Capturas de widgets revisadas contra Figma; no se agrega evidencia de Render ni dispositivo. |
 | 14 | Accessibility | 563:618 | Parcial | Aceptada proporcionalmente en render ES (17-11-2026; claro/oscuro, contraste y texto ampliado) | Grupos Vista, Interacción y Ayuda comparados con 563:618; controles nativos, iconos originales, selección de cuatro tamaños e idioma y persistencia existentes conservados. Doce renders; sin nueva prueba de dispositivo. |
 | 15 | Family Summary | 563:727 | Parcial | Sin aceptación visual específica registrada | FamilySummaryScreen y FamilySummaryBloc: Resumen y señales de atención del adulto elegido, con recarga al regresar de flujos; pruebas del equipo integradas. |
-| 16 | Linked Person | 563:1121 | Completa | Aceptada proporcionalmente en emulador (18-11-2026); sin Editar ni ↗ y con iniciales en lugar de foto | LinkedPersonScreen en la pestaña Persona con perfil, vínculo, adherencia, medicamentos activos, contacto y última nota; monitoring_navigation_test.dart, active_medications_card_test.dart y Spring local |
+| 16 | Linked Person | 563:1121 | Parcial | Aceptada proporcionalmente en emulador por el equipo y render ES revisado (18-11-2026; iconos originales, texto 150 % y Editar); iniciales porque no hay fotografía contractual | LinkedPersonScreen en Persona con perfil, vínculo, adherencia, medicación activa, contacto por tipo y última nota. Editar usa PUT del perfil en Care Link y recarga nombre, ficha y listado. Pruebas HTTP simuladas y renders de la edición; la nueva escritura conserva verificación desplegada y de dispositivo pendiente. |
 | 17 | Alerts | 563:819 | Parcial | Sin aceptación visual específica registrada | AlertsScreen y AlertsBloc: Alertas por alcance del adulto, filtros y lectura de estados del servidor; pruebas de contrato y navegación. |
 | 18 | Alert Detail | 563:918 | Parcial | Sin aceptación visual específica registrada | AlertDetailScreen y AlertDetailBloc: Detalle, atención, cierre, contacto y nota, con validación de recibos y pérdida de permiso. |
 | 19 | History & Insights | 563:1017 | Parcial | Comparada, ajustes abiertos (eje con 5 fechas proporcionales a los puntos; el brillo del fondo es casi invisible, como en el nodo) | AdherenceFlowRoute/HistoryBloc con adherence/summary de 7 o 30 días; estados contenido, sin datos (563:2836), sin resultados (563:4039), 7 días (563:4447, sin captura propia), carga y error; tests de caso de uso, mapper, repositorio con sesión, bloc y widget; falta entrada desde Family Monitoring, Spring/Render y dispositivo |
@@ -1359,6 +1359,37 @@ Verificación de este corte: 18 pruebas del Inicio aprobadas, 666 pruebas en la 
 La pantalla mantiene sus componentes Flutter y sus datos de sesión. No se modifica su composición ni se suma una aceptación visual por este cambio funcional. La consulta periódica no sustituye las notificaciones de sistema: no avisa con la aplicación cerrada.
 
 Se consultan asimismo los nodos 563:1121 y 563:727 para preparar la ficha de persona y la revisión del resumen familiar. Esa consulta no acredita implementación ni aceptación visual. La ficha requiere reunir perfil, vínculo, adherencia, medicación, notas y contacto con permisos vigentes; no se incorporan fechas, fotografías, tratamientos ni porcentajes del ejemplo como datos productivos. Continúa el recuento de 64 variantes representadas y 32 aceptadas visualmente.
+
+## Revisión remota y edición de la persona (18-11-2026)
+
+Se reciben diez commits de temp, de b2ca71e a a0aa276: referencias de medicamento/tratamiento en el caché, recordatorios en Inicio y con la aplicación cerrada, catálogo público de planes/contacto y ficha Persona. La base recibida pasa 704 pruebas. El borrador local de la ficha queda conservado; se utiliza la pantalla y composición por slots del equipo, incorporando únicamente la edición de Care Link y los cuatro SVG originales que aún faltan. No se duplica el recorrido.
+
+Los textos secundarios de Persona usan #5B6475 sobre superficies claras; se conserva ese contraste. Se revisan capturas con fuentes reales, tarjetas productivas de Analítica y Treatment, iconos SVG de 24x24 y escala de texto normal/150 %. Las áreas interactivas, tarjetas y formulario son widgets Flutter. La imagen de Rosa del mockup no se asigna a usuarios reales. El acceso lateral ↗ no tiene un destino contractual definido y no se presenta como función implementada.
+
+### Responsabilidades y correcciones
+
+| Área y archivos | Responsabilidad |
+| --- | --- |
+| Care Link: application/ports/caregiver_profile_editor.dart y application/usecases/update_caregiver_profile.dart | Puerto de lectura/escritura y validación de nombre, referencia y fecha calendario. La edición no reasigna cuidador ni consentimiento. |
+| Care Link: infrastructure/remote/care_link_api.dart e infrastructure/repositories/remote_care_link_repository.dart | GET y PUT del perfil ya existentes en backend; bearer del cuidador capturado. El recibo debe coincidir en persona, cuidador, nombre y fecha. Se rechazan respuestas posteriores a un cambio de cuenta. |
+| Care Link: presentation/bloc/profile_editor/profile_editor_cubit.dart, presentation/screens/profile_editor_screen.dart y presentation/navigation/profile_editor_route.dart | Formulario con TextFormField, ListTile, DatePicker, FilledButton y BLoC/Cubit. Cancelar no escribe; un fallo conserva los campos; doble envío no duplica escrituras y una respuesta tras cerrar no restaura el formulario. Solo un recibo válido retorna el perfil actualizado. |
+| Family Monitoring: LinkedPersonSlots, LinkedPersonScreen y FamilySummaryBloc | El host ofrece Editar y devuelve el nombre confirmado. Ficha, resumen y tarjetas se recargan. Una lectura fallida de perfil oculta las tarjetas clínicas; perder permiso al consultar contacto también retira esos datos. |
+| Family Monitoring: FamilyContactRequested y diálogo de contacto | Llamar filtra teléfono y Mensajes filtra WhatsApp. Un canal diferente no se ofrece como si correspondiera a la acción elegida. Reintentar conserva el filtro. El contacto genérico del resumen conserva ambos tipos. |
+| app y CaregiverSetupRoute | Composición explícita de la edición mediante el host y recarga del listado de vínculos al volver de la zona de seguimiento. |
+
+El registro anterior del equipo indicaba que no existía edición del perfil. El controlador OlderAdultsController ya expone PUT /api/v1/older-adults/{olderAdultId}; esta revisión conecta ese contrato sin modificar el backend. La edición se considera parcial hasta probar su escritura contra el servidor y dispositivo, además de las comprobaciones locales. La lectura y las pruebas de Spring/emulador previas del equipo se conservan con su alcance original.
+
+### Verificación del corte
+
+La suite integrada pasa 723 pruebas, incluidas 13 pruebas nuevas de edición y seis de integración/representación de Persona. El análisis final no reporta incidencias y la comprobación de formato queda limpia en 469 archivos. El APK debug compila con las dependencias recibidas; conserva avisos del entorno de Kotlin y herramientas del SDK. Se revisan los renders de Persona y del formulario con escala normal/150 %. No se ejecuta una nueva escritura en Render ni en teléfono físico.
+
+### Estado de los repositorios y continuidad
+
+La rama de trabajo Flutter continúa en temp. main conserva el scaffold 269f50c y no se crea una release ni se integra main/develop como efecto de esta revisión. Backend permanece en main 9f6fd73 y develop/fix 9154233; Android mantiene main d04ca0e y develop d2baab3. Se consultan los remotos y no hay cambios nuevos en esos dos repositorios. El informe académico no se modifica.
+
+El inventario contiene 69 de 70 variantes representadas, 9 completas y 60 parciales; quedan 37 aceptaciones visuales proporcionales. La única variante sin implementación específica es Landing - Value & Features (563:1849). Estos recuentos no equivalen a finalización de la aplicación: siguen abiertas la validación visual de variantes, el acceso social Flutter, push FCM familiar y la verificación remota/dispositivo de recorridos concretos. Los recordatorios locales del equipo sí existen, programan desde la agenda almacenada y tienen evidencia del equipo con la app cerrada; no equivalen a recibir nuevas programaciones del servidor con la app cerrada ni a push familiar.
+
+Siguiente recorrido: revisar la fidelidad del resumen familiar con 563:727, completar las comparaciones específicas pendientes y verificar la escritura del perfil en un host aislado. El corte conserva separadas las evidencias de HTTP simulado, render, Spring, Render y dispositivo.
 
 ## Procedimiento de implementación y revisión
 

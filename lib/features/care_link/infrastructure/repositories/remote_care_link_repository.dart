@@ -5,6 +5,7 @@ import '../../../../shared/application/time/clock.dart';
 import '../../../../shared/common/result/app_result.dart';
 import '../../../../shared/infrastructure/network/api_response.dart';
 import '../../application/ports/care_link_writer.dart';
+import '../../application/ports/caregiver_profile_editor.dart';
 import '../../application/ports/caregiver_profiles_reader.dart';
 import '../../application/readmodels/caregiver_link_summary.dart';
 import '../../application/readmodels/older_adult_profile.dart';
@@ -15,7 +16,7 @@ import '../remote/care_link_api.dart';
 /// Captures caregiver identity for each request and rejects results after actor changes.
 /// Profile registration and code issuance never replace or issue an adult session.
 final class RemoteCareLinkRepository
-    implements CareLinkWriter, CaregiverProfilesReader {
+    implements CareLinkWriter, CaregiverProfilesReader, CaregiverProfileEditor {
   const RemoteCareLinkRepository({
     required this._api,
     required this._store,
@@ -24,6 +25,40 @@ final class RemoteCareLinkRepository
   final CareLinkApi _api;
   final SessionStore _store;
   final Clock _clock;
+
+  @override
+  Future<AppResult<OlderAdultProfile>> readProfile(String olderAdultId) =>
+      _authorized((session) async {
+        final response = await _api.profile(olderAdultId, session.accessToken);
+        if (response.status != 200) return _failure(response);
+        final profile = CareLinkMapper.profile(response.body);
+        return profile.id == olderAdultId &&
+                profile.caregiverId == session.owner.id
+            ? AppSuccess(profile)
+            : const AppFailure('INVALID_RESPONSE');
+      });
+
+  @override
+  Future<AppResult<OlderAdultProfile>> updateProfile(
+    String olderAdultId,
+    String fullName,
+    DateTime birthDate,
+  ) => _authorized((session) async {
+    final response = await _api.updateProfile(
+      olderAdultId,
+      fullName,
+      birthDate,
+      session.accessToken,
+    );
+    if (response.status != 200) return _failure(response);
+    final profile = CareLinkMapper.profile(response.body);
+    return profile.id == olderAdultId &&
+            profile.caregiverId == session.owner.id &&
+            profile.fullName == fullName &&
+            profile.birthDate == birthDate
+        ? AppSuccess(profile)
+        : const AppFailure('INVALID_RESPONSE');
+  });
 
   @override
   Future<AppResult<List<CaregiverLinkSummary>>> readConfirmed() =>

@@ -68,7 +68,7 @@ Future<void> main() async {
             createBloc: dependencies.createProfilesBloc,
             onSignOut: signOut,
             onSessionInvalidated: invalidated,
-            onOpenProfile: (link) {
+            onOpenProfile: (link) async {
               final caregiverId = context
                   .read<AccessBloc>()
                   .state
@@ -76,7 +76,7 @@ Future<void> main() async {
                   ?.owner
                   .id;
               if (caregiverId == null) return;
-              Navigator.of(context).push<void>(
+              await Navigator.of(context).push<void>(
                 MaterialPageRoute(
                   builder: (_) => CaregiverCareRoute(
                     profile: link,
@@ -85,6 +85,8 @@ Future<void> main() async {
                     monitoring: monitoring,
                     push: push,
                     inventory: inventory,
+                    createProfileEditorCubit:
+                        dependencies.createProfileEditorCubit,
                     createPersonAdherenceBloc:
                         dependencies.createAdherenceWeekBloc,
                     createTreatmentAdherenceBloc:

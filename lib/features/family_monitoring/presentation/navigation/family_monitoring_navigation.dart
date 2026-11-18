@@ -28,11 +28,15 @@ final class LinkedPersonSlots {
     required this.linkedSince,
     this.adherence,
     this.treatment,
+    this.onEdit,
   });
 
   final DateTime linkedSince;
   final WidgetBuilder? adherence;
   final WidgetBuilder? treatment;
+
+  /// Returns the server-acknowledged name, or null when editing is cancelled.
+  final Future<String?> Function(BuildContext)? onEdit;
 }
 
 final class FamilyMonitoringFactories {
@@ -142,6 +146,16 @@ class _CaregiverShell extends StatefulWidget {
 
 class _CaregiverShellState extends State<_CaregiverShell> {
   CaregiverTab _tab = CaregiverTab.home;
+  int _personRevision = 0;
+
+  Future<void> _editPerson() async {
+    final name = await widget.person?.onEdit?.call(context);
+    if (!mounted || name == null) return;
+    _summary.add(FamilySummaryNameUpdated(name));
+    _notes.add(const NotesRequested());
+    setState(() => _personRevision++);
+  }
+
   late final FamilySummaryBloc _summary;
   late final AlertsBloc _alerts;
   late final NotesBloc _notes;
@@ -263,6 +277,9 @@ class _CaregiverShellState extends State<_CaregiverShell> {
         BlocListener<FamilySummaryBloc, FamilySummaryState>(
           listenWhen: (a, b) => a.errorCode != b.errorCode,
           listener: (_, state) {
+            if (state.errorCode == 'ACCESS_DENIED') {
+              _notes.add(NotesAccessLost(state.errorCode!));
+            }
             if (isSessionFailure(state.errorCode)) {
               widget.onSessionInvalidated();
             }
@@ -300,8 +317,19 @@ class _CaregiverShellState extends State<_CaregiverShell> {
           onTab: _select,
           onOpenMedications: () => _thenRefresh(widget.onAddMedication),
           onOpenHistory: widget.onHistory,
-          adherence: widget.person!.adherence?.call(context),
-          treatment: widget.person!.treatment?.call(context),
+          onEdit: widget.person!.onEdit == null ? null : _editPerson,
+          adherence: KeyedSubtree(
+            key: ValueKey('adherence-$_personRevision'),
+            child:
+                widget.person!.adherence?.call(context) ??
+                const SizedBox.shrink(),
+          ),
+          treatment: KeyedSubtree(
+            key: ValueKey('treatment-$_personRevision'),
+            child:
+                widget.person!.treatment?.call(context) ??
+                const SizedBox.shrink(),
+          ),
         ),
         _ => FamilySummaryScreen(
           launcher: widget.factories.launcher,

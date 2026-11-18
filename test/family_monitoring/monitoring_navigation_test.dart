@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tata/features/adherence_analytics/presentation/widgets/adherence_level_card.dart';
 import 'package:tata/features/family_monitoring/application/ports/contact_launcher.dart';
 import 'package:tata/features/family_monitoring/application/ports/monitoring_ports.dart';
 import 'package:tata/features/family_monitoring/application/readmodels/monitoring_readmodels.dart';
@@ -18,10 +19,15 @@ import 'package:tata/features/family_monitoring/presentation/bloc/notes/notes_bl
 import 'package:tata/features/family_monitoring/presentation/bloc/personal_notes/personal_notes_bloc.dart';
 import 'package:tata/features/family_monitoring/presentation/bloc/summary/family_summary_bloc.dart';
 import 'package:tata/features/family_monitoring/presentation/navigation/family_monitoring_navigation.dart';
+import 'package:tata/features/treatment_management/application/usecases/medication_usecases.dart';
+import 'package:tata/features/treatment_management/domain/entities/medication.dart';
+import 'package:tata/features/treatment_management/presentation/bloc/medication_management/medication_management_bloc.dart';
+import 'package:tata/features/treatment_management/presentation/widgets/active_medications_card.dart';
 import 'package:tata/l10n/generated/app_localizations.dart';
 import 'package:tata/shared/common/result/app_result.dart';
 import 'package:tata/shared/presentation/theme/tata_theme.dart';
 
+import '../support/fake_treatment_backend.dart';
 import '../support/visual_capture.dart';
 import 'monitoring_application_test.dart'
     show
@@ -46,6 +52,7 @@ final class _Summary implements FamilyMonitoringRepository {
   _Summary(this.result);
   AppResult<FamilySummary> result;
   int reads = 0;
+  final names = <String>[];
 
   @override
   Future<AppResult<FamilySummary>> summary(
@@ -54,6 +61,7 @@ final class _Summary implements FamilyMonitoringRepository {
     DateTime day,
   ) async {
     reads++;
+    names.add(name);
     return result;
   }
 
@@ -79,10 +87,12 @@ void main() {
   late _Summary summaries;
   late FakeAlerts alerts;
   late FakeTimeline timeline;
+  late FakePersonReader personReader;
 
   FamilyMonitoringNavigation navigation({
     DateTime? birthDate,
     List<FollowUpNote> noteList = const [],
+    FakeContact? contact,
   }) {
     summaries = _Summary(AppSuccess(summary()));
     alerts = FakeAlerts(alerts: [anAlert()]);
@@ -96,7 +106,7 @@ void main() {
         ),
       ),
     );
-    final people = FakePersonReader(
+    final people = personReader = FakePersonReader(
       AppSuccess(
         MonitoredPerson(
           id: 'adult-1',
@@ -112,7 +122,7 @@ void main() {
         launcher: _NoLauncher(),
         createSummaryBloc: (id, name) => FamilySummaryBloc(
           summary: GetFamilySummary(summaries),
-          contact: GetContactOption(FakeContact()),
+          contact: GetContactOption(contact ?? FakeContact()),
           olderAdultId: id,
           olderAdultName: name,
           clock: () => DateTime(2026, 11, 13, 10),
@@ -163,27 +173,39 @@ void main() {
     FutureOr<void> Function()? onAddMedication,
     FutureOr<void> Function(StockAttention stock)? onOpenStock,
     LinkedPersonSlots? person,
+    double scale = 1,
   }) async {
-    tester.view.physicalSize = const Size(393, 883);
+    tester.view.physicalSize = scale == 1
+        ? const Size(393, 883)
+        : const Size(360, 640);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
-      MaterialApp(
-        theme: TataTheme.light,
-        locale: const Locale('es'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: navigation.caregiverHome(
-          olderAdultId: 'adult-1',
-          olderAdultName: 'Rosa Vargas',
-          onHistory: onHistory ?? () {},
-          onAddMedication: onAddMedication ?? () {},
-          onPerson: onPerson ?? () {},
-          onMore: onMore ?? () {},
-          onSessionInvalidated: onInvalidated ?? () {},
-          onOpenStock: onOpenStock,
-          person: person,
+      RepaintBoundary(
+        key: const Key('linked-person-capture'),
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: TataTheme.light,
+          locale: const Locale('es'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: TextScaler.linear(scale)),
+            child: child!,
+          ),
+          home: navigation.caregiverHome(
+            olderAdultId: 'adult-1',
+            olderAdultName: 'Rosa Vargas',
+            onHistory: onHistory ?? () {},
+            onAddMedication: onAddMedication ?? () {},
+            onPerson: onPerson ?? () {},
+            onMore: onMore ?? () {},
+            onSessionInvalidated: onInvalidated ?? () {},
+            onOpenStock: onOpenStock,
+            person: person,
+          ),
         ),
       ),
     );
@@ -354,6 +376,163 @@ void main() {
       adherence: (_) => const Text('tarjeta de adherencia'),
       treatment: (_) => const Text('tarjeta de tratamiento'),
     );
+
+    testWidgets('call and message only offer their registered channel type', (
+      tester,
+    ) async {
+      final contact = FakeContact(
+        channel: AppSuccess(
+          ContactChannel(
+            type: ContactChannelType.whatsapp,
+            value: '+51999888777',
+          ),
+        ),
+        name: const AppSuccess('Rosa Vargas'),
+      );
+      await pumpHome(tester, navigation(contact: contact), person: slots());
+      await tester.tap(find.text('Persona'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Llamar'));
+      await tester.pumpAndSettle();
+      expect(find.text('Abrir WhatsApp'), findsNothing);
+      expect(
+        find.text('No hay un canal de contacto registrado.'),
+        findsOneWidget,
+      );
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Mensajes'));
+      await tester.pumpAndSettle();
+      expect(find.text('Abrir WhatsApp'), findsOneWidget);
+      expect(find.text('Abrir teléfono'), findsNothing);
+    });
+
+    testWidgets('lost contact permission removes the protected person cards', (
+      tester,
+    ) async {
+      await pumpHome(
+        tester,
+        navigation(
+          contact: FakeContact(channel: const AppFailure('ACCESS_DENIED')),
+        ),
+        person: slots(),
+      );
+      await tester.tap(find.text('Persona'));
+      await tester.pumpAndSettle();
+      expect(find.text('tarjeta de adherencia'), findsOneWidget);
+      await tester.tap(find.text('Llamar'));
+      await tester.pumpAndSettle();
+      expect(find.text('tarjeta de adherencia'), findsNothing);
+      expect(find.text('tarjeta de tratamiento'), findsNothing);
+      expect(find.text('Vinculada'), findsNothing);
+    });
+
+    testWidgets('editing reloads the profile and updates the summary name', (
+      tester,
+    ) async {
+      await pumpHome(
+        tester,
+        navigation(),
+        person: LinkedPersonSlots(
+          linkedSince: DateTime(2025, 11, 2),
+          onEdit: (_) async {
+            personReader.result = AppSuccess(
+              MonitoredPerson(
+                id: 'adult-1',
+                fullName: 'Rosa Actualizada',
+                birthDate: DateTime(1958, 5, 12),
+              ),
+            );
+            return 'Rosa Actualizada';
+          },
+        ),
+      );
+      await tester.tap(find.text('Persona'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Editar'));
+      await tester.pumpAndSettle();
+      expect(find.text('Rosa Actualizada'), findsOneWidget);
+      expect(summaries.names.last, 'Rosa Actualizada');
+    });
+
+    testWidgets('a denied profile hides the clinical slots and linked status', (
+      tester,
+    ) async {
+      await pumpHome(tester, navigation(), person: slots());
+      personReader.result = const AppFailure('ACCESS_DENIED');
+      await tester.tap(find.text('Persona'));
+      await tester.pumpAndSettle();
+      expect(find.text('tarjeta de adherencia'), findsNothing);
+      expect(find.text('tarjeta de tratamiento'), findsNothing);
+      expect(find.text('Vinculada'), findsNothing);
+    });
+
+    for (final scale in [1.0, 1.5]) {
+      testWidgets(
+        'profile with production clinical cards renders at scale $scale',
+        (tester) async {
+          final backend = FakeBackend();
+          backend.medications.clear();
+          for (final (id, name, strength) in [
+            ('m1', 'Losartán', '50 mg'),
+            ('m2', 'Metformina', '500 mg'),
+            ('m3', 'Levotiroxina', '75 mcg'),
+          ]) {
+            backend.medications[id] = Medication(
+              id: id,
+              olderAdultId: 'adult-A',
+              name: name,
+              presentation: strength,
+              active: true,
+            );
+          }
+          await pumpHome(
+            tester,
+            navigation(
+              birthDate: DateTime(1958, 5, 12),
+              noteList: [
+                FollowUpNote(
+                  id: 1,
+                  text: 'A veces olvida la toma de la tarde cuando sale a caminar. Le ayudan los recordatorios.',
+                  recordedAt: DateTime.utc(2026, 11, 18),
+                  familiarId: 'caregiver-A',
+                ),
+              ],
+            ),
+            scale: scale,
+            person: LinkedPersonSlots(
+              linkedSince: DateTime(2024, 3, 1),
+              onEdit: (_) async => null,
+              adherence: (_) => const AdherenceLevelCard(
+                adherencePercent: 92,
+                periodDays: 30,
+                changePercent: 8,
+              ),
+              treatment: (_) => ActiveMedicationsCard(
+                createBloc: () => MedicationManagementBloc(
+                  list: ListMedications(backend),
+                  update: UpdateMedication(backend),
+                  deactivate: DeactivateMedication(backend),
+                  reactivate: ReactivateMedication(backend),
+                  olderAdultId: 'adult-A',
+                ),
+                onSessionInvalidated: () {},
+              ),
+            ),
+          );
+          await tester.tap(find.text('Persona'));
+          await tester.pumpAndSettle();
+          await captureWidget(
+            tester,
+            find.byKey(const Key('linked-person-capture')),
+            'linked_person_$scale',
+          );
+          await tester.scrollUntilVisible(find.text('Notas del cuidador'), 200);
+          expect(find.textContaining('A veces olvida'), findsOneWidget);
+          expect(tester.takeException(), isNull);
+        },
+      );
+    }
 
     testWidgets('shows who the person is, the link and the latest note', (
       tester,

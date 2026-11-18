@@ -68,6 +68,23 @@ final class CareLinkApi {
         token: token,
       );
 
+  /// Edits basic fields; the actor is taken from the bearer, never the body.
+  Future<ApiResponse> updateProfile(
+    String olderAdultId,
+    String fullName,
+    DateTime birthDate,
+    String token,
+  ) => _client.request(
+    'PUT',
+    'api/v1/older-adults/${Uri.encodeComponent(olderAdultId)}',
+    token: token,
+    body: {
+      'fullName': fullName,
+      'birthDate':
+          '${birthDate.year.toString().padLeft(4, '0')}-${birthDate.month.toString().padLeft(2, '0')}-${birthDate.day.toString().padLeft(2, '0')}',
+    },
+  );
+
   Future<ApiResponse> generate(
     String caregiverId,
     String olderAdultId,
