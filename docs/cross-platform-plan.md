@@ -1336,7 +1336,24 @@ La suite integrada actual pasa 659 pruebas y el análisis no reporta incidencias
 
 Quedan sin implementación específica las variantes 1 y 2 (landing), 16 (persona vinculada), 39 y 51 (avisos de toma y recordatorio reforzado) y 69 (destino externo no disponible). Los nueve contextos tienen código, pero Omission/Escalation conserva NotConfiguredPushTokenSource y NotConfiguredOmissionNotifier: este build no registra un token FCM ni muestra notificaciones de sistema reales. El acceso social de Flutter también permanece sin el adaptador cliente. No se equipara un cambio de plan con un cobro real.
 
-El siguiente recorrido funcional es enlazar un adaptador real de push/notificaciones y cerrar la ficha de persona; en paralelo, continuar el contraste de notificaciones, resumen familiar, alertas y notas. Se conserva la recarga del Home al volver o reabrir; la llegada de una toma mientras permanece abierto sigue requiriendo revisar su política de actualización. Las validaciones en Render, iOS y teléfono se mantienen separadas por recorrido. Backend y Android nativo no presentan cambios remotos nuevos en esta revisión; el informe académico no se modifica.
+El siguiente recorrido funcional es enlazar un adaptador real de push/notificaciones y cerrar la ficha de persona; en paralelo, continuar el contraste de notificaciones, resumen familiar, alertas y notas. El Home también descubre nuevas tomas mientras permanece visible mediante la política de actualización descrita en el siguiente corte. Las validaciones en Render, iOS y teléfono se mantienen separadas por recorrido. Backend y Android nativo no presentan cambios remotos nuevos en esta revisión; el informe académico no se modifica.
+
+## Actualización del Inicio visible (17-11-2026)
+
+Base: 9689c00 en temp, sin novedades remotas al comenzar este corte. Se resuelve el caso en que el cuidador programa una toma mientras el adulto mantiene abierta la pantalla de Inicio. La actualización se limita a lectura: el backend conserva la programación y clasificación de las tomas.
+
+| Archivo | Responsabilidad y comportamiento |
+| --- | --- |
+| lib/features/intake_execution/presentation/navigation/adult_home_route.dart | Administra un Timer de un minuto mientras la aplicación está resumed. Una ruta cubierta no consulta; inactive, hidden, paused y dispose cancelan el temporizador. La pérdida de acceso detiene nuevas recargas periódicas. Se conservan las recargas al volver y los avisos de sincronización offline. |
+| lib/features/intake_execution/presentation/bloc/home/home_event.dart | HomeRequested diferencia una consulta periódica de una recarga explícita. |
+| lib/features/intake_execution/presentation/bloc/home/home_bloc.dart | Conserva la tarjeta lista durante una consulta periódica y omite consultas periódicas superpuestas. Una recarga explícita prevalece sobre respuestas anteriores. Los fallos siguen produciendo un estado de error; no se conservan datos clínicos después de perder permiso. |
+| test/intake_execution/home_refresh_test.dart | Siete regresiones: toma nueva desde el estado vacío, lectura lenta sin parpadeo ni solicitudes superpuestas, ruta cubierta, ciclo de vida completo, pérdida de permiso, cambio de día y respuesta antigua después de una recarga explícita. |
+
+Verificación de este corte: 18 pruebas del Inicio aprobadas, 666 pruebas en la suite integrada, análisis sin incidencias, formato limpio en 445 archivos y APK debug generado correctamente. No se atribuye a estas pruebas una ejecución nueva en Render ni en teléfono físico.
+
+La pantalla mantiene sus componentes Flutter y sus datos de sesión. No se modifica su composición ni se suma una aceptación visual por este cambio funcional. La consulta periódica no sustituye las notificaciones de sistema: no avisa con la aplicación cerrada.
+
+Se consultan asimismo los nodos 563:1121 y 563:727 para preparar la ficha de persona y la revisión del resumen familiar. Esa consulta no acredita implementación ni aceptación visual. La ficha requiere reunir perfil, vínculo, adherencia, medicación, notas y contacto con permisos vigentes; no se incorporan fechas, fotografías, tratamientos ni porcentajes del ejemplo como datos productivos. Continúa el recuento de 64 variantes representadas y 32 aceptadas visualmente.
 
 ## Procedimiento de implementación y revisión
 
