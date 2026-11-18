@@ -97,10 +97,19 @@ void main() {
               .copyWith(textScaler: TextScaler.linear(scale)),
           child: child!,
         ),
-        home: child,
+        debugShowCheckedModeBanner: false,
+        home: RepaintBoundary(key: const Key('summary-capture'), child: child),
       ),
     );
     await tester.pump();
+    if (find.byType(FamilySummaryScreen).evaluate().isNotEmpty) {
+      await tester.runAsync(
+        () => precacheImage(
+          const AssetImage('assets/illustrations/summary_glow.png'),
+          tester.element(find.byType(FamilySummaryScreen).first),
+        ),
+      );
+    }
     await tester.pump();
   }
 
@@ -540,6 +549,68 @@ void main() {
   });
 
   group('family summary', () {
+    for (final scale in [1.0, 1.5]) {
+      testWidgets('summary Figma layout renders data at scale $scale', (
+        tester,
+      ) async {
+        final data = FamilySummary(
+          olderAdultName: 'Rosa Vargas',
+          date: DateTime(2026, 7, 22),
+          weekly: AdherenceCounts(23, 25),
+          today: AdherenceCounts(3, 4),
+          nextDose: MonitoredDose(
+            id: 'dose-1',
+            medicationId: 'med-A',
+            medicationName: 'Amlodipino 5 mg',
+            dose: '1 comprimido',
+            scheduledAt: DateTime(2026, 7, 22, 20).toUtc(),
+            status: 'PENDING',
+          ),
+          stockAttention: const [
+            StockAttention(
+              medicationId: 'med-B',
+              medicationName: 'Losartán',
+              remaining: 5,
+            ),
+          ],
+          openAlerts: const [],
+          inventoryAvailable: true,
+        );
+        await pump(
+          tester,
+          BlocProvider(
+            create: (_) => FamilySummaryBloc(
+              summary: GetFamilySummary(
+                _FakeSummaryRepository(AppSuccess(data)),
+              ),
+              contact: GetContactOption(FakeContact()),
+              olderAdultId: 'adult-1',
+              olderAdultName: 'Rosa Vargas',
+            )..add(const FamilySummaryRequested()),
+            child: FamilySummaryScreen(
+              launcher: _Launcher(),
+              onTab: (_) {},
+              onOpenAgenda: () {},
+              onChoosePerson: () {},
+              onOpenAlerts: () {},
+              onHistory: () {},
+              onOpenStock: (_) {},
+            ),
+          ),
+          scale: scale,
+        );
+        await tester.pumpAndSettle();
+        await captureWidget(
+          tester,
+          find.byKey(const Key('summary-capture')),
+          'family_summary_$scale',
+        );
+        expect(find.text('92%'), findsOneWidget);
+        await tester.scrollUntilVisible(find.text('Ver agenda'), 150);
+        expect(tester.takeException(), isNull);
+      });
+    }
+
     FamilySummary summary({
       List<StockAttention> stock = const [],
       bool inventory = true,

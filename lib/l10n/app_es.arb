@@ -1476,5 +1476,10 @@
   "lpNoteError": "No pudimos cargar las notas.",
   "lpOpenNotes": "Abrir notas",
   "clEditProfileTitle": "Editar perfil",
-  "clSaveProfile": "Guardar cambios"
+  "clSaveProfile": "Guardar cambios",
+  "fmViewAgenda": "Ver agenda",
+  "fmTodayAgenda": "Agenda de hoy",
+  "fmAgendaEmpty": "No hay tomas programadas para este día.",
+  "fmDoseOmitted": "Toma omitida",
+  "fmRestockHint": "Considera registrar un reabastecimiento."
 }

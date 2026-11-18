@@ -1302,5 +1302,10 @@
   "lpNoteError": "We could not load the notes.",
   "lpOpenNotes": "Open notes",
   "clEditProfileTitle": "Edit profile",
-  "clSaveProfile": "Save changes"
+  "clSaveProfile": "Save changes",
+  "fmViewAgenda": "View schedule",
+  "fmTodayAgenda": "Today's schedule",
+  "fmAgendaEmpty": "No doses are scheduled for this day.",
+  "fmDoseOmitted": "Missed dose",
+  "fmRestockHint": "Consider recording a replenishment."
 }

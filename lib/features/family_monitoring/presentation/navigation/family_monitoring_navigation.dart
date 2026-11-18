@@ -15,6 +15,7 @@ import '../bloc/summary/family_summary_bloc.dart';
 import '../screens/alert_detail_screen.dart';
 import '../screens/alerts_screen.dart';
 import '../screens/family_summary_screen.dart';
+import '../screens/followed_agenda_sheet.dart';
 import '../screens/linked_person_screen.dart';
 import '../screens/notes_screen.dart';
 import '../screens/personal_notes_screen.dart';
@@ -210,6 +211,23 @@ class _CaregiverShellState extends State<_CaregiverShell> {
     }
   }
 
+  /// Shows every dose of today with the caregiver's read-only authorization.
+  Future<void> _openAgenda() async {
+    _alerts.add(const AlertsRequested());
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => FractionallySizedBox(
+        heightFactor: 0.8,
+        child: BlocProvider.value(
+          value: _alerts,
+          child: const FollowedAgendaSheet(),
+        ),
+      ),
+    );
+  }
+
   /// Runs a host flow that may change medications or stock, then reads the summary again.
   Future<void> _thenRefresh(FutureOr<void> Function() open) async {
     await open();
@@ -288,6 +306,9 @@ class _CaregiverShellState extends State<_CaregiverShell> {
         BlocListener<AlertsBloc, AlertsState>(
           listenWhen: (a, b) => a.errorCode != b.errorCode,
           listener: (_, state) {
+            if (state.errorCode == 'ACCESS_DENIED') {
+              _summary.add(const FamilySummaryAccessLost('ACCESS_DENIED'));
+            }
             if (isSessionFailure(state.errorCode)) {
               widget.onSessionInvalidated();
             }
@@ -296,6 +317,9 @@ class _CaregiverShellState extends State<_CaregiverShell> {
         BlocListener<NotesBloc, NotesState>(
           listenWhen: (a, b) => a.errorCode != b.errorCode,
           listener: (_, state) {
+            if (state.errorCode == 'ACCESS_DENIED') {
+              _summary.add(const FamilySummaryAccessLost('ACCESS_DENIED'));
+            }
             if (isSessionFailure(state.errorCode)) {
               widget.onSessionInvalidated();
             }
@@ -335,6 +359,8 @@ class _CaregiverShellState extends State<_CaregiverShell> {
           launcher: widget.factories.launcher,
           onTab: _select,
           onHistory: widget.onHistory,
+          onOpenAgenda: _openAgenda,
+          onChoosePerson: widget.onPerson,
           onAddMedication: () => _thenRefresh(widget.onAddMedication),
           onOpenAlerts: () => _select(CaregiverTab.alerts),
           onOpenStock: switch (widget.onOpenStock) {

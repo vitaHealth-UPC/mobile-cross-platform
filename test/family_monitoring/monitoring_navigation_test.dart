@@ -370,6 +370,76 @@ void main() {
     expect(invalidated, 1);
   });
 
+  testWidgets(
+    'summary agenda shows every outcome, including overdue pending doses',
+    (tester) async {
+      final nav = navigation();
+      timeline.result = AppSuccess(
+        AlertTimeline(
+          alerts: const [],
+          doses: [
+            dose('pending', 'PENDING', DateTime(2026, 11, 13, 6)),
+            dose('done', 'CONFIRMED', DateTime(2026, 11, 13, 7)),
+            dose('late', 'LATE', DateTime(2026, 11, 13, 8)),
+            dose('missed', 'OMITTED', DateTime(2026, 11, 13, 9)),
+          ],
+          olderAdultName: 'Rosa Vargas',
+          day: DateTime(2026, 11, 13),
+        ),
+      );
+      await pumpHome(tester, nav);
+      await tester.ensureVisible(find.text('Ver agenda'));
+      await tester.tap(find.text('Ver agenda'));
+      await tester.pumpAndSettle();
+      expect(find.text('Agenda de hoy'), findsOneWidget);
+      for (final label in [
+        'Toma pendiente',
+        'Toma confirmada',
+        'Toma confirmada con retraso',
+        'Toma omitida',
+      ]) {
+        expect(
+          find.textContaining(RegExp('\\n${RegExp.escape(label)}\$')),
+          findsOneWidget,
+        );
+      }
+      expect(find.text('Confirmar toma'), findsNothing);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('Resumen familiar'), findsOneWidget);
+    },
+  );
+
+  testWidgets('daily agenda remains scrollable with enlarged text', (
+    tester,
+  ) async {
+    await pumpHome(tester, navigation(), scale: 1.5);
+    await tester.ensureVisible(find.text('Ver agenda'));
+    await tester.tap(find.text('Ver agenda'));
+    await tester.pumpAndSettle();
+    expect(find.text('Agenda de hoy'), findsOneWidget);
+    expect(find.textContaining('Toma confirmada'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('denied agenda does not keep a previously loaded dose', (
+    tester,
+  ) async {
+    final nav = navigation();
+    await pumpHome(tester, nav);
+    timeline.result = const AppFailure('ACCESS_DENIED');
+    await tester.ensureVisible(find.text('Ver agenda'));
+    await tester.tap(find.text('Ver agenda'));
+    await tester.pumpAndSettle();
+    expect(find.text('Agenda de hoy'), findsOneWidget);
+    expect(find.textContaining('Toma confirmada'), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('71%'), findsNothing);
+    expect(find.text('Seguimiento restringido'), findsOneWidget);
+  });
+
   group('Person tab (Figma 563:1121)', () {
     LinkedPersonSlots slots() => LinkedPersonSlots(
       linkedSince: DateTime(2025, 11, 2),

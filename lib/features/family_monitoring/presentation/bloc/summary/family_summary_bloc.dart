@@ -24,6 +24,12 @@ final class FamilySummaryNameUpdated extends FamilySummaryEvent {
   final String name;
 }
 
+/// Another protected follow-up read has refused access to this person.
+final class FamilySummaryAccessLost extends FamilySummaryEvent {
+  const FamilySummaryAccessLost(this.code);
+  final String code;
+}
+
 /// Open the contact dialog; the channel is read when it is asked for.
 final class FamilyContactRequested extends FamilySummaryEvent {
   const FamilyContactRequested({this.channelType});
@@ -74,6 +80,17 @@ final class FamilySummaryBloc
   }) : _clock = clock ?? DateTime.now,
        super(const FamilySummaryState()) {
     on<FamilySummaryRequested>(_load);
+    on<FamilySummaryAccessLost>((event, emit) {
+      if (!isAccessFailure(event.code)) return;
+      _revision++;
+      _contactRevision++;
+      emit(
+        FamilySummaryState(
+          status: FamilySummaryStatus.failure,
+          errorCode: event.code,
+        ),
+      );
+    });
     on<FamilySummaryNameUpdated>((event, emit) {
       if (event.name.trim().isEmpty) return;
       _olderAdultName = event.name.trim();
