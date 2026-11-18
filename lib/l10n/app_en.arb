@@ -873,6 +873,8 @@
   "fmTitleAttended": "Attended alert",
   "fmTitleClosed": "Closed alert",
   "fmDetailTitle": "Alert detail",
+  "fmReminderTimeline": "Reminder timeline",
+  "fmPersonProfile": "View profile",
   "fmDetailSection": "Alert information",
   "fmDetailScheduled": "Scheduled dose",
   "fmDetailReason": "Reason",

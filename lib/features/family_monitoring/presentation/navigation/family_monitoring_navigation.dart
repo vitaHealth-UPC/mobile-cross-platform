@@ -263,6 +263,14 @@ class _CaregiverShellState extends State<_CaregiverShell> {
                       },
                       child: AlertDetailScreen(
                         launcher: f.launcher,
+                        onTab: (tab) {
+                          Navigator.of(detailContext).pop();
+                          _select(tab);
+                        },
+                        onOpenProfile: () {
+                          Navigator.of(detailContext).pop();
+                          _select(CaregiverTab.person);
+                        },
                         onOpenSummary: () {
                           Navigator.of(detailContext).pop();
                           _select(CaregiverTab.home);

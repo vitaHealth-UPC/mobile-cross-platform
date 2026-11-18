@@ -19,6 +19,7 @@ import 'package:tata/features/family_monitoring/presentation/bloc/notes/notes_bl
 import 'package:tata/features/family_monitoring/presentation/bloc/personal_notes/personal_notes_bloc.dart';
 import 'package:tata/features/family_monitoring/presentation/bloc/summary/family_summary_bloc.dart';
 import 'package:tata/features/family_monitoring/presentation/navigation/family_monitoring_navigation.dart';
+import 'package:tata/features/family_monitoring/presentation/screens/alert_detail_screen.dart';
 import 'package:tata/features/treatment_management/application/usecases/medication_usecases.dart';
 import 'package:tata/features/treatment_management/domain/entities/medication.dart';
 import 'package:tata/features/treatment_management/presentation/bloc/medication_management/medication_management_bloc.dart';
@@ -332,14 +333,41 @@ void main() {
     final readsBefore = timeline.reads;
     await tester.tap(find.text('Alerta pendiente'));
     await tester.pumpAndSettle();
-    expect(find.text('Detalle de la alerta'), findsOneWidget);
+    expect(find.byType(AlertDetailScreen), findsOneWidget);
     expect(find.text('Marcar como atendida'), findsOneWidget);
 
     await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
-    expect(find.text('Detalle de la alerta'), findsNothing);
+    expect(find.byType(AlertDetailScreen), findsNothing);
     expect(timeline.reads, greaterThan(readsBefore));
   });
+
+  testWidgets(
+    'detail profile and tabs return to the existing caregiver shell',
+    (tester) async {
+      var openedProfile = 0;
+      await pumpHome(tester, navigation(), onPerson: () => openedProfile++);
+      await tester.tap(find.text('Alertas'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Alerta pendiente'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Ver perfil'));
+      await tester.pumpAndSettle();
+      expect(openedProfile, 1);
+      expect(find.byType(AlertDetailScreen), findsNothing);
+
+      await tester.tap(find.text('Alerta pendiente'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Notas'));
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDetailScreen), findsNothing);
+      expect(find.text('Agregar nota'), findsOneWidget);
+      expect(
+        Navigator.of(tester.element(find.text('Agregar nota'))).canPop(),
+        isFalse,
+      );
+    },
+  );
 
   testWidgets(
     'a rejected session reaches the host once and leaves the detail',

@@ -182,10 +182,14 @@ class ContactChannelView extends StatelessWidget {
     super.key,
     required this.option,
     required this.launcher,
+    this.actionLabel,
+    this.showChannel = true,
   });
 
   final ContactOption option;
   final ContactLauncher launcher;
+  final String? actionLabel;
+  final bool showChannel;
 
   @override
   Widget build(BuildContext context) {
@@ -200,10 +204,13 @@ class ContactChannelView extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
-        const SizedBox(height: 12),
+        if (showChannel) ...[
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 12),
+        ],
         MonitoringPrimaryButton(
-          label: isPhone ? text.fmOpenPhone : text.fmOpenWhatsapp,
+          label:
+              actionLabel ?? (isPhone ? text.fmOpenPhone : text.fmOpenWhatsapp),
           onPressed: () async {
             final messenger = ScaffoldMessenger.maybeOf(context);
             final opened = await launcher.open(channel);

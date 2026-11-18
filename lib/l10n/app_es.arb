@@ -880,6 +880,8 @@
   "fmTitleAttended": "Alerta atendida",
   "fmTitleClosed": "Alerta cerrada",
   "fmDetailTitle": "Detalle de la alerta",
+  "fmReminderTimeline": "Línea de tiempo de recordatorios",
+  "fmPersonProfile": "Ver perfil",
   "fmDetailSection": "Información de la alerta",
   "fmDetailScheduled": "Toma programada",
   "fmDetailReason": "Motivo",

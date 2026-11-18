@@ -125,6 +125,14 @@ void main() {
         );
       });
     }
+    if (find.byType(AlertDetailScreen).evaluate().isNotEmpty) {
+      await tester.runAsync(
+        () => precacheImage(
+          const AssetImage('assets/illustrations/alert_tablet.png'),
+          tester.element(find.byType(AlertDetailScreen).first),
+        ),
+      );
+    }
     await tester.pump();
   }
 
@@ -432,6 +440,9 @@ void main() {
       required _Launcher launcher,
       FakeContact? contact,
       FakeNotes? notes,
+      List<RecordedAlertEvent>? history,
+      VoidCallback? onOpenProfile,
+      ValueChanged<CaregiverTab>? onTab,
     }) => MultiBlocProvider(
       providers: [
         BlocProvider(
@@ -454,12 +465,15 @@ void main() {
               ),
             ),
             history: FakeEventsReader(
-              AppSuccess([
-                RecordedAlertEvent(
-                  type: RecordedAlertEventType.alertGenerated,
-                  occurredAt: DateTime.utc(2026, 11, 13, 12, 30),
-                ),
-              ]),
+              AppSuccess(
+                history ??
+                    [
+                      RecordedAlertEvent(
+                        type: RecordedAlertEventType.alertGenerated,
+                        occurredAt: DateTime.utc(2026, 11, 13, 12, 30),
+                      ),
+                    ],
+              ),
             ),
             olderAdultId: 'adult-1',
             alertId: 1,
@@ -472,10 +486,51 @@ void main() {
           ),
         ),
       ],
-      child: AlertDetailScreen(launcher: launcher),
+      child: AlertDetailScreen(
+        launcher: launcher,
+        onOpenProfile: onOpenProfile,
+        onTab: onTab,
+      ),
     );
 
     for (final scale in [1.0, 1.5]) {
+      testWidgets(
+        'detail Figma composition with recorded reminders at $scale',
+        (tester) async {
+          await pump(
+            tester,
+            screen(
+              alerts: FakeAlerts(alerts: [anAlert()]),
+              launcher: _Launcher(),
+              onOpenProfile: () {},
+              onTab: (_) {},
+              history: [
+                for (final minute in [0, 10, 25, 30])
+                  RecordedAlertEvent(
+                    type: minute == 0
+                        ? RecordedAlertEventType.intakeScheduled
+                        : minute == 30
+                        ? RecordedAlertEventType.alertGenerated
+                        : RecordedAlertEventType.reinforcedReminderSent,
+                    occurredAt: DateTime(2026, 11, 13, 8, minute),
+                  ),
+              ],
+            ),
+            scale: scale,
+          );
+          expect(find.text('Recordatorio reforzado enviado'), findsNWidgets(2));
+          expect(find.text('Ver perfil'), findsOneWidget);
+          expect(tester.takeException(), isNull);
+          await captureWidget(
+            tester,
+            find.byKey(const Key('summary-capture')),
+            'alert_detail_$scale',
+          );
+          await tester.ensureVisible(find.text('Agregar nota de seguimiento'));
+          expect(tester.takeException(), isNull);
+        },
+      );
+
       testWidgets('shows the person, the evidence and the actions at $scale', (
         tester,
       ) async {
@@ -490,7 +545,7 @@ void main() {
         expect(find.text('Rosa Vargas'), findsOneWidget);
         expect(find.text('Alerta generada'), findsOneWidget);
         expect(find.text('Marcar como atendida'), findsOneWidget);
-        expect(find.text('Cerrar alerta'), findsOneWidget);
+        expect(find.byType(PopupMenuButton<AlertStatus>), findsOneWidget);
         expect(find.textContaining('Contacta a Rosa'), findsOneWidget);
         expect(tester.takeException(), isNull);
       });
@@ -499,6 +554,8 @@ void main() {
     testWidgets('closing asks for confirmation first', (tester) async {
       final alerts = FakeAlerts(alerts: [anAlert()]);
       await pump(tester, screen(alerts: alerts, launcher: _Launcher()));
+      await tester.tap(find.byType(PopupMenuButton<AlertStatus>));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Cerrar alerta'));
       await tester.pumpAndSettle();
       expect(find.text('¿Cerrar esta alerta?'), findsOneWidget);
@@ -508,6 +565,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(alerts.updates, isEmpty);
 
+      await tester.tap(find.byType(PopupMenuButton<AlertStatus>));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Cerrar alerta'));
       await tester.pumpAndSettle();
       await tester.tap(
@@ -542,7 +601,7 @@ void main() {
           launcher: launcher,
         ),
       );
-      await tester.tap(find.text('Abrir teléfono'));
+      await tester.tap(find.text('Contactar a Rosa'));
       await tester.pump();
       await tester.pump();
       expect(launcher.opened.single.digits, '51999111');
