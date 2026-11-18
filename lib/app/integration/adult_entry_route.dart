@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../features/accessibility_preferences/presentation/navigation/preferences_navigation.dart';
@@ -9,6 +11,7 @@ import '../../features/identity_subscription/presentation/bloc/pin/pin_bloc.dart
 import '../../features/identity_subscription/presentation/navigation/pin_route.dart';
 import '../../features/intake_execution/application/ports/intake_sync.dart';
 import '../../features/intake_execution/application/ports/voice_confirmation.dart';
+import '../../features/intake_execution/application/services/intake_reminder_sync.dart';
 import '../../features/intake_execution/presentation/bloc/agenda/agenda_bloc.dart';
 import '../../features/intake_execution/presentation/bloc/dose/dose_bloc.dart';
 import '../../features/intake_execution/presentation/bloc/home/home_bloc.dart';
@@ -48,6 +51,7 @@ class AdultEntryRoute extends StatefulWidget {
     this.preferences,
     this.monitoring,
     this.push,
+    this.reminders,
   });
 
   final String olderAdultId;
@@ -86,6 +90,9 @@ class AdultEntryRoute extends StatefulWidget {
   /// Optional Omission & Escalation entry: follows this adult's reinforced reminders.
   final OmissionPushFacade? push;
 
+  /// Device reminders of this adult's doses, kept while the session lasts.
+  final IntakeReminderSync? reminders;
+
   @override
   State<AdultEntryRoute> createState() => _AdultEntryRouteState();
 }
@@ -95,11 +102,35 @@ enum _Phase { loading, pinSetup, home }
 class _AdultEntryRouteState extends State<AdultEntryRoute> {
   _Phase _phase = _Phase.loading;
   String? _name;
+  StreamSubscription<String>? _reminderTaps;
 
   @override
   void initState() {
     super.initState();
     _resolve();
+  }
+
+  @override
+  void dispose() {
+    _reminderTaps?.cancel();
+    // Sign-out, another account or withdrawn consent: no reminder stays.
+    unawaited(widget.reminders?.stop());
+    super.dispose();
+  }
+
+  /// Schedules the reminders once the home is reachable, and opens the dose
+  /// of a tapped reminder, including the one that launched the app.
+  Future<void> _followReminders() async {
+    final reminders = widget.reminders;
+    if (reminders == null || _reminderTaps != null) return;
+    _reminderTaps = reminders.opened.listen((id) {
+      if (!mounted) return;
+      Navigator.of(context).popUntil((route) => route.isFirst);
+      _openDose(context, id);
+    });
+    await reminders.start(widget.olderAdultId);
+    final launched = await reminders.takeLaunchDose();
+    if (launched != null && mounted) _openDose(context, launched);
   }
 
   /// Storage or profile failures fall back to setup without a name; the server
@@ -120,6 +151,7 @@ class _AdultEntryRouteState extends State<AdultEntryRoute> {
       _name = name;
       _phase = known ? _Phase.home : _Phase.pinSetup;
     });
+    if (known) unawaited(_followReminders());
   }
 
   Future<void> _pinSaved() async {
@@ -130,7 +162,9 @@ class _AdultEntryRouteState extends State<AdultEntryRoute> {
     } on Exception {
       // The enrollment succeeded; only the device shortcut is missing.
     }
-    if (mounted) setState(() => _phase = _Phase.home);
+    if (!mounted) return;
+    setState(() => _phase = _Phase.home);
+    unawaited(_followReminders());
   }
 
   void _openMore(BuildContext context) {

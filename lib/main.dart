@@ -137,6 +137,7 @@ Future<void> main() async {
           preferences: preferences,
           monitoring: monitoring,
           push: push,
+          reminders: dependencies.intakeReminders,
         );
       },
       invitationBuilder: (context) => ConsentRoute(

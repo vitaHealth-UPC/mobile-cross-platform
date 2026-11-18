@@ -1278,5 +1278,9 @@
   "planChoiceRowInsights": "Adherence insights",
   "planChoiceIncluded": "Included in {name}",
   "planChoiceNotIncluded": "Not included in {name}",
-  "planChoiceApplyFailed": "Your account is ready. We could not activate the chosen plan; you can change it in Settings."
+  "planChoiceApplyFailed": "Your account is ready. We could not activate the chosen plan; you can change it in Settings.",
+  "reminderChannelName": "Dose reminders",
+  "reminderChannelDescription": "Alerts at the time of each dose and if it is still pending.",
+  "reminderDueBody": "{medication} · {dose}. Confirm it once you have taken it.",
+  "reminderReinforcedBody": "{medication} is still pending. Confirm it when you take it."
 }
