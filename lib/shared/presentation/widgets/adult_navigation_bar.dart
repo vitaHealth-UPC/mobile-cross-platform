@@ -44,15 +44,25 @@ class AdultNavigationBar extends StatelessWidget {
       (AdultDestination.notes, text.adultTabNotes, 'notes', onNotes),
       (AdultDestination.more, text.homeTabMore, 'more', onMore),
     ];
+    final scheme = Theme.of(context).colorScheme;
+    final accessible =
+        Theme.of(context).brightness == Brightness.dark ||
+        MediaQuery.highContrastOf(context);
+    final surface = accessible ? scheme.surface : Colors.white;
+    final primary = accessible ? scheme.primary : TataColors.primary;
+    final onPrimary = accessible ? scheme.onPrimary : Colors.white;
+    final muted = accessible ? scheme.onSurfaceVariant : TataColors.muted;
     return SafeArea(
       top: false,
       child: Container(
         margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
         padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: surface,
           borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: const Color(0xCCEDEFF4)),
+          border: Border.all(
+            color: accessible ? scheme.outlineVariant : const Color(0xCCEDEFF4),
+          ),
           boxShadow: const [
             BoxShadow(
               color: Color(0x141A2138),
@@ -85,7 +95,7 @@ class AdultNavigationBar extends StatelessWidget {
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
                               color: selected == destination
-                                  ? TataColors.primary
+                                  ? primary
                                   : Colors.transparent,
                               borderRadius: BorderRadius.circular(15),
                             ),
@@ -96,9 +106,7 @@ class AdultNavigationBar extends StatelessWidget {
                               child: SvgPicture.asset(
                                 'assets/icons/adult_tab_$icon.svg',
                                 colorFilter: ColorFilter.mode(
-                                  selected == destination
-                                      ? Colors.white
-                                      : TataColors.muted,
+                                  selected == destination ? onPrimary : muted,
                                   BlendMode.srcIn,
                                 ),
                               ),
@@ -111,9 +119,7 @@ class AdultNavigationBar extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontSize: 9,
-                              color: selected == destination
-                                  ? TataColors.primary
-                                  : TataColors.muted,
+                              color: selected == destination ? primary : muted,
                             ),
                           ),
                         ],

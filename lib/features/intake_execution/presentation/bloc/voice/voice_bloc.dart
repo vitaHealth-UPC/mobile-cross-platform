@@ -39,8 +39,12 @@ final class VoiceBloc extends Bloc<VoiceEvent, VoiceState> {
   final Duration maxListening;
   Timer? _limit;
   String _language = 'es-419';
+  bool _starting = false;
+  bool _closing = false;
+  int _recordingEpoch = 0;
 
   Future<void> _load(VoiceRequested event, Emitter<VoiceState> emit) async {
+    if (_starting || _closing) return;
     if (state.phase case VoicePhase.recording || VoicePhase.processing) return;
     emit(const VoiceState());
     final result = await _detail(intakeId);
@@ -58,20 +62,29 @@ final class VoiceBloc extends Bloc<VoiceEvent, VoiceState> {
   }
 
   Future<void> _start(VoiceStarted event, Emitter<VoiceState> emit) async {
-    if (!state.canStart) return;
+    if (!state.canStart || _starting || _closing) return;
+    _starting = true;
+    final epoch = ++_recordingEpoch;
     _language = event.language;
-    final started = await _recorder.start();
-    if (emit.isDone) return;
-    switch (started) {
-      case AppSuccess():
-        emit(state.copyWith(phase: VoicePhase.recording));
-        _limit = Timer(maxListening, () {
-          if (!isClosed) add(const VoiceStopped());
-        });
-      case AppFailure(code: 'MICROPHONE_PERMISSION_DENIED'):
-        emit(state.copyWith(phase: VoicePhase.permissionDenied));
-      case AppFailure():
-        emit(state.copyWith(phase: VoicePhase.unavailable));
+    try {
+      final started = await _recorder.start();
+      if (epoch != _recordingEpoch || _closing || emit.isDone) {
+        await _recorder.cancel();
+        return;
+      }
+      switch (started) {
+        case AppSuccess():
+          emit(state.copyWith(phase: VoicePhase.recording));
+          _limit = Timer(maxListening, () {
+            if (!isClosed && !_closing) add(const VoiceStopped());
+          });
+        case AppFailure(code: 'MICROPHONE_PERMISSION_DENIED'):
+          emit(state.copyWith(phase: VoicePhase.permissionDenied));
+        case AppFailure():
+          emit(state.copyWith(phase: VoicePhase.unavailable));
+      }
+    } finally {
+      _starting = false;
     }
   }
 
@@ -118,9 +131,12 @@ final class VoiceBloc extends Bloc<VoiceEvent, VoiceState> {
 
   Future<void> _cancel(VoiceCancelled event, Emitter<VoiceState> emit) async {
     _limit?.cancel();
-    if (state.phase != VoicePhase.recording) return;
+    if (!_starting && state.phase != VoicePhase.recording) return;
+    ++_recordingEpoch;
     await _recorder.cancel();
-    if (!emit.isDone) emit(state.copyWith(phase: VoicePhase.ready));
+    if (!emit.isDone && !_closing) {
+      emit(state.copyWith(phase: VoicePhase.ready));
+    }
   }
 
   /// Another device may have confirmed it; a failed read proves nothing.
@@ -149,6 +165,15 @@ final class VoiceBloc extends Bloc<VoiceEvent, VoiceState> {
   ) async {
     final next = await _next();
     if (emit.isDone) return;
+    if (next case AppFailure(:final code)
+        when const {
+          'AUTHENTICATION_REQUIRED',
+          'ACCESS_DENIED',
+          'SESSION_CHANGED',
+        }.contains(code)) {
+      emit(VoiceState(phase: VoicePhase.failure, errorCode: code));
+      return;
+    }
     emit(
       VoiceState(
         phase: VoicePhase.ready,
@@ -164,6 +189,8 @@ final class VoiceBloc extends Bloc<VoiceEvent, VoiceState> {
 
   @override
   Future<void> close() async {
+    _closing = true;
+    ++_recordingEpoch;
     _limit?.cancel();
     await _recorder.cancel();
     return super.close();

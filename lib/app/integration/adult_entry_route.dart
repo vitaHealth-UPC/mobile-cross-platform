@@ -21,6 +21,7 @@ import '../../features/omission_escalation/application/services/omission_push_fa
 import '../../features/omission_escalation/presentation/widgets/follow_omission_push.dart';
 import '../../features/treatment_management/presentation/navigation/treatment_navigation.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../../shared/presentation/widgets/adult_navigation_bar.dart';
 
 /// Entry for a validated full adult session, composing three contexts:
 /// Identity enrolls the PIN once per device, Intake shows the home and
@@ -168,6 +169,31 @@ class _AdultEntryRouteState extends State<AdultEntryRoute> {
                   widget.preferences!.openAccessibility(
                     context,
                     widget.olderAdultId,
+                    navigationBuilder: (settingsContext) => AdultNavigationBar(
+                      selected: AdultDestination.more,
+                      onHome: () =>
+                          Navigator.of(settingsContext)
+                              .popUntil((route) => route.isFirst),
+                      onAgenda: () {
+                        Navigator.of(settingsContext)
+                            .popUntil((route) => route.isFirst);
+                        _openAgenda(this.context);
+                      },
+                      onMedications: widget.treatments == null
+                          ? null
+                          : () {
+                              Navigator.of(settingsContext)
+                                  .popUntil((route) => route.isFirst);
+                              _openMedications(this.context);
+                            },
+                      onNotes: widget.monitoring == null
+                          ? null
+                          : () {
+                              Navigator.of(settingsContext)
+                                  .popUntil((route) => route.isFirst);
+                              _openNotes(this.context);
+                            },
+                    ),
                   );
                 },
               ),

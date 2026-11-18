@@ -25,17 +25,22 @@ final class PreferencesNavigation {
   const PreferencesNavigation(this._factories);
   final PreferencesFactories _factories;
 
-  Future<void> openAccessibility(BuildContext context, String userId) =>
-      Navigator.of(context).push<void>(
-        MaterialPageRoute(
-          builder: (_) => BlocProvider(
-            create: (_) =>
-                _factories.createAccessibilityBloc(userId)
-                  ..add(const AccessibilityStarted()),
-            child: const AccessibilityScreen(),
-          ),
+  Future<void> openAccessibility(
+    BuildContext context,
+    String userId, {
+    Widget Function(BuildContext context)? navigationBuilder,
+  }) => Navigator.of(context).push<void>(
+    MaterialPageRoute(
+      builder: (routeContext) => BlocProvider(
+        create: (_) =>
+            _factories.createAccessibilityBloc(userId)
+              ..add(const AccessibilityStarted()),
+        child: AccessibilityScreen(
+          navigationBar: navigationBuilder?.call(routeContext),
         ),
-      );
+      ),
+    ),
+  );
 
   Future<void> openNotifications(
     BuildContext context,
