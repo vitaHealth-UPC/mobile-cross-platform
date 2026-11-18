@@ -9,6 +9,11 @@ class CachedIntakes extends Table {
   TextColumn get ownerId => text()();
   TextColumn get careLinkId => text()();
   TextColumn get intakeId => text()();
+
+  /// Source references added in schema 2; rows cached by schema 1 lack them
+  /// until the next agenda refresh replaces those rows.
+  TextColumn get medicationId => text().nullable()();
+  TextColumn get treatmentId => text().nullable()();
   TextColumn get medicationName => text()();
   TextColumn get dose => text()();
   TextColumn get instructions => text().nullable()();

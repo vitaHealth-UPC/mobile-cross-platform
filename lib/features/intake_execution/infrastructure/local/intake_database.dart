@@ -17,5 +17,16 @@ final class IntakeDatabase extends _$IntakeDatabase {
       IntakeDatabase(driftDatabase(name: 'tata_intakes'));
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onUpgrade: (m, from, to) async {
+      // 2: cached intakes keep the medication and treatment they belong to.
+      if (from < 2) {
+        await m.addColumn(cachedIntakes, cachedIntakes.medicationId);
+        await m.addColumn(cachedIntakes, cachedIntakes.treatmentId);
+      }
+    },
+  );
 }
