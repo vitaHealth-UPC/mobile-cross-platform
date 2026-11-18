@@ -362,6 +362,13 @@ class _AdultEntryRouteState extends State<AdultEntryRoute> {
         MaterialPageRoute(
           builder: (routeContext) => AgendaRoute(
             createBloc: widget.createAgendaBloc,
+            onNotes: widget.monitoring == null
+                ? null
+                : () {
+                    Navigator.of(routeContext)
+                        .popUntil((route) => route.isFirst);
+                    _openNotes(this.context);
+                  },
             onMedications: widget.treatments == null
                 ? null
                 : () {

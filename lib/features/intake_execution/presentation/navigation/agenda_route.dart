@@ -20,6 +20,7 @@ class AgendaRoute extends StatefulWidget {
     this.onBack,
     this.onMore,
     this.onMedications,
+    this.onNotes,
   });
 
   final AgendaBloc Function() createBloc;
@@ -31,6 +32,7 @@ class AgendaRoute extends StatefulWidget {
   final VoidCallback? onBack;
   final VoidCallback? onMore;
   final VoidCallback? onMedications;
+  final VoidCallback? onNotes;
 
   @override
   State<AgendaRoute> createState() => _AgendaRouteState();
@@ -90,12 +92,12 @@ class _AgendaRouteState extends State<AgendaRoute> {
             _ => text.homeErrorBody,
           },
           onSelectDay: (day) => _bloc.add(AgendaDaySelected(day)),
-          onMoveWeek: (weeks) => _bloc.add(AgendaWeekMoved(weeks)),
           onRetry: _refresh,
           onOpenDose: _open,
           onBack: widget.onBack,
           onMore: widget.onMore,
           onMedications: widget.onMedications,
+          onNotes: widget.onNotes,
         );
       },
     ),

@@ -20,6 +20,8 @@ import 'package:tata/features/family_monitoring/presentation/navigation/family_m
 import 'package:tata/features/identity_subscription/application/readmodels/remembered_adult.dart';
 import 'package:tata/features/intake_execution/application/usecases/get_daily_progress.dart';
 import 'package:tata/features/intake_execution/application/usecases/get_next_intake.dart';
+import 'package:tata/features/intake_execution/application/usecases/get_week_agenda.dart';
+import 'package:tata/features/intake_execution/presentation/bloc/agenda/agenda_bloc.dart';
 import 'package:tata/features/intake_execution/presentation/bloc/home/home_bloc.dart';
 import 'package:tata/features/omission_escalation/application/policies/omission_push_access_policy.dart';
 import 'package:tata/features/omission_escalation/application/services/omission_notification_session_cleanup.dart';
@@ -205,7 +207,8 @@ void main() {
             next: GetNextIntake(reader),
             progress: GetDailyProgress(reader, DateTime.now),
           ),
-          createAgendaBloc: () => throw UnimplementedError(),
+          createAgendaBloc: () =>
+              AgendaBloc(agenda: GetWeekAgenda(reader), clock: DateTime.now),
           createDoseBloc: (_) => throw UnimplementedError(),
           createConsentBloc: () => throw UnimplementedError(),
           onSignOut: () {},
@@ -215,6 +218,16 @@ void main() {
         ),
       );
       expect(targets.adults, {'adult-A': 'Rosa Vargas'});
+
+      await tester.tap(find.text('Agenda'));
+      await tester.pumpAndSettle();
+      expect(find.text('Agenda semanal'), findsOneWidget);
+      await tester.tap(find.text('Notas'));
+      await tester.pumpAndSettle();
+      expect(find.text('Apuntes para acompañar tu rutina.'), findsOneWidget);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('Agenda semanal'), findsNothing);
 
       await tester.tap(find.text('Más'));
       await tester.pumpAndSettle();

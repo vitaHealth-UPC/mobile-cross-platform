@@ -68,7 +68,6 @@ void main() {
       ),
       today: now,
       onSelectDay: (_) {},
-      onMoveWeek: (_) {},
       onRetry: () async {},
       onOpenDose: (_) {},
       onBack: () {},

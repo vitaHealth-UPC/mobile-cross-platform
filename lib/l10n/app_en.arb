@@ -233,8 +233,7 @@
       }
     }
   },
-  "agendaPreviousWeek": "Previous week",
-  "agendaNextWeek": "Next week",
+  "agendaChooseDate": "Choose date",
   "agendaLoading": "Loading your doses…",
   "agendaEmptyDay": "No doses this day",
   "agendaEmptyDayBody": "You have no doses scheduled for this day.",
