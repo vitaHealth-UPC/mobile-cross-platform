@@ -15,11 +15,26 @@ import '../bloc/summary/family_summary_bloc.dart';
 import '../screens/alert_detail_screen.dart';
 import '../screens/alerts_screen.dart';
 import '../screens/family_summary_screen.dart';
+import '../screens/linked_person_screen.dart';
 import '../screens/notes_screen.dart';
 import '../screens/personal_notes_screen.dart';
 import '../texts/monitoring_texts.dart';
 
 /// Builders for the blocs of the Family Monitoring flows.
+/// What the host adds to the Person tab (Figma 563:1121): the link date and
+/// the cards that belong to other contexts.
+final class LinkedPersonSlots {
+  const LinkedPersonSlots({
+    required this.linkedSince,
+    this.adherence,
+    this.treatment,
+  });
+
+  final DateTime linkedSince;
+  final WidgetBuilder? adherence;
+  final WidgetBuilder? treatment;
+}
+
 final class FamilyMonitoringFactories {
   const FamilyMonitoringFactories({
     required this.launcher,
@@ -47,8 +62,9 @@ final class FamilyMonitoringNavigation {
   const FamilyMonitoringNavigation(this._factories);
   final FamilyMonitoringFactories _factories;
 
-  /// Caregiver home of one followed person. The shell owns the Home/Alerts/Notes tabs; the
-  /// Person and More tabs are decided by the host through [onPerson] and [onMore].
+  /// Caregiver home of one followed person. The shell owns the Home/Alerts/Notes tabs and,
+  /// with [person], the Person tab, whose back arrow calls [onPerson]; without [person]
+  /// the Person tab calls [onPerson] directly. The More tab is decided by [onMore].
   /// The summary is read again when [onAddMedication], [onOpenStock] or [onMore]
   /// completes, because medications or stock may have changed there.
   Widget caregiverHome({
@@ -60,6 +76,7 @@ final class FamilyMonitoringNavigation {
     required FutureOr<void> Function() onMore,
     required VoidCallback onSessionInvalidated,
     FutureOr<void> Function(StockAttention stock)? onOpenStock,
+    LinkedPersonSlots? person,
   }) => _CaregiverShell(
     factories: _factories,
     olderAdultId: olderAdultId,
@@ -70,6 +87,7 @@ final class FamilyMonitoringNavigation {
     onMore: onMore,
     onSessionInvalidated: onSessionInvalidated,
     onOpenStock: onOpenStock,
+    person: person,
   );
 
   /// The older adult's own notes, loaded when the screen appears.
@@ -104,6 +122,7 @@ class _CaregiverShell extends StatefulWidget {
     required this.onMore,
     required this.onSessionInvalidated,
     this.onOpenStock,
+    this.person,
   });
 
   final FamilyMonitoringFactories factories;
@@ -115,6 +134,7 @@ class _CaregiverShell extends StatefulWidget {
   final FutureOr<void> Function() onMore;
   final VoidCallback onSessionInvalidated;
   final FutureOr<void> Function(StockAttention stock)? onOpenStock;
+  final LinkedPersonSlots? person;
 
   @override
   State<_CaregiverShell> createState() => _CaregiverShellState();
@@ -151,8 +171,13 @@ class _CaregiverShellState extends State<_CaregiverShell> {
 
   void _select(CaregiverTab tab) {
     switch (tab) {
-      case CaregiverTab.person:
+      case CaregiverTab.person when widget.person == null:
         widget.onPerson();
+      case CaregiverTab.person:
+        if (tab != _tab) {
+          _notes.add(const NotesRequested());
+          setState(() => _tab = tab);
+        }
       case CaregiverTab.more:
         _thenRefresh(widget.onMore);
       case CaregiverTab.home || CaregiverTab.alerts || CaregiverTab.notes:
@@ -267,6 +292,17 @@ class _CaregiverShellState extends State<_CaregiverShell> {
           onOpenSummary: () => _select(CaregiverTab.home),
         ),
         CaregiverTab.notes => NotesScreen(onTab: _select),
+        CaregiverTab.person when widget.person != null => LinkedPersonScreen(
+          olderAdultName: widget.olderAdultName,
+          linkedSince: widget.person!.linkedSince,
+          launcher: widget.factories.launcher,
+          onBack: widget.onPerson,
+          onTab: _select,
+          onOpenMedications: () => _thenRefresh(widget.onAddMedication),
+          onOpenHistory: widget.onHistory,
+          adherence: widget.person!.adherence?.call(context),
+          treatment: widget.person!.treatment?.call(context),
+        ),
         _ => FamilySummaryScreen(
           launcher: widget.factories.launcher,
           onTab: _select,
