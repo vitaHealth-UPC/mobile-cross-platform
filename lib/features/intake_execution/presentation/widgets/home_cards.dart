@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/presentation/theme/tata_colors.dart';
+import '../../../../shared/presentation/widgets/status_notice.dart';
 import '../../application/readmodels/daily_progress.dart';
 import '../../domain/entities/intake.dart';
 
@@ -526,6 +527,51 @@ class DailyTipCard extends StatelessWidget {
             icon: const Icon(Icons.close, size: 18, color: TataColors.muted),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Figma 563:2619 and 563:3682: a dose whose time has come is still pending.
+/// After [reinforceAfter] the same dose is announced as a second reminder.
+class DueIntakeReminder extends StatelessWidget {
+  const DueIntakeReminder({
+    super.key,
+    required this.intake,
+    required this.now,
+    this.onTap,
+  });
+
+  /// Mirrors the backend default (tata.intake.unconfirmed-after = PT15M), when
+  /// the server reports the dose as unconfirmed and sends its reinforced reminder.
+  static const reinforceAfter = Duration(minutes: 15);
+
+  final Intake intake;
+  final DateTime now;
+
+  /// Opens the dose, where it can be confirmed.
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = AppLocalizations.of(context);
+    final reinforced =
+        now.toUtc().difference(intake.scheduledAt) >= reinforceAfter;
+    final notice = StatusNotice(
+      tone: NoticeTone.warning,
+      title: reinforced ? text.homeReinforcedTitle : text.homeDueTitle,
+      body: reinforced
+          ? text.homeReinforcedBody
+          : text.homeDueBody(intake.medicationName),
+    );
+    final open = onTap;
+    if (open == null) return notice;
+    return Semantics(
+      button: true,
+      child: InkWell(
+        onTap: open,
+        borderRadius: BorderRadius.circular(16),
+        child: notice,
       ),
     );
   }

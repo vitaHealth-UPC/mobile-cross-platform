@@ -1252,5 +1252,9 @@
   "pfReducedMotionHint": "Reduce animations",
   "pfVoiceHint": "Listen for confirmations",
   "pfNeedHelp": "Need help?",
-  "pfHelpSummary": "We help you set up your app."
+  "pfHelpSummary": "We help you set up your app.",
+  "homeDueTitle": "Time for your dose",
+  "homeDueBody": "{medication} · Confirm it once you have taken it.",
+  "homeReinforcedTitle": "Second reminder",
+  "homeReinforcedBody": "The dose is still pending. Confirm it when you take it."
 }

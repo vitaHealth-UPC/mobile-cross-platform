@@ -255,6 +255,79 @@ void main() {
     });
   }
 
+  group('reminder for a dose whose time has come', () {
+    final later = intake('b', IntakeStatus.pending, DateTime(2026, 11, 3, 8));
+
+    Future<FakeIntakeReader> pumpDue(
+      WidgetTester tester,
+      Intake due, {
+      Future<void> Function(String)? onDose,
+    }) async {
+      final reader = FakeIntakeReader(
+        nextResult: AppSuccess(later),
+        agendaResult: AppSuccess([due, later]),
+      );
+      await pumpHome(tester, reader, onDose: onDose);
+      return reader;
+    }
+
+    testWidgets('a pending dose at its time says so (Figma 563:2619)', (
+      tester,
+    ) async {
+      final opened = <String>[];
+      await pumpDue(
+        tester,
+        intake('a', IntakeStatus.pending, DateTime(2026, 11, 3, 7, 30)),
+        onDose: (id) async => opened.add(id),
+      );
+      await tester.scrollUntilVisible(find.text('Es hora de tu toma'), 200);
+      expect(
+        find.text('Losartán 50 mg · Confirma cuando la hayas tomado.'),
+        findsOneWidget,
+      );
+      expect(find.text('Segundo recordatorio'), findsNothing);
+      await tester.tap(find.text('Es hora de tu toma'));
+      await tester.pumpAndSettle();
+      expect(opened, ['a']);
+    });
+
+    testWidgets('still pending after 15 min is a second reminder (563:3682)', (
+      tester,
+    ) async {
+      await pumpDue(
+        tester,
+        intake('a', IntakeStatus.pending, DateTime(2026, 11, 3, 7, 20)),
+      );
+      await tester.scrollUntilVisible(find.text('Segundo recordatorio'), 200);
+      expect(
+        find.text('La toma sigue pendiente. Confírmala cuando la realices.'),
+        findsOneWidget,
+      );
+      expect(find.text('Es hora de tu toma'), findsNothing);
+    });
+
+    for (final (label, dose) in [
+      (
+        'taken',
+        intake('a', IntakeStatus.confirmed, DateTime(2026, 11, 3, 7, 30)),
+      ),
+      (
+        'queued on this device',
+        intake(
+          'a',
+          IntakeStatus.pending,
+          DateTime(2026, 11, 3, 7, 30),
+        ).withLocalConfirmation(LocalConfirmation.queued),
+      ),
+    ]) {
+      testWidgets('a $label dose is not announced again', (tester) async {
+        await pumpDue(tester, dose);
+        expect(find.text('Es hora de tu toma'), findsNothing);
+        expect(find.text('Segundo recordatorio'), findsNothing);
+      });
+    }
+  });
+
   testWidgets('the tip can be dismissed and More opens account actions', (
     tester,
   ) async {
