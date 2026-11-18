@@ -73,10 +73,16 @@ class MonitoringLoading extends StatelessWidget {
 
 /// Failure message with a retry action.
 class MonitoringError extends StatelessWidget {
-  const MonitoringError({super.key, required this.message, this.onRetry});
+  const MonitoringError({
+    super.key,
+    required this.message,
+    this.onRetry,
+    this.retryLabel,
+  });
 
   final String message;
   final VoidCallback? onRetry;
+  final String? retryLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -97,7 +103,10 @@ class MonitoringError extends StatelessWidget {
               ),
             ),
             if (onRetry != null)
-              TextButton(onPressed: onRetry, child: Text(text.fmRetry)),
+              TextButton(
+                onPressed: onRetry,
+                child: Text(retryLabel ?? text.fmRetry),
+              ),
           ],
         ),
       ),
@@ -112,11 +121,13 @@ class MonitoringFilterChip extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    this.fontSize = 13,
   });
 
   final String label;
   final bool selected;
   final VoidCallback onTap;
+  final double fontSize;
 
   @override
   Widget build(BuildContext context) => Semantics(
@@ -140,7 +151,7 @@ class MonitoringFilterChip extends StatelessWidget {
           label,
           style: TextStyle(
             color: selected ? Colors.white : TataColors.ink,
-            fontSize: 13,
+            fontSize: fontSize,
             fontWeight: FontWeight.w600,
           ),
         ),

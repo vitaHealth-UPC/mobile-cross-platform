@@ -1125,6 +1125,14 @@
   "pnTitle": "Notes",
   "pnSubtitle": "Notes to support your routine.",
   "pnToday": "Today",
+  "pnYesterday": "Yesterday",
+  "pnRecordedAt": "{day} - {time}",
+  "@pnRecordedAt": {
+    "placeholders": {
+      "day": {"type": "String"},
+      "time": {"type": "String"}
+    }
+  },
   "pnAll": "All",
   "pnMedications": "Medications",
   "pnRoutine": "Routine",

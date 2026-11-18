@@ -1132,6 +1132,14 @@
   "pnTitle": "Notas",
   "pnSubtitle": "Apuntes para acompañar tu rutina.",
   "pnToday": "Hoy",
+  "pnYesterday": "Ayer",
+  "pnRecordedAt": "{day} - {time}",
+  "@pnRecordedAt": {
+    "placeholders": {
+      "day": {"type": "String"},
+      "time": {"type": "String"}
+    }
+  },
   "pnAll": "Todas",
   "pnMedications": "Medicamentos",
   "pnRoutine": "Rutina",

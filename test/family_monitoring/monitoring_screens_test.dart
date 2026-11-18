@@ -796,7 +796,7 @@ void main() {
           child: PersonalNotesScreen(onSignIn: () => signIn++),
         ),
       );
-      await tester.tap(find.text('Reintentar'));
+      await tester.tap(find.text('Ingresar con PIN'));
       expect(signIn, 1);
     });
   });
