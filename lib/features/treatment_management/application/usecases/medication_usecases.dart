@@ -4,6 +4,13 @@ import '../../domain/repositories/treatment_repositories.dart';
 
 bool _blank(String value) => value.trim().isEmpty;
 
+/// Input bound shared by RegisterMedicationRequest and UpdateMedicationRequest.
+const maxMedicationFieldLength = 160;
+
+bool _tooLong(String name, String presentation) =>
+    name.trim().length > maxMedicationFieldLength ||
+    presentation.trim().length > maxMedicationFieldLength;
+
 /// Validates required fields before registering a medication for a linked adult.
 final class RegisterMedication {
   const RegisterMedication(this._repository);
@@ -16,6 +23,9 @@ final class RegisterMedication {
   ) {
     if (_blank(olderAdultId) || _blank(name) || _blank(presentation)) {
       return Future.value(const AppFailure('REQUIRED_FIELDS_MISSING'));
+    }
+    if (_tooLong(name, presentation)) {
+      return Future.value(const AppFailure('MEDICATION_DETAILS_TOO_LONG'));
     }
     return _repository.registerMedication(
       olderAdultId.trim(),
@@ -53,6 +63,9 @@ final class UpdateMedication {
     }
     if (_blank(name) || _blank(presentation)) {
       return Future.value(const AppFailure('REQUIRED_FIELDS_MISSING'));
+    }
+    if (_tooLong(name, presentation)) {
+      return Future.value(const AppFailure('MEDICATION_DETAILS_TOO_LONG'));
     }
     return _repository.update(
       medicationId.trim(),

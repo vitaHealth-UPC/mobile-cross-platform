@@ -12,6 +12,7 @@ String? treatmentErrorText(AppLocalizations text, String? code) =>
       'INSTRUCTIONS_TOO_LONG' => text.tmErrInstructionsLong,
       'INVALID_REMINDER_DELAY' => text.tmErrReminderDelay,
       'REQUIRED_FIELDS_MISSING' => text.tmErrRequired,
+      'MEDICATION_DETAILS_TOO_LONG' => text.tmMedicationLength,
       'INVALID_TREATMENT_CONFIGURATION' ||
       'REQUEST_VALIDATION_FAILED' => text.tmErrIncomplete,
       'RESOURCE_NOT_FOUND' => text.tmErrNotFound,

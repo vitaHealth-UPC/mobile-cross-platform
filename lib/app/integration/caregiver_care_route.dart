@@ -75,6 +75,7 @@ class CaregiverCareRoute extends StatelessWidget {
           inner,
           profile.olderAdultId,
           onSessionInvalidated,
+          personName: profile.fullName,
           onOpenInventory: _inventoryOpener(inner),
         ),
         onPerson: () => Navigator.of(inner).maybePop(),
@@ -202,6 +203,7 @@ class CaregiverCareRoute extends StatelessWidget {
           context,
           profile.olderAdultId,
           onSessionInvalidated,
+          personName: profile.fullName,
           onOpenInventory: _inventoryOpener(context),
         );
       case _MoreChoice.settings:

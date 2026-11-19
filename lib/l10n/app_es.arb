@@ -625,6 +625,30 @@
   "tmMedicationsTitle": "Medicamentos",
   "tmNoMedications": "Aún no hay medicamentos registrados.",
   "tmRegisterMedication": "Registrar medicamento",
+  "tmAddMedication": "Agregar medicamento",
+  "tmAddMedicationFor": "Agregar medicamento: {name}",
+  "@tmAddMedicationFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tmMedicationDataStep": "Cuidador, Paso 1 de 4",
+  "tmMedicationBasicInfo": "Información básica",
+  "tmMedicationNameHint": "Ej. Losartán",
+  "tmMedicationDosePresentation": "Dosis y presentación",
+  "tmMedicationPresentationHint": "Ej. 50 mg, comprimido",
+  "tmMedicationFrequencyHint": "¿Cada cuánto lo tomas?",
+  "tmMedicationWhen": "¿Cuándo lo tomas?",
+  "tmMedicationWhenHint": "Ej. Con el desayuno",
+  "tmMedicationNotes": "Notas opcionales",
+  "tmMedicationNotesHint": "Algo importante que recordar",
+  "tmFrequencyDaily": "Una vez al día",
+  "tmFrequencyTwelveHours": "Cada 12 horas",
+  "tmFrequencyEightHours": "Cada 8 horas",
+  "tmRegistrationNext": "Siguiente",
+  "tmMedicationLength": "El nombre y la presentación admiten hasta 160 caracteres cada uno.",
   "tmMedicationName": "Nombre del medicamento",
   "tmMedicationPresentation": "Presentación (por ejemplo, tabletas de 500 mg)",
   "tmMedicationRegistered": "Medicamento registrado.",
