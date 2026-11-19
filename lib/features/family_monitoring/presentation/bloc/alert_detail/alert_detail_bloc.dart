@@ -23,6 +23,12 @@ final class AlertDetailResumed extends AlertDetailEvent {
   const AlertDetailResumed();
 }
 
+/// A related protected write established that access to this adult was lost.
+final class AlertDetailAccessLost extends AlertDetailEvent {
+  const AlertDetailAccessLost(this.code);
+  final String code;
+}
+
 /// Read the contact again after it could not be read.
 final class AlertContactRequested extends AlertDetailEvent {
   const AlertContactRequested();
@@ -125,6 +131,11 @@ final class AlertDetailBloc extends Bloc<AlertDetailEvent, AlertDetailState> {
   }) : super(const AlertDetailState()) {
     on<AlertDetailRequested>(_requested);
     on<AlertDetailResumed>(_resumed);
+    on<AlertDetailAccessLost>((event, emit) {
+      if (isAccessFailure(event.code)) {
+        _deny(emit, event.code);
+      }
+    });
     on<AlertContactRequested>((event, emit) => _loadContact(emit));
     on<AlertStatusChangeRequested>(_change);
   }
@@ -270,9 +281,10 @@ final class AlertDetailBloc extends Bloc<AlertDetailEvent, AlertDetailState> {
         !current.status.canMoveTo(event.target)) {
       return;
     }
+    final revision = _alertRevision;
     emit(state.copyWith(updating: () => event.target, feedback: () => null));
     final result = await _update(olderAdultId, alertId, event.target);
-    if (emit.isDone) return;
+    if (revision != _alertRevision || _denied || emit.isDone) return;
     switch (result) {
       case AppSuccess(:final value):
         emit(
@@ -284,7 +296,7 @@ final class AlertDetailBloc extends Bloc<AlertDetailEvent, AlertDetailState> {
         );
         await _loadHistory(emit);
       case AppFailure(:final code):
-        await _afterFailedUpdate(emit, code);
+        await _afterFailedUpdate(emit, code, revision);
     }
   }
 
@@ -292,6 +304,7 @@ final class AlertDetailBloc extends Bloc<AlertDetailEvent, AlertDetailState> {
   Future<void> _afterFailedUpdate(
     Emitter<AlertDetailState> emit,
     String code,
+    int revision,
   ) async {
     if (isAccessFailure(code)) {
       _deny(emit, code);
@@ -303,7 +316,7 @@ final class AlertDetailBloc extends Bloc<AlertDetailEvent, AlertDetailState> {
       return;
     }
     final fresh = await _detail(olderAdultId, alertId);
-    if (emit.isDone) return;
+    if (revision != _alertRevision || _denied || emit.isDone) return;
     switch (fresh) {
       case AppSuccess(:final value):
         emit(

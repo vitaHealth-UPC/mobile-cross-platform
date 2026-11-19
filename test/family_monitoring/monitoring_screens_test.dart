@@ -631,6 +631,7 @@ void main() {
       await tester.tap(find.text('Guardar nota'));
       await tester.pumpAndSettle();
       expect(notes.registered, ['Llamé y está bien']);
+      expect(find.byKey(const Key('follow-up-note-saved')), findsOneWidget);
       expect(find.text('Nota guardada'), findsOneWidget);
       expect(find.byType(AlertDialog), findsNothing);
     });

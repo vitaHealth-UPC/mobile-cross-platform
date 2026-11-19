@@ -255,6 +255,11 @@ class _CaregiverShellState extends State<_CaregiverShell> {
                     BlocListener<AlertDetailBloc, AlertDetailState>(
                       listenWhen: (a, b) => a.errorCode != b.errorCode,
                       listener: (_, state) {
+                        if (state.errorCode == 'ACCESS_DENIED') {
+                          _summary.add(
+                            const FamilySummaryAccessLost('ACCESS_DENIED'),
+                          );
+                        }
                         if (isSessionFailure(state.errorCode)) {
                           Navigator.of(detailContext)
                               .popUntil((r) => r.isFirst);
@@ -305,6 +310,7 @@ class _CaregiverShellState extends State<_CaregiverShell> {
           listener: (_, state) {
             if (state.errorCode == 'ACCESS_DENIED') {
               _notes.add(NotesAccessLost(state.errorCode!));
+              _composer.clear();
             }
             if (isSessionFailure(state.errorCode)) {
               widget.onSessionInvalidated();

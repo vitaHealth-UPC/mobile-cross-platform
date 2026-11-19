@@ -59,95 +59,115 @@ class _AlertDetailScreenState extends State<AlertDetailScreen>
   @override
   Widget build(BuildContext context) {
     final text = AppLocalizations.of(context);
-    return NoteComposerHost(
-      child: Scaffold(
-        backgroundColor: TataColors.background,
-        bottomNavigationBar: widget.onTab == null
-            ? null
-            : CaregiverTabBar(
-                selected: CaregiverTab.alerts,
-                onSelected: widget.onTab!,
-              ),
-        body: SafeArea(
-          child: BlocConsumer<AlertDetailBloc, AlertDetailState>(
-            listenWhen: (a, b) =>
-                a.feedback != b.feedback && b.feedback != null,
-            listener: (context, state) => ScaffoldMessenger.of(context)
-                .showSnackBar(
-                  SnackBar(content: Text(_feedback(text, state.feedback!))),
+    return BlocListener<NoteComposerCubit, NoteComposerState>(
+      listenWhen: (a, b) => a.failureCode != b.failureCode,
+      listener: (context, state) {
+        final code = state.failureCode;
+        if (code != null && isAccessFailure(code)) {
+          context.read<AlertDetailBloc>().add(AlertDetailAccessLost(code));
+          context.read<NoteComposerCubit>().clear();
+        }
+      },
+      child: NoteComposerHost(
+        showSavedMessage: false,
+        child: Scaffold(
+          backgroundColor: TataColors.background,
+          bottomNavigationBar: widget.onTab == null
+              ? null
+              : CaregiverTabBar(
+                  selected: CaregiverTab.alerts,
+                  onSelected: widget.onTab!,
                 ),
-            builder: (context, state) => SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(22, 8, 22, 32),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      BackButton(
-                        onPressed:
-                            widget.onBack ??
-                            () => Navigator.of(context).maybePop(),
-                      ),
-                      Expanded(
-                        child: Text(
-                          state.alert == null
-                              ? text.fmDetailTitle
-                              : alertStatusTitle(text, state.alert!.status),
-                          style: const TextStyle(
-                            fontFamily: 'DMSerifDisplay',
-                            fontSize: 24,
-                            color: TataColors.ink,
+          body: SafeArea(
+            child: BlocConsumer<AlertDetailBloc, AlertDetailState>(
+              listenWhen: (a, b) =>
+                  (a.feedback != b.feedback && b.feedback != null) ||
+                  a.errorCode != b.errorCode,
+              listener: (context, state) {
+                if (isAccessFailure(state.errorCode)) {
+                  context.read<NoteComposerCubit>().clear();
+                }
+                if (state.feedback != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(_feedback(text, state.feedback!))),
+                  );
+                }
+              },
+              builder: (context, state) => SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(22, 8, 22, 32),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        BackButton(
+                          onPressed:
+                              widget.onBack ??
+                              () => Navigator.of(context).maybePop(),
+                        ),
+                        Expanded(
+                          child: Text(
+                            state.alert == null
+                                ? text.fmDetailTitle
+                                : alertStatusTitle(text, state.alert!.status),
+                            style: const TextStyle(
+                              fontFamily: 'DMSerifDisplay',
+                              fontSize: 24,
+                              color: TataColors.ink,
+                            ),
                           ),
                         ),
-                      ),
-                      if (state.alert != null &&
-                          state.alert!.status != AlertStatus.closed)
-                        PopupMenuButton<AlertStatus>(
-                          tooltip: text.fmActionsTitle,
-                          enabled: state.updating == null,
-                          onSelected: (_) => _confirmAlertClose(
-                            context,
-                            context.read<AlertDetailBloc>(),
+                        if (state.alert != null &&
+                            state.alert!.status != AlertStatus.closed)
+                          PopupMenuButton<AlertStatus>(
+                            tooltip: text.fmActionsTitle,
+                            enabled: state.updating == null,
+                            onSelected: (_) => _confirmAlertClose(
+                              context,
+                              context.read<AlertDetailBloc>(),
+                            ),
+                            itemBuilder: (_) => [
+                              PopupMenuItem(
+                                value: AlertStatus.closed,
+                                child: Text(text.fmActionClose),
+                              ),
+                            ],
                           ),
-                          itemBuilder: (_) => [
-                            PopupMenuItem(
-                              value: AlertStatus.closed,
-                              child: Text(text.fmActionClose),
-                            ),
-                          ],
+                      ],
+                    ),
+                    if (state.alert != null)
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: AlertDetailStatusPill(
+                          status: state.alert!.status,
                         ),
-                    ],
-                  ),
-                  if (state.alert != null)
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: AlertDetailStatusPill(status: state.alert!.status),
-                    ),
-                  const SizedBox(height: 18),
-                  switch (state.status) {
-                    AlertDetailStatus.loading => MonitoringLoading(
-                      label: text.fmDetailLoading,
-                    ),
-                    AlertDetailStatus.failure => MonitoringError(
-                      message: monitoringErrorText(
-                        text,
-                        state.errorCode,
-                        detail: true,
                       ),
-                      onRetry: isAccessFailure(state.errorCode)
-                          ? null
-                          : () => context.read<AlertDetailBloc>().add(
-                              const AlertDetailRequested(),
-                            ),
-                    ),
-                    AlertDetailStatus.ready => _Ready(
-                      state: state,
-                      launcher: widget.launcher,
-                      onOpenSummary: widget.onOpenSummary,
-                      onOpenProfile: widget.onOpenProfile,
-                    ),
-                  },
-                ],
+                    const SizedBox(height: 18),
+                    switch (state.status) {
+                      AlertDetailStatus.loading => MonitoringLoading(
+                        label: text.fmDetailLoading,
+                      ),
+                      AlertDetailStatus.failure => MonitoringError(
+                        message: monitoringErrorText(
+                          text,
+                          state.errorCode,
+                          detail: true,
+                        ),
+                        onRetry: isAccessFailure(state.errorCode)
+                            ? null
+                            : () => context.read<AlertDetailBloc>().add(
+                                const AlertDetailRequested(),
+                              ),
+                      ),
+                      AlertDetailStatus.ready => _Ready(
+                        state: state,
+                        launcher: widget.launcher,
+                        onOpenSummary: widget.onOpenSummary,
+                        onOpenProfile: widget.onOpenProfile,
+                      ),
+                    },
+                  ],
+                ),
               ),
             ),
           ),
@@ -361,7 +381,19 @@ class _Actions extends StatelessWidget {
               child: Text(text.fmContactRetry),
             )
           else if (contact.option?.channel == null)
-            Text(text.fmContactUnavailable)
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: null,
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size(0, 48),
+                  disabledBackgroundColor: const Color(0xFFEBEDF2),
+                  disabledForegroundColor: const Color(0xFF575E6E),
+                  shape: const StadiumBorder(),
+                ),
+                child: Text(text.fmContactUnavailable),
+              ),
+            )
           else
             ContactChannelView(
               option: contact.option!,
@@ -383,12 +415,22 @@ class _Actions extends StatelessWidget {
               child: OutlinedButton(
                 style: OutlinedButton.styleFrom(
                   backgroundColor: TataColors.lavender,
+                  disabledBackgroundColor: alert.status == AlertStatus.attended
+                      ? const Color(0xFFE5F4E8)
+                      : TataColors.lavender,
+                  disabledForegroundColor: alert.status == AlertStatus.attended
+                      ? const Color(0xFF296B40)
+                      : const Color(0xFF5B6475),
                   minimumSize: const Size(0, 48),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 12,
                   ),
-                  side: const BorderSide(color: Color(0xFFCFC4ED)),
+                  side: BorderSide(
+                    color: alert.status == AlertStatus.attended
+                        ? const Color(0xFF95C4A3)
+                        : const Color(0xFFCFC4ED),
+                  ),
                   shape: const StadiumBorder(),
                 ),
                 onPressed: busy || alert.status == AlertStatus.attended
@@ -407,12 +449,52 @@ class _Actions extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 10),
-          TextButton(
-            onPressed: () => context.read<NoteComposerCubit>().open(),
-            child: Text(text.fmNoteAddFollowUp),
-          ),
+          const _FollowUpNoteAction(),
         ],
       ),
+    );
+  }
+}
+
+/// Keeps the acknowledged receipt visible without removing the next-note action.
+class _FollowUpNoteAction extends StatelessWidget {
+  const _FollowUpNoteAction();
+
+  @override
+  Widget build(BuildContext context) {
+    final text = AppLocalizations.of(context);
+    final cubit = context.read<NoteComposerCubit>();
+    return BlocBuilder<NoteComposerCubit, NoteComposerState>(
+      builder: (context, state) {
+        if (state.saved && state.note != null) {
+          return Row(
+            children: [
+              Semantics(
+                key: const Key('follow-up-note-saved'),
+                liveRegion: true,
+                child: Text(
+                  text.fmNoteSaved,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF2E754A),
+                  ),
+                ),
+              ),
+              const Spacer(),
+              IconButton(
+                onPressed: cubit.open,
+                tooltip: text.fmNoteAddFollowUp,
+                icon: const Icon(Icons.add, size: 20),
+              ),
+            ],
+          );
+        }
+        return TextButton(
+          onPressed: state.saving ? null : cubit.open,
+          child: Text(text.fmNoteAddFollowUp),
+        );
+      },
     );
   }
 }
