@@ -1641,3 +1641,7 @@ RegisterMedication y UpdateMedication aplican el límite de 160 caracteres de am
 
 Se revisan los renders de 393x883 y 360x640 con texto al 150 %, incluido el acceso por desplazamiento al botón. Pasan las cinco pruebas nuevas y la suite completa de 770 pruebas; el análisis global no reporta incidencias. El inventario conserva 69 variantes representadas y alcanza 46 aceptadas visualmente. El siguiente recorrido es comprobar la navegación completa desde el catálogo hacia el nuevo asistente y contrastar las variantes restantes de Treatment Management.
 El APK debug compila; conserva los avisos existentes de migración de plugins a Built-in Kotlin. El formato queda limpio en 482 archivos.
+
+### Corte 18-11-2026: recorrido de catálogo a tratamiento
+
+Sobre temp 001d82a se comprueba TreatmentNavigation mediante rutas reales de widgets. El registro entrega el medicamento med-2 al asistente; la activación guarda su identificador, dosis, frecuencia, instrucciones y horarios elegidos, vuelve al catálogo y configura una sola vez. Salir del asistente antes de crear conserva el medicamento registrado y vuelve al catálogo sin repetir el alta ni crear un tratamiento. Son fixtures de prueba, sin datos de ejemplo añadidos a producción. Pasan las 84 pruebas de Treatment Management, incluidas las dos regresiones nuevas. El conteo visual permanece en 46/70 y no se atribuye nueva cobertura remota o física. Continúa el contraste de Notification Preferences (563:1219) y las variantes visuales restantes.
