@@ -1455,5 +1455,9 @@
   "pfChannelsReceipt": "Notification channels were updated.",
   "pfQuietReceipt": "Quiet hours were updated.",
   "tmMissingMedicationTitle": "Required details are missing",
-  "tmMissingMedicationBody": "Complete the medication, strength and frequency before continuing."
+  "tmMissingMedicationBody": "Complete the medication, strength and frequency before continuing.",
+  "tmChangesSaved": "Changes saved",
+  "tmFutureRegimenReceipt": "The new regimen will apply only to future doses.",
+  "tmDeactivationReceipt": "No new doses will be generated. History is preserved.",
+  "tmReactivationReceipt": "The medication is available again."
 }

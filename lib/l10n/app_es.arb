@@ -1629,5 +1629,9 @@
   "pfChannelsReceipt": "Los canales de notificación fueron actualizados.",
   "pfQuietReceipt": "El horario de silencio fue actualizado.",
   "tmMissingMedicationTitle": "Faltan datos obligatorios",
-  "tmMissingMedicationBody": "Completa medicamento, dosis y frecuencia antes de continuar."
+  "tmMissingMedicationBody": "Completa medicamento, dosis y frecuencia antes de continuar.",
+  "tmChangesSaved": "Cambios guardados",
+  "tmFutureRegimenReceipt": "La nueva pauta se aplicará solo a tomas futuras.",
+  "tmDeactivationReceipt": "No se generarán nuevas tomas. El historial se conserva.",
+  "tmReactivationReceipt": "El medicamento vuelve a estar disponible."
 }

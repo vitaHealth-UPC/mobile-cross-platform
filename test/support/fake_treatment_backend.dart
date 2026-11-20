@@ -105,10 +105,15 @@ final class FakeBackend
   }
 
   @override
-  Future<AppResult<Medication>> deactivate(String medicationId) async =>
-      failure != null
-      ? _fail()
-      : AppSuccess(_availability(medicationId, false));
+  Future<AppResult<Medication>> deactivate(String medicationId) async {
+    if (failure != null) return _fail();
+    final medication = _availability(medicationId, false);
+    if (stored?.medicationId == medicationId &&
+        stored?.status == TreatmentStatus.active) {
+      _treatment(TreatmentStatus.paused);
+    }
+    return AppSuccess(medication);
+  }
 
   @override
   Future<AppResult<Medication>> reactivate(String medicationId) async =>

@@ -3,6 +3,13 @@ import '../../../domain/entities/medication.dart';
 
 enum TreatmentManagementStatus { loading, ready, failure }
 
+/// Successful operation acknowledged by the server, cleared by the next attempt.
+enum TreatmentManagementNotice {
+  regimenSaved,
+  medicationDeactivated,
+  medicationReactivated,
+}
+
 /// Treatment, its medication and the state of the current operation.
 final class TreatmentManagementState {
   const TreatmentManagementState({
@@ -11,7 +18,7 @@ final class TreatmentManagementState {
     this.medication,
     this.activeMedicationCount,
     this.busy = false,
-    this.regimenSaved = false,
+    this.notice,
     this.errorCode,
   });
 
@@ -20,7 +27,7 @@ final class TreatmentManagementState {
   final Medication? medication;
   final int? activeMedicationCount;
   final bool busy;
-  final bool regimenSaved;
+  final TreatmentManagementNotice? notice;
   final String? errorCode;
 
   bool get medicationInactive => medication?.active == false;
@@ -35,7 +42,7 @@ final class TreatmentManagementState {
     Medication? medication,
     int? activeMedicationCount,
     bool? busy,
-    bool? regimenSaved,
+    TreatmentManagementNotice? notice,
     String? errorCode,
   }) => TreatmentManagementState(
     status: status ?? this.status,
@@ -43,7 +50,7 @@ final class TreatmentManagementState {
     medication: medication ?? this.medication,
     activeMedicationCount: activeMedicationCount ?? this.activeMedicationCount,
     busy: busy ?? this.busy,
-    regimenSaved: regimenSaved ?? false,
+    notice: notice,
     errorCode: errorCode,
   );
 }

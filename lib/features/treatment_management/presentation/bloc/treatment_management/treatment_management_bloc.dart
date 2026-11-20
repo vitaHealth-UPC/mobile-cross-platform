@@ -196,19 +196,25 @@ final class TreatmentManagementBloc
     // Reload so the screen shows exactly what the server stored.
     final reread = await _detail(treatmentId);
     if (emit.isDone) return;
+    if (reread is AppFailure<TreatmentDetail>) {
+      emit(_failed(reread.code));
+      return;
+    }
     if (reread is AppSuccess<TreatmentDetail> &&
-        reread.value.olderAdultId == olderAdultId) {
+        reread.value.id == treatmentId &&
+        reread.value.olderAdultId == olderAdultId &&
+        reread.value.medicationId == detail.medicationId) {
       emit(
         TreatmentManagementState(
           status: TreatmentManagementStatus.ready,
           detail: reread.value,
           medication: state.medication,
           activeMedicationCount: state.activeMedicationCount,
-          regimenSaved: true,
+          notice: TreatmentManagementNotice.regimenSaved,
         ),
       );
     } else {
-      emit(state.copyWith(busy: false, errorCode: 'INVALID_RESPONSE'));
+      emit(_failed('INVALID_RESPONSE'));
     }
   }
 
@@ -253,10 +259,29 @@ final class TreatmentManagementBloc
         }
         final others =
             (state.activeMedicationCount ?? 0) - (medication.active ? 1 : 0);
+        // Deactivation can pause active treatments on the server. A medication
+        // receipt alone cannot establish the resulting treatment lifecycle.
+        final refreshed = await _detail(treatmentId);
+        if (emit.isDone) return;
+        if (refreshed is AppFailure<TreatmentDetail>) {
+          emit(_failed(refreshed.code));
+          return;
+        }
+        final detail = (refreshed as AppSuccess<TreatmentDetail>).value;
+        if (detail.id != treatmentId ||
+            detail.olderAdultId != olderAdultId ||
+            detail.medicationId != value.id) {
+          emit(_failed('INVALID_RESPONSE'));
+          return;
+        }
         emit(
           state.copyWith(
             busy: false,
+            detail: detail,
             medication: value,
+            notice: expectedActive
+                ? TreatmentManagementNotice.medicationReactivated
+                : TreatmentManagementNotice.medicationDeactivated,
             activeMedicationCount: others + (value.active ? 1 : 0),
           ),
         );

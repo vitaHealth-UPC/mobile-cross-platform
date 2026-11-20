@@ -13,6 +13,7 @@ import '../texts/treatment_texts.dart';
 import '../widgets/managed_person_card.dart';
 import '../widgets/regimen_editor.dart';
 import '../widgets/treatment_management_card.dart';
+import '../widgets/treatment_management_receipt.dart';
 
 /// Shows one treatment and offers pause, resume, regimen editing and medication
 /// availability. A draft or inactive-medication treatment is shown read-only.
@@ -80,9 +81,6 @@ class TreatmentDetailScreen extends StatelessWidget {
       listener: (context, state) {
         if (isSessionFailure(state.errorCode)) {
           onSessionInvalidated();
-        } else if (state.regimenSaved) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(text.tmRegimenSaved)));
         }
       },
       builder: (context, state) {
@@ -90,7 +88,19 @@ class TreatmentDetailScreen extends StatelessWidget {
         final name = personName?.trim();
         final knownName = name != null && name.isNotEmpty;
         return Scaffold(
-          bottomNavigationBar: navigationBar,
+          bottomNavigationBar: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (state.status == TreatmentManagementStatus.ready)
+                if (state.notice case final notice?)
+                  SafeArea(
+                    top: false,
+                    bottom: navigationBar == null,
+                    child: TreatmentManagementReceipt(notice: notice),
+                  ),
+              ?navigationBar,
+            ],
+          ),
           body: SafeArea(
             bottom: navigationBar == null,
             child: ListView(
@@ -221,6 +231,8 @@ class TreatmentDetailScreen extends StatelessWidget {
                     onEdit: () => _editRegimen(context, state.detail!),
                     onPause: () => bloc.add(const TreatmentPauseRequested()),
                     onResume: () => bloc.add(const TreatmentResumeRequested()),
+                    onReactivate: () =>
+                        bloc.add(const TreatmentMedicationReactivated()),
                   ),
                   const SizedBox(height: 20),
                   Container(
@@ -264,15 +276,6 @@ class TreatmentDetailScreen extends StatelessWidget {
                             : () => _deactivateMedication(context),
                         child: Text(text.tmDeactivateMedication),
                       ),
-                    )
-                  else if (state.medicationInactive)
-                    OutlinedButton(
-                      onPressed: state.busy
-                          ? null
-                          : () => bloc.add(
-                              const TreatmentMedicationReactivated(),
-                            ),
-                      child: Text(text.tmReactivate),
                     ),
                   if (state.errorCode != null)
                     InlineError(treatmentErrorText(text, state.errorCode)!),
@@ -280,7 +283,8 @@ class TreatmentDetailScreen extends StatelessWidget {
                     const SizedBox(height: 8),
                     adherence!,
                   ],
-                  if (state.detail?.status == TreatmentStatus.paused) ...[
+                  if (state.detail?.status == TreatmentStatus.paused &&
+                      !state.medicationInactive) ...[
                     const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.all(16),

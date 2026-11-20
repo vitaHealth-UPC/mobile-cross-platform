@@ -24,18 +24,28 @@ import '../support/fake_treatment_backend.dart';
 final class FakeReader implements TreatmentReader {
   FakeReader(this.backend);
   final FakeBackend backend;
+  String? detailFailure;
+  int? failOnCall;
+  int _detailCalls = 0;
 
   @override
   Future<AppResult<List<TreatmentDetail>>> list(String olderAdultId) async =>
       AppSuccess([?backend.stored]);
 
   @override
-  Future<AppResult<TreatmentDetail>> detail(String treatmentId) async =>
-      backend.failure != null
-      ? AppFailure(backend.failure!)
-      : backend.stored == null
-      ? const AppFailure('RESOURCE_NOT_FOUND')
-      : AppSuccess(backend.stored!);
+  Future<AppResult<TreatmentDetail>> detail(String treatmentId) async {
+    _detailCalls++;
+    final failure =
+        detailFailure != null &&
+            (failOnCall == null || _detailCalls >= failOnCall!)
+        ? detailFailure
+        : backend.failure;
+    return failure != null
+        ? AppFailure(failure)
+        : backend.stored == null
+        ? const AppFailure('RESOURCE_NOT_FOUND')
+        : AppSuccess(backend.stored!);
+  }
 }
 
 TreatmentSetupBloc setupBloc(FakeBackend backend) => TreatmentSetupBloc(
@@ -50,17 +60,19 @@ TreatmentSetupBloc setupBloc(FakeBackend backend) => TreatmentSetupBloc(
   medicationId: 'med-1',
 );
 
-TreatmentManagementBloc managementBloc(FakeBackend backend) =>
-    TreatmentManagementBloc(
-      detail: GetTreatmentDetail(FakeReader(backend)),
-      medications: ListMedications(backend),
-      configure: ConfigureTreatment(backend),
-      changeStatus: ChangeTreatmentStatus(backend),
-      reactivate: ReactivateMedication(backend),
-      deactivate: DeactivateMedication(backend),
-      treatmentId: 'tr-1',
-      olderAdultId: 'adult-A',
-    );
+TreatmentManagementBloc managementBloc(
+  FakeBackend backend, {
+  TreatmentReader? reader,
+}) => TreatmentManagementBloc(
+  detail: GetTreatmentDetail(reader ?? FakeReader(backend)),
+  medications: ListMedications(backend),
+  configure: ConfigureTreatment(backend),
+  changeStatus: ChangeTreatmentStatus(backend),
+  reactivate: ReactivateMedication(backend),
+  deactivate: DeactivateMedication(backend),
+  treatmentId: 'tr-1',
+  olderAdultId: 'adult-A',
+);
 
 /// Lets chained futures of the in-memory backend settle.
 Future<void> settle() async {
@@ -221,7 +233,7 @@ void main() {
         ),
       );
       await settle();
-      expect(bloc.state.regimenSaved, isTrue);
+      expect(bloc.state.notice, TreatmentManagementNotice.regimenSaved);
       expect(bloc.state.detail!.scheduledTimes, ['06:00', '14:00', '22:00']);
       expect(backend.stored!.dose, '2 tabletas');
       // Editing never changes the lifecycle state.
@@ -255,13 +267,70 @@ void main() {
         expect(bloc.state.activeMedicationCount, 0);
         bloc.add(const TreatmentPauseRequested());
         await settle();
-        expect(backend.stored!.status, TreatmentStatus.active);
+        expect(backend.stored!.status, TreatmentStatus.paused);
         bloc.add(const TreatmentMedicationReactivated());
         await settle();
         expect(bloc.state.medicationInactive, isFalse);
         expect(bloc.state.activeMedicationCount, 1);
+        expect(bloc.state.detail!.status, TreatmentStatus.paused);
+        expect(
+          bloc.state.notice,
+          TreatmentManagementNotice.medicationReactivated,
+        );
       },
     );
+
+    test(
+      'a failed post-availability read hides stale data and retries by reading',
+      () async {
+        final (backend, _) = await active();
+        final reader = FakeReader(backend);
+        final bloc = managementBloc(backend, reader: reader)
+          ..add(const TreatmentManagementRequested());
+        addTearDown(bloc.close);
+        await settle();
+        reader.detailFailure = 'NETWORK_UNAVAILABLE';
+        bloc.add(const TreatmentMedicationDeactivated());
+        await settle();
+        expect(backend.medications['med-1']!.active, isFalse);
+        expect(bloc.state.status, TreatmentManagementStatus.failure);
+        expect(bloc.state.detail, isNull);
+        expect(bloc.state.notice, isNull);
+        reader.detailFailure = null;
+        bloc.add(const TreatmentManagementRequested());
+        await settle();
+        expect(bloc.state.detail!.status, TreatmentStatus.paused);
+        expect(bloc.state.medicationInactive, isTrue);
+        expect(bloc.state.notice, isNull);
+      },
+    );
+
+    test('access denied after saving a regimen removes the protected receipt and detail', () async {
+      final (backend, _) = await active();
+      final reader = FakeReader(backend);
+      final bloc = managementBloc(backend, reader: reader)
+        ..add(const TreatmentManagementRequested());
+      addTearDown(bloc.close);
+      await settle();
+      reader.detailFailure = 'ACCESS_DENIED';
+      reader.failOnCall = 3;
+      bloc.add(
+        const RegimenEdited(
+          dose: '2 tabletas',
+          frequency: 'cada día',
+          scheduleText: '08:00',
+          instructions: '',
+          delayMinutes: '15',
+        ),
+      );
+      await settle();
+      expect(backend.stored!.dose, '2 tabletas');
+      expect(bloc.state.status, TreatmentManagementStatus.failure);
+      expect(bloc.state.errorCode, 'ACCESS_DENIED');
+      expect(bloc.state.detail, isNull);
+      expect(bloc.state.medication, isNull);
+      expect(bloc.state.notice, isNull);
+    });
 
     test('an authorization failure leaves no management actions', () async {
       final (backend, bloc) = await active();
