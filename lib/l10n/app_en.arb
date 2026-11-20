@@ -1404,5 +1404,50 @@
         "type": "String"
       }
     }
+  },
+  "pfEdit": "Edit",
+  "pfNotificationPreferences": "Notification preferences",
+  "pfMedicationReminders": "Medication reminders",
+  "pfCadence": "Cadence",
+  "pfCaregiverAlerts": "Caregiver alerts",
+  "pfPendingDoses": "Pending doses",
+  "pfOmittedDoses": "Missed doses",
+  "pfSummaryLabel": "Daily summary",
+  "pfEmergencyEscalation": "Emergency escalation",
+  "pfEscalateNoResponse": "Escalate if no response",
+  "pfNotificationChannels": "Notification channels",
+  "pfNotConfigured": "Not configured",
+  "pfDisabled": "Disabled",
+  "pfAfterMinutes": "After {count} min",
+  "@pfAfterMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pfAfterHours": "After {count} h",
+  "@pfAfterHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pfReminderAfter": "{count} min after the scheduled time",
+  "@pfReminderAfter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pfConfiguredContacts": "{count} configured",
+  "@pfConfiguredContacts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

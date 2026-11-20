@@ -741,7 +741,7 @@
   "pfChannelSms": "SMS",
   "pfChannelEmail": "Correo electrónico",
   "pfChannelCall": "Llamada",
-  "pfQuietHours": "Horas de silencio",
+  "pfQuietHours": "Horario de silencio",
   "pfQuietStart": "Inicio",
   "pfQuietEnd": "Fin",
   "pfPolicyTitle": "Avisos por tomas",
@@ -1576,6 +1576,51 @@
     "placeholders": {
       "time": {
         "type": "String"
+      }
+    }
+  },
+  "pfEdit": "Editar",
+  "pfNotificationPreferences": "Preferencias de notificaciones",
+  "pfMedicationReminders": "Recordatorios de medicación",
+  "pfCadence": "Cadencia",
+  "pfCaregiverAlerts": "Alertas al cuidador",
+  "pfPendingDoses": "Tomas pendientes",
+  "pfOmittedDoses": "Tomas omitidas",
+  "pfSummaryLabel": "Resumen diario",
+  "pfEmergencyEscalation": "Escalamiento de emergencia",
+  "pfEscalateNoResponse": "Escalar si no hay respuesta",
+  "pfNotificationChannels": "Canales de notificación",
+  "pfNotConfigured": "Sin configurar",
+  "pfDisabled": "Desactivado",
+  "pfAfterMinutes": "Después de {count} min",
+  "@pfAfterMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pfAfterHours": "Después de {count} h",
+  "@pfAfterHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pfReminderAfter": "{count} min después de la hora programada",
+  "@pfReminderAfter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pfConfiguredContacts": "{count} configurados",
+  "@pfConfiguredContacts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
       }
     }
   }

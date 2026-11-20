@@ -45,8 +45,9 @@ final class PreferencesNavigation {
   Future<void> openNotifications(
     BuildContext context,
     String userId,
-    VoidCallback onSessionInvalidated,
-  ) => Navigator.of(context).push<void>(
+    VoidCallback onSessionInvalidated, {
+    Widget Function(BuildContext context)? navigationBuilder,
+  }) => Navigator.of(context).push<void>(
     MaterialPageRoute(
       builder: (_) => BlocProvider(
         create: (_) =>
@@ -54,6 +55,7 @@ final class PreferencesNavigation {
               ..add(const NotificationPreferencesRequested()),
         child: Builder(
           builder: (innerContext) => NotificationPreferencesScreen(
+            navigationBar: navigationBuilder?.call(innerContext),
             onSessionInvalidated: () {
               Navigator.of(innerContext).popUntil((route) => route.isFirst);
               onSessionInvalidated();

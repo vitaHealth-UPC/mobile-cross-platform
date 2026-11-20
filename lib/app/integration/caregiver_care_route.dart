@@ -304,6 +304,18 @@ class CaregiverSettingsRoute extends StatelessWidget {
               context,
               caregiverId,
               onSessionInvalidated,
+              navigationBuilder: (notificationsContext) => CaregiverTabBar(
+                selected: CaregiverTab.more,
+                enabledTabs: const {CaregiverTab.home, CaregiverTab.more},
+                onSelected: (tab) {
+                  final navigator = Navigator.of(notificationsContext);
+                  if (tab == CaregiverTab.home) {
+                    navigator.popUntil((route) => route.isFirst);
+                  } else if (tab == CaregiverTab.more) {
+                    navigator.pop();
+                  }
+                },
+              ),
             ),
           ),
           ListTile(
