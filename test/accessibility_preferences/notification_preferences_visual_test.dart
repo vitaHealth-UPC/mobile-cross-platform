@@ -15,6 +15,51 @@ import 'preferences_presentation_test.dart'
 /// Native summary, editing and server acknowledgements stay in the same flow.
 void main() {
   setUpAll(loadTataFonts);
+  for (final scale in [1.0, 1.5]) {
+    testWidgets(
+      'saved notification receipt renders after acknowledgement at $scale',
+      (tester) async {
+        final repository = _repository();
+        await _show(tester, repository, scale: scale);
+        expect(
+          find.byKey(const Key('notification-save-receipt')),
+          findsNothing,
+        );
+        final sms = find.byKey(const Key('notification-channel-sms'));
+        await tester.ensureVisible(sms);
+        await tester.pumpAndSettle();
+        await tester.tap(sms);
+        await tester.pumpAndSettle();
+        await tester.ensureVisible(sms);
+        await tester.pumpAndSettle();
+        await tester.tap(sms);
+        await tester.pumpAndSettle();
+        expect(repository.updates, 2);
+        expect(repository.stored.isEnabled(ChannelType.sms), isTrue);
+        expect(find.text('Preferencias guardadas'), findsOneWidget);
+        expect(
+          find.text('Los canales de notificación fueron actualizados.'),
+          findsOneWidget,
+        );
+        expect(find.byType(SnackBar), findsNothing);
+        if (scale == 1) {
+          await tester.drag(find.byType(ListView), const Offset(0, 1000));
+          await tester.pumpAndSettle();
+        } else {
+          await tester.ensureVisible(
+            find.byKey(const Key('notification-channel-call')),
+          );
+          await tester.pumpAndSettle();
+        }
+        await captureWidget(
+          tester,
+          find.byKey(const Key('notification-capture')),
+          'notification-saved-563-5090-$scale',
+        );
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
   testWidgets(
     'a channel receipt with equivalent policy preserves unsaved edits',
     (tester) async {
@@ -87,11 +132,16 @@ void main() {
       await tester.tap(sms);
       await tester.pumpAndSettle();
       expect(repository.stored.isEnabled(ChannelType.sms), isFalse);
+      expect(
+        find.byKey(const Key('notification-save-receipt')),
+        findsOneWidget,
+      );
       repository.failure = 'NETWORK_UNAVAILABLE';
       await tester.tap(sms);
       await tester.pumpAndSettle();
       expect(repository.stored.isEnabled(ChannelType.sms), isFalse);
       expect(repository.updates, 2);
+      expect(find.byKey(const Key('notification-save-receipt')), findsNothing);
     },
   );
   testWidgets(
@@ -127,6 +177,10 @@ void main() {
       expect(repository.stored.policy!.reminderMinutes, 12);
       expect(find.byKey(const Key('policy-reminder')), findsNothing);
       expect(find.text('12 min después de la hora programada'), findsOneWidget);
+      expect(
+        find.text('Los avisos y contactos de emergencia fueron actualizados.'),
+        findsOneWidget,
+      );
     },
   );
   testWidgets('cancelling the quiet time picker sends no update', (

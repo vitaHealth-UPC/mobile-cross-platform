@@ -1623,5 +1623,9 @@
         "type": "int"
       }
     }
-  }
+  },
+  "pfPreferencesSaved": "Preferencias guardadas",
+  "pfPolicyReceipt": "Los avisos y contactos de emergencia fueron actualizados.",
+  "pfChannelsReceipt": "Los canales de notificación fueron actualizados.",
+  "pfQuietReceipt": "El horario de silencio fue actualizado."
 }

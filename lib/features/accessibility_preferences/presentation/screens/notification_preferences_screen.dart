@@ -9,6 +9,7 @@ import '../bloc/notifications/notification_preferences_bloc.dart';
 import '../bloc/notifications/notification_preferences_event.dart';
 import '../bloc/notifications/notification_preferences_state.dart';
 import '../widgets/notification_preferences_summary.dart';
+import '../widgets/notification_save_receipt.dart';
 
 /// Summary and editor for channels, quiet hours, policy and emergency contacts.
 /// The summary uses server receipts; unsaved edits stay in memory until submitted.
@@ -165,10 +166,8 @@ class _NotificationPreferencesScreenState
             state.errorCode == 'SESSION_CHANGED' ||
             state.errorCode == 'ACCESS_DENIED') {
           widget.onSessionInvalidated();
-        } else if (state.saved) {
+        } else if (state.receipt == NotificationPreferenceReceipt.policy) {
           setState(() => _editingPolicy = false);
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(text.pfPolicySaved)));
         }
       },
       builder: (context, state) {
@@ -225,7 +224,16 @@ class _NotificationPreferencesScreenState
                 ),
               ),
             ),
-            bottomNavigationBar: widget.navigationBar,
+            bottomNavigationBar: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (!_editingPolicy &&
+                    state.status == NotificationPreferencesStatus.ready)
+                  if (state.receipt case final receipt?)
+                    NotificationSaveReceipt(receipt: receipt),
+                ?widget.navigationBar,
+              ],
+            ),
             body: switch (state.status) {
               NotificationPreferencesStatus.loading => const Center(
                 child: CircularProgressIndicator(),

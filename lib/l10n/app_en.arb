@@ -1449,5 +1449,9 @@
         "type": "int"
       }
     }
-  }
+  },
+  "pfPreferencesSaved": "Preferences saved",
+  "pfPolicyReceipt": "Alerts and emergency contacts were updated.",
+  "pfChannelsReceipt": "Notification channels were updated.",
+  "pfQuietReceipt": "Quiet hours were updated."
 }

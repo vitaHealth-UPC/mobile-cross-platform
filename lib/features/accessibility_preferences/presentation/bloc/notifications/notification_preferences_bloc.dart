@@ -24,12 +24,14 @@ final class NotificationPreferencesBloc
         event.enabled
             ? state.preferences.copyWith(quietHours: QuietHours.suggested())
             : state.preferences.copyWith(clearQuietHours: true),
+        receipt: NotificationPreferenceReceipt.quietHours,
       ),
     );
     on<QuietHoursChanged>(
       (event, emit) => _replace(
         emit,
         state.preferences.copyWith(quietHours: event.quietHours),
+        receipt: NotificationPreferenceReceipt.quietHours,
       ),
     );
     on<PolicySaved>(_savePolicy);
@@ -76,6 +78,7 @@ final class NotificationPreferencesBloc
                 : channel,
         ],
       ),
+      receipt: NotificationPreferenceReceipt.channels,
     );
   }
 
@@ -83,8 +86,9 @@ final class NotificationPreferencesBloc
   /// previous values stay visible.
   Future<void> _replace(
     Emitter<NotificationPreferencesState> emit,
-    NotificationPreferences candidate,
-  ) async {
+    NotificationPreferences candidate, {
+    required NotificationPreferenceReceipt receipt,
+  }) async {
     if (state.busy || state.status != NotificationPreferencesStatus.ready) {
       return;
     }
@@ -95,6 +99,7 @@ final class NotificationPreferencesBloc
       AppSuccess<NotificationPreferences>(:final value) => state.copyWith(
         preferences: value,
         busy: false,
+        receipt: receipt,
       ),
       AppFailure<NotificationPreferences>(:final code) => state.copyWith(
         busy: false,
@@ -153,7 +158,7 @@ final class NotificationPreferencesBloc
       AppSuccess<NotificationPreferences>(:final value) => state.copyWith(
         preferences: value,
         busy: false,
-        saved: true,
+        receipt: NotificationPreferenceReceipt.policy,
       ),
       AppFailure<NotificationPreferences>(:final code) => state.copyWith(
         busy: false,

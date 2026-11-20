@@ -64,6 +64,11 @@ class NotificationPreferencesSummary extends StatelessWidget {
       ),
       TextButton(
         onPressed: busy ? null : onEditPolicy,
+        style: TextButton.styleFrom(
+          minimumSize: const Size(44, 32),
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
         child: Text(text.pfEdit, style: const TextStyle(fontSize: 11)),
       ),
     ],
@@ -235,7 +240,7 @@ class NotificationPreferencesSummary extends StatelessWidget {
           Column(
             children: [
               _heading(text, text.pfNotificationChannels, 'channels'),
-              const SizedBox(height: 14),
+              const SizedBox(height: 6),
               if (MediaQuery.textScalerOf(context).scale(9) > 12)
                 LayoutBuilder(
                   builder: (context, constraints) => Wrap(

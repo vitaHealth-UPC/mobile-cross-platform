@@ -115,6 +115,7 @@ void main() {
       await settle();
       expect(bloc.state.preferences.isEnabled(ChannelType.sms), isTrue);
       expect(repository.updates, 1);
+      expect(bloc.state.receipt, NotificationPreferenceReceipt.channels);
     });
 
     test('quiet hours switch on with the suggestion and back off', () async {
@@ -125,6 +126,7 @@ void main() {
       bloc.add(const QuietHoursToggled(true));
       await settle();
       expect(bloc.state.preferences.quietHours, QuietHours(22, 0, 7, 0));
+      expect(bloc.state.receipt, NotificationPreferenceReceipt.quietHours);
       bloc.add(QuietHoursChanged(QuietHours(23, 30, 6, 0)));
       await settle();
       expect(bloc.state.preferences.quietHours, QuietHours(23, 30, 6, 0));
@@ -145,6 +147,7 @@ void main() {
       expect(bloc.state.preferences.isEnabled(ChannelType.email), isFalse);
       expect(bloc.state.errorCode, 'NETWORK_UNAVAILABLE');
       expect(bloc.state.busy, isFalse);
+      expect(bloc.state.receipt, isNull);
     });
 
     test('policy is validated before any request', () async {
@@ -203,7 +206,7 @@ void main() {
           ),
         );
         await settle();
-        expect(bloc.state.saved, isTrue);
+        expect(bloc.state.receipt, NotificationPreferenceReceipt.policy);
         expect(repository.policyUpdates, 1);
         final policy = bloc.state.preferences.policy!;
         expect(policy.escalationMinutes, 90);
