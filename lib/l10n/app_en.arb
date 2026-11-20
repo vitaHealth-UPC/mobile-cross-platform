@@ -1459,5 +1459,6 @@
   "tmChangesSaved": "Changes saved",
   "tmFutureRegimenReceipt": "The new regimen will apply only to future doses.",
   "tmDeactivationReceipt": "No new doses will be generated. History is preserved.",
-  "tmReactivationReceipt": "The medication is available again."
+  "tmReactivationReceipt": "The medication is available again.",
+  "fmFollowUpNoteTitle": "Observation"
 }

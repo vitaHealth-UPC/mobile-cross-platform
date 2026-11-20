@@ -36,12 +36,16 @@ final class NotesState {
     this.notes = const [],
     this.person,
     this.errorCode,
+    this.refreshing = false,
   });
 
   final NotesStatus status;
   final List<FollowUpNote> notes;
   final MonitoredPerson? person;
   final String? errorCode;
+
+  /// Remains true until both notes and profile queries have finished.
+  final bool refreshing;
 }
 
 /// Loads the caregiver follow-up notes of one adult and the profile that frames them.
@@ -66,45 +70,52 @@ final class NotesBloc extends Bloc<NotesEvent, NotesState> {
 
   Future<void> _load(NotesRequested event, Emitter<NotesState> emit) async {
     final revision = ++_revision;
-    final kept = state.status == NotesStatus.ready
-        ? state.notes
-        : const <FollowUpNote>[];
-    if (state.status != NotesStatus.ready) emit(const NotesState());
+    final kept = state.notes;
+    final knownPerson = state.person;
+    emit(
+      NotesState(
+        status: state.status,
+        notes: kept,
+        person: knownPerson,
+        refreshing: true,
+      ),
+    );
     final result = await _notes(olderAdultId);
     if (revision != _revision || emit.isDone) return;
-    switch (result) {
-      case AppSuccess(:final value):
-        emit(
-          NotesState(
-            status: value.isEmpty ? NotesStatus.empty : NotesStatus.ready,
-            notes: value,
-          ),
-        );
-      case AppFailure(:final code):
-        emit(
-          NotesState(
-            status: NotesStatus.failure,
-            notes: isAccessFailure(code) ? const [] : kept,
-            errorCode: code,
-          ),
-        );
-        return;
+    if (result is AppFailure<List<FollowUpNote>>) {
+      final denied = isAccessFailure(result.code);
+      emit(
+        NotesState(
+          status: NotesStatus.failure,
+          notes: denied ? const [] : kept,
+          person: denied ? null : knownPerson,
+          errorCode: result.code,
+        ),
+      );
+      return;
     }
+    final notes = (result as AppSuccess<List<FollowUpNote>>).value;
+    // Do not publish newly fetched text before the profile access check finishes.
     final profile = await _people.read(olderAdultId);
     if (revision != _revision || emit.isDone) return;
-    switch (profile) {
-      case AppSuccess(:final value):
-        emit(
-          NotesState(status: state.status, notes: state.notes, person: value),
-        );
-      case AppFailure(:final code) when isAccessFailure(code):
-        emit(NotesState(status: NotesStatus.failure, errorCode: code));
-      case AppFailure():
-        break;
+    if (profile is AppFailure<MonitoredPerson> &&
+        isAccessFailure(profile.code)) {
+      emit(NotesState(status: NotesStatus.failure, errorCode: profile.code));
+      return;
     }
+    emit(
+      NotesState(
+        status: notes.isEmpty ? NotesStatus.empty : NotesStatus.ready,
+        notes: notes,
+        person: profile is AppSuccess<MonitoredPerson>
+            ? profile.value
+            : knownPerson,
+      ),
+    );
   }
 
   void _add(NoteAdded event, Emitter<NotesState> emit) {
+    if (isAccessFailure(state.errorCode)) return;
     _revision++;
     emit(
       NotesState(

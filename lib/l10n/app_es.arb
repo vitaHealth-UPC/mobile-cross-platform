@@ -1633,5 +1633,6 @@
   "tmChangesSaved": "Cambios guardados",
   "tmFutureRegimenReceipt": "La nueva pauta se aplicará solo a tomas futuras.",
   "tmDeactivationReceipt": "No se generarán nuevas tomas. El historial se conserva.",
-  "tmReactivationReceipt": "El medicamento vuelve a estar disponible."
+  "tmReactivationReceipt": "El medicamento vuelve a estar disponible.",
+  "fmFollowUpNoteTitle": "Observación"
 }

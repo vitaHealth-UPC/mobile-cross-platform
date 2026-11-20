@@ -2,53 +2,87 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
+import '../../../../shared/application/time/clock.dart';
 import '../../../../shared/presentation/theme/tata_colors.dart';
 import '../../../../shared/presentation/widgets/caregiver_tab_bar.dart';
 import '../bloc/notes/note_composer_cubit.dart';
 import '../bloc/notes/notes_bloc.dart';
 import '../texts/monitoring_texts.dart';
+import '../widgets/follow_up_note_card.dart';
 import '../widgets/follow_up_note_dialog.dart';
 import '../widgets/monitoring_widgets.dart';
 
-/// Caregiver follow-up notes about the followed person, newest first.
+/// Authorized caregiver notes with a native profile, timeline and composer.
 class NotesScreen extends StatelessWidget {
-  const NotesScreen({super.key, required this.onTab});
-
+  const NotesScreen({
+    super.key,
+    required this.onTab,
+    this.clock = DateTime.now,
+  });
   final ValueChanged<CaregiverTab> onTab;
+  final Clock clock;
+
+  Future<void> _refresh(BuildContext context) async {
+    final bloc = context.read<NotesBloc>();
+    if (bloc.state.refreshing || bloc.state.status == NotesStatus.loading) {
+      return;
+    }
+    final completed = bloc.stream.firstWhere(
+      (state) => !state.refreshing,
+      orElse: () => bloc.state,
+    );
+    bloc.add(const NotesRequested());
+    await completed;
+  }
 
   @override
   Widget build(BuildContext context) {
     final text = AppLocalizations.of(context);
-    final locale = Localizations.localeOf(context).toString();
     return NoteComposerHost(
       onSaved: (note) => context.read<NotesBloc>().add(NoteAdded(note)),
-      child: BlocListener<NoteComposerCubit, NoteComposerState>(
-        listenWhen: (a, b) => a.failureCode != b.failureCode,
-        listener: (context, state) {
-          final code = state.failureCode;
-          if (code != null && isAccessFailure(code)) {
-            context.read<NotesBloc>().add(NotesAccessLost(code));
-            context.read<NoteComposerCubit>().clear();
-          }
-        },
+      child: MultiBlocListener(
+        listeners: [
+          BlocListener<NoteComposerCubit, NoteComposerState>(
+            listenWhen: (a, b) => a.failureCode != b.failureCode,
+            listener: (context, state) {
+              final code = state.failureCode;
+              if (code != null && isAccessFailure(code)) {
+                context.read<NotesBloc>().add(NotesAccessLost(code));
+                context.read<NoteComposerCubit>().clear();
+              }
+            },
+          ),
+          BlocListener<NotesBloc, NotesState>(
+            listenWhen: (a, b) => a.errorCode != b.errorCode,
+            listener: (context, state) {
+              if (isAccessFailure(state.errorCode)) {
+                context.read<NoteComposerCubit>().clear();
+              }
+            },
+          ),
+        ],
         child: Scaffold(
-          backgroundColor: TataColors.background,
+          backgroundColor: const Color(0xFFFBFBFE),
           extendBody: true,
-          bottomNavigationBar: DefaultTextStyle.merge(
-            style: const TextStyle(letterSpacing: 0, height: 1.2),
-            child: CaregiverTabBar(
-              selected: CaregiverTab.notes,
-              onSelected: onTab,
-            ),
+          bottomNavigationBar: CaregiverTabBar(
+            selected: CaregiverTab.notes,
+            onSelected: onTab,
           ),
           body: SafeArea(
             bottom: false,
             child: BlocBuilder<NotesBloc, NotesState>(
               builder: (context, state) {
                 final person = state.person;
+                final denied = isAccessFailure(state.errorCode);
+                final add =
+                    denied ||
+                        state.refreshing ||
+                        state.status == NotesStatus.loading
+                    ? null
+                    : () => context.read<NoteComposerCubit>().open();
+                final now = clock();
                 return RefreshIndicator(
-                  onRefresh: () async =>
-                      context.read<NotesBloc>().add(const NotesRequested()),
+                  onRefresh: () => _refresh(context),
                   child: SingleChildScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: EdgeInsets.fromLTRB(
@@ -58,32 +92,52 @@ class NotesScreen extends StatelessWidget {
                       MediaQuery.paddingOf(context).bottom + 110,
                     ),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        MonitoringHeader(
-                          title: text.fmNotesTitle,
-                          subtitle: person == null
-                              ? text.fmNotesSubtitle
-                              : text.fmNotesSubtitlePerson(person.fullName),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: MonitoringHeader(
+                                title: text.fmNotesTitle,
+                                subtitle: person == null
+                                    ? text.fmNotesSubtitle
+                                    : text.fmNotesSubtitlePerson(
+                                        person.fullName,
+                                      ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              tooltip: text.fmNotesAdd,
+                              onPressed: add,
+                              icon: const Icon(
+                                Icons.add,
+                                color: TataColors.primary,
+                              ),
+                              style: IconButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                side: const BorderSide(
+                                  color: Color(0xFFE3E3F0),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 16),
-                        if (state.status != NotesStatus.failure ||
-                            !isAccessFailure(state.errorCode))
-                          MonitoringPrimaryButton(
-                            label: text.fmNotesAdd,
-                            onPressed: () =>
-                                context.read<NoteComposerCubit>().open(),
-                          ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 20),
+                        if (person != null && !denied) ...[
+                          FollowUpPersonCard(person: person, now: now),
+                          const SizedBox(height: 24),
+                        ],
                         switch (state.status) {
                           NotesStatus.loading => MonitoringLoading(
                             label: text.fmNotesLoading,
                           ),
                           NotesStatus.failure => MonitoringError(
-                            message: isAccessFailure(state.errorCode)
+                            message: denied
                                 ? text.fmErrorAccess
                                 : text.fmErrorUnknown,
-                            onRetry: isAccessFailure(state.errorCode)
+                            onRetry: denied
                                 ? null
                                 : () => context.read<NotesBloc>().add(
                                     const NotesRequested(),
@@ -96,16 +150,11 @@ class NotesScreen extends StatelessWidget {
                                 Text(
                                   text.fmNotesEmptyTitle,
                                   style: const TextStyle(
-                                    fontWeight: FontWeight.w700,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                                 const SizedBox(height: 6),
-                                Text(
-                                  text.fmNotesEmptyMessage,
-                                  style: const TextStyle(
-                                    color: TataColors.muted,
-                                  ),
-                                ),
+                                Text(text.fmNotesEmptyMessage),
                               ],
                             ),
                           ),
@@ -115,56 +164,75 @@ class NotesScreen extends StatelessWidget {
                               Text(
                                 text.fmNotesSection,
                                 style: const TextStyle(
-                                  fontWeight: FontWeight.w700,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                               const SizedBox(height: 10),
-                              for (final note in state.notes) ...[
-                                MonitoringCard(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                              Stack(
+                                children: [
+                                  Positioned(
+                                    left: 31,
+                                    top: 24,
+                                    bottom: 24,
+                                    width: 2,
+                                    child: ColoredBox(
+                                      color: const Color(0xFFE5E4EE),
+                                    ),
+                                  ),
+                                  Column(
                                     children: [
-                                      Text(note.text),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        text.fmNotesMeta(
-                                          text.fmNotesAuthorYou,
-                                          monitoringDateTime(
-                                            locale,
-                                            note.recordedAt,
-                                          ),
+                                      for (
+                                        var i = 0;
+                                        i < state.notes.length;
+                                        i++
+                                      ) ...[
+                                        FollowUpNoteCard(
+                                          note: state.notes[i],
+                                          now: now,
+                                          index: i,
                                         ),
-                                        style: const TextStyle(
-                                          color: TataColors.muted,
-                                          fontSize: 12,
-                                        ),
-                                      ),
+                                        const SizedBox(height: 16),
+                                      ],
                                     ],
                                   ),
-                                ),
-                                const SizedBox(height: 12),
-                              ],
+                                ],
+                              ),
                             ],
                           ),
                         },
-                        const SizedBox(height: 8),
-                        MonitoringCard(
-                          color: TataColors.infoSurface,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                text.fmNotesSharedHistory,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w700,
+                        if (!denied) ...[
+                          const SizedBox(height: 4),
+                          MonitoringCard(
+                            color: const Color(0xFFE8F7EB),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  text.fmNotesSharedHistory,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(text.fmNotesSharedHistoryBody),
-                            ],
+                                const SizedBox(height: 6),
+                                Text(
+                                  text.fmNotesSharedHistoryBody,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    height: 1.3,
+                                    color: Color(0xFF637087),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
+                          const SizedBox(height: 12),
+                          MonitoringPrimaryButton(
+                            label: text.fmNotesAdd,
+                            onPressed: add,
+                          ),
+                        ],
                       ],
                     ),
                   ),
