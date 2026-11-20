@@ -1453,5 +1453,7 @@
   "pfPreferencesSaved": "Preferences saved",
   "pfPolicyReceipt": "Alerts and emergency contacts were updated.",
   "pfChannelsReceipt": "Notification channels were updated.",
-  "pfQuietReceipt": "Quiet hours were updated."
+  "pfQuietReceipt": "Quiet hours were updated.",
+  "tmMissingMedicationTitle": "Required details are missing",
+  "tmMissingMedicationBody": "Complete the medication, strength and frequency before continuing."
 }

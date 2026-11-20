@@ -17,6 +17,67 @@ import 'treatment_blocs_test.dart' show setupBloc;
 /// Registration keeps regimen suggestions separate from medication persistence.
 void main() {
   setUpAll(loadTataFonts);
+  for (final scale in [1.0, 1.5]) {
+    testWidgets('required medication notice renders at text scale $scale', (
+      tester,
+    ) async {
+      final backend = FakeBackend();
+      await _show(tester, backend, (_) {}, textScale: scale);
+      if (scale > 1) tester.view.physicalSize = const Size(360, 640);
+      await tester.runAsync(() async {
+        await precacheImage(
+          const AssetImage('assets/illustrations/registration_bottle.png'),
+          tester.element(find.byType(MedicationRegistrationScreen)),
+        );
+      });
+      await tester.pumpAndSettle();
+      await _next(tester);
+      await tester.ensureVisible(
+        find.widgetWithText(ElevatedButton, 'Siguiente'),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Faltan datos obligatorios'), findsOneWidget);
+      expect(backend.medications.length, 1);
+      await captureWidget(
+        tester,
+        find.byKey(const Key('registration-capture')),
+        'medication-required-563-2404-$scale',
+      );
+      expect(tester.takeException(), isNull);
+    });
+  }
+  testWidgets(
+    'frequency is required before registration and selecting it clears the notice',
+    (tester) async {
+      final backend = FakeBackend();
+      MedicationRegistrationResult? result;
+      await _show(tester, backend, (value) => result = value);
+      await tester.enterText(
+        find.byKey(const Key('medication-name')),
+        'Losartán',
+      );
+      await tester.enterText(
+        find.byKey(const Key('medication-presentation')),
+        '50 mg, comprimido',
+      );
+      await _next(tester);
+      expect(backend.medications.length, 1);
+      expect(result, isNull);
+      final frequency = find.byKey(const Key('medication-frequency'));
+      await tester.ensureVisible(frequency);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Frecuencia'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cada 12 horas').last);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('medication-required-notice')), findsNothing);
+      expect(find.text('Completa este campo.'), findsNothing);
+      await _next(tester);
+      expect(result!.frequency, 'Cada 12 horas');
+      expect(backend.medications.length, 2);
+      expect(backend.configureCalls, 0);
+    },
+  );
   testWidgets('regimen suggestions remain editable and never infer the dose', (
     tester,
   ) async {
@@ -156,7 +217,8 @@ void main() {
     final backend = FakeBackend();
     await _show(tester, backend, (_) {});
     await _next(tester);
-    expect(find.text('Completa este campo.'), findsNWidgets(2));
+    expect(find.text('Completa este campo.'), findsNWidgets(3));
+    expect(find.byKey(const Key('medication-required-notice')), findsOneWidget);
     expect(backend.medications.length, 1);
   });
 

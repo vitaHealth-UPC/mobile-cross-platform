@@ -5,6 +5,7 @@ import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/presentation/theme/tata_colors.dart';
 import '../../../../shared/presentation/theme/tata_typography.dart';
 import '../../../../shared/presentation/widgets/async_states.dart';
+import '../../../../shared/presentation/widgets/status_notice.dart';
 import '../../application/readmodels/medication_registration_result.dart';
 import '../../application/usecases/medication_usecases.dart';
 import '../../domain/value_objects/regimen_text.dart';
@@ -40,6 +41,12 @@ class _MedicationRegistrationScreenState
   final _frequency = TextEditingController();
   final _when = TextEditingController();
   final _notes = TextEditingController();
+  bool _showMissingFields = false;
+
+  bool get _missingRequired =>
+      _name.text.trim().isEmpty ||
+      _presentation.text.trim().isEmpty ||
+      _frequency.text.trim().isEmpty;
 
   String get _instructions => [
     _when.text.trim(),
@@ -87,6 +94,7 @@ class _MedicationRegistrationScreenState
     child: TextFormField(
       key: Key(fieldKey),
       controller: controller,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
       enabled: !locked,
       maxLength: maxLength,
       minLines: 1,
@@ -174,6 +182,11 @@ class _MedicationRegistrationScreenState
                   padding: const EdgeInsets.fromLTRB(22, 16, 22, 28),
                   child: Form(
                     key: _form,
+                    onChanged: () {
+                      if (_showMissingFields && !_missingRequired) {
+                        setState(() => _showMissingFields = false);
+                      }
+                    },
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -243,11 +256,10 @@ class _MedicationRegistrationScreenState
                           locked: locked,
                           maxLength: 100,
                           validator: (v) =>
-                              v == null ||
-                                  v.trim().isEmpty ||
-                                  Frequency.tryParse(v) != null
-                              ? null
-                              : text.tmErrInvalidFrequency,
+                              _required(v, text) ??
+                              (Frequency.tryParse(v!) == null
+                                  ? text.tmErrInvalidFrequency
+                                  : null),
                           suffix: PopupMenuButton<String>(
                             enabled: !locked,
                             tooltip: text.tmFrequencyShort,
@@ -293,12 +305,26 @@ class _MedicationRegistrationScreenState
                               ? text.tmErrInstructionsLong
                               : null,
                         ),
-                        const SizedBox(height: 32),
+                        if (_showMissingFields) ...[
+                          const SizedBox(height: 10),
+                          StatusNotice(
+                            key: const Key('medication-required-notice'),
+                            title: text.tmMissingMedicationTitle,
+                            body: text.tmMissingMedicationBody,
+                          ),
+                          const SizedBox(height: 12),
+                        ] else
+                          const SizedBox(height: 32),
                         ElevatedButton(
                           onPressed: locked
                               ? null
                               : () {
-                                  if (!_form.currentState!.validate()) return;
+                                  final valid = _form.currentState!.validate();
+                                  setState(
+                                    () => _showMissingFields =
+                                        !valid && _missingRequired,
+                                  );
+                                  if (!valid) return;
                                   FocusScope.of(context).unfocus();
                                   context
                                       .read<MedicationRegistrationBloc>()
