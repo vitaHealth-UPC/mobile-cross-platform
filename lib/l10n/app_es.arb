@@ -1658,5 +1658,7 @@
   "pfMotionReduced": "Movimiento reducido",
   "pfMotionApplied": "Las transiciones no esenciales usan una alternativa reducida.",
   "pfReadingActive": "Ayuda de lectura activa",
-  "pfReadingApplied": "Más espacio entre líneas y letras en el contenido compatible."
+  "pfReadingApplied": "Más espacio entre líneas y letras en el contenido compatible.",
+  "linkPendingBadge": "Pendiente",
+  "linkConfirmedBadge": "Confirmado"
 }
