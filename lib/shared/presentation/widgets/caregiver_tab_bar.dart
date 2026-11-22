@@ -67,7 +67,13 @@ class CaregiverTabBar extends StatelessWidget {
       container: true,
       label: text.caregiverTabBarSemantics,
       child: Container(
-        height: 68,
+        // Preserve the normal label spacing when system text grows.
+        height:
+            68 +
+            math.max(
+              0.0,
+              MediaQuery.textScalerOf(context).scale(8.5) * (12 / 8.5) - 12,
+            ),
         // Figma keeps the bar 16 px above the frame bottom, over the home
         // indicator area; on gesture navigation the system inset is used when
         // it is larger, so the bar is never covered.

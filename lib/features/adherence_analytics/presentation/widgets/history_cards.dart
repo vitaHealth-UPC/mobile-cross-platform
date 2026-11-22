@@ -20,46 +20,67 @@ class MetricsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = AppLocalizations.of(context);
     final days = summary.periodDays;
-    return IntrinsicHeight(
+    final cards = [
+      _MetricCard(
+        label: text.adherenceMetricAdherence,
+        value: '${summary.adherencePercent}%',
+        caption: adherenceChangeCaption(
+          text,
+          summary.adherenceChangePercent,
+          days,
+        ),
+        start: AdherencePalette.adherenceStart,
+        end: AdherencePalette.adherenceEnd,
+      ),
+      _MetricCard(
+        label: text.adherenceMetricOnTime,
+        value: '${summary.onTimePercent}%',
+        caption: adherenceChangeText(summary.onTimeChangePercent),
+        start: AdherencePalette.onTimeStart,
+        end: AdherencePalette.onTimeEnd,
+      ),
+      _MetricCard(
+        label: text.adherenceMetricLateOmitted,
+        value: '${summary.lateCount}, ${summary.omittedCount}',
+        caption: text.adherenceLateOmittedCaption(days),
+        start: AdherencePalette.lateOmittedStart,
+        end: AdherencePalette.lateOmittedEnd,
+      ),
+    ];
+    Widget row(List<Widget> children) => IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            child: _MetricCard(
-              label: text.adherenceMetricAdherence,
-              value: '${summary.adherencePercent}%',
-              caption: adherenceChangeCaption(
-                text,
-                summary.adherenceChangePercent,
-                days,
-              ),
-              start: AdherencePalette.adherenceStart,
-              end: AdherencePalette.adherenceEnd,
-            ),
-          ),
-          const SizedBox(width: 9),
-          Expanded(
-            child: _MetricCard(
-              label: text.adherenceMetricOnTime,
-              value: '${summary.onTimePercent}%',
-              caption: adherenceChangeText(summary.onTimeChangePercent),
-              start: AdherencePalette.onTimeStart,
-              end: AdherencePalette.onTimeEnd,
-            ),
-          ),
-          const SizedBox(width: 9),
-          Expanded(
-            child: _MetricCard(
-              label: text.adherenceMetricLateOmitted,
-              value: '${summary.lateCount}, ${summary.omittedCount}',
-              caption: text.adherenceLateOmittedCaption(days),
-              start: AdherencePalette.lateOmittedStart,
-              end: AdherencePalette.lateOmittedEnd,
-            ),
-          ),
+          for (var i = 0; i < children.length; i++) ...[
+            if (i > 0) const SizedBox(width: 9),
+            Expanded(child: children[i]),
+          ],
         ],
       ),
     );
+    final scaler = MediaQuery.textScalerOf(context);
+    if (scaler.scale(25) > 40) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var i = 0; i < cards.length; i++) ...[
+            if (i > 0) const SizedBox(height: 9),
+            cards[i],
+          ],
+        ],
+      );
+    }
+    if (scaler.scale(11) > 14) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          row(cards.take(2).toList()),
+          const SizedBox(height: 9),
+          cards.last,
+        ],
+      );
+    }
+    return row(cards);
   }
 }
 
