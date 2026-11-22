@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tata/features/accessibility_preferences/application/readmodels/accessibility_change.dart';
 import 'package:tata/features/accessibility_preferences/domain/value_objects/accessibility_preferences.dart';
 import 'package:tata/features/accessibility_preferences/infrastructure/repositories/offline_first_user_preferences.dart';
 import 'package:tata/features/accessibility_preferences/presentation/bloc/accessibility/accessibility_event.dart';
@@ -89,6 +90,39 @@ void main() {
             find.byKey(const Key('accessibility-capture')),
             'accessibility_${variant.key}_${scale == 1 ? 'normal' : 'large'}',
           );
+          final field = switch (variant.key) {
+            'large_text' => AccessibilityField.textSize,
+            'contrast' => AccessibilityField.highContrast,
+            'reduced_motion' => AccessibilityField.reducedMotion,
+            'reading' => AccessibilityField.readingAssistance,
+            _ => null,
+          };
+          if (field != null) {
+            bloc.add(
+              AccessibilityChanged(AccessibilityChange.forField(field, prefs)),
+            );
+            await tester.pumpAndSettle();
+            expect(bloc.state.receipt, field);
+            final screenContext = tester.element(
+              find.byType(AccessibilityScreen),
+            );
+            expect(
+              MediaQuery.disableAnimationsOf(screenContext),
+              prefs.reducedMotion,
+            );
+            expect(
+              MediaQuery.textScalerOf(screenContext).scale(10),
+              closeTo(10 * scale * prefs.textSize.scaleFactor, 0.001),
+            );
+            if (prefs.readingAssistance) {
+              expect(Theme.of(screenContext).textTheme.bodyMedium!.height, 1.7);
+            }
+            await captureWidget(
+              tester,
+              find.byKey(const Key('accessibility-capture')),
+              'accessibility_${variant.key}_${scale == 1 ? 'normal' : 'large'}_saved',
+            );
+          }
           await tester.scrollUntilVisible(
             find.widgetWithText(ListTile, 'Idioma'),
             250,
@@ -99,6 +133,13 @@ void main() {
             findsOneWidget,
           );
           expect(tester.takeException(), isNull);
+          if (field != null) {
+            await captureWidget(
+              tester,
+              find.byKey(const Key('accessibility-capture')),
+              'accessibility_${variant.key}_${scale == 1 ? 'normal' : 'large'}_bottom',
+            );
+          }
           await tester.pumpWidget(const SizedBox());
           await tester.pumpAndSettle();
         },

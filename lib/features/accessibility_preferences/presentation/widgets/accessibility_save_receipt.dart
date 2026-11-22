@@ -2,12 +2,18 @@ import 'package:flutter/material.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../application/readmodels/accessibility_change.dart';
+import '../../domain/value_objects/accessibility_preferences.dart';
 
 /// Confirms the field stored by an explicit edit; loading preferences is silent.
 class AccessibilitySaveReceipt extends StatelessWidget {
-  const AccessibilitySaveReceipt({super.key, required this.field});
+  const AccessibilitySaveReceipt({
+    super.key,
+    required this.field,
+    required this.preferences,
+  });
 
   final AccessibilityField field;
+  final AccessibilityPreferences preferences;
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +29,19 @@ class AccessibilitySaveReceipt extends StatelessWidget {
       AccessibilityField.reducedMotion => text.pfReducedMotion,
       AccessibilityField.voiceConfirmation => text.pfVoiceConfirmation,
       AccessibilityField.readingAssistance => text.pfReadingAssistance,
+    };
+    final (title, detail) = switch (field) {
+      AccessibilityField.highContrast when preferences.highContrast => (
+        text.pfContrastActive,
+        text.pfContrastApplied,
+      ),
+      AccessibilityField.reducedMotion when preferences.reducedMotion => (
+        text.pfMotionReduced,
+        text.pfMotionApplied,
+      ),
+      AccessibilityField.readingAssistance when preferences.readingAssistance =>
+        (text.pfReadingActive, text.pfReadingApplied),
+      _ => (text.pfAccessibilitySaved, text.pfAccessibilityReceipt(label)),
     };
     return Semantics(
       liveRegion: true,
@@ -40,7 +59,7 @@ class AccessibilitySaveReceipt extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              text.pfAccessibilitySaved,
+              title,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
@@ -51,7 +70,7 @@ class AccessibilitySaveReceipt extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              text.pfAccessibilityReceipt(label),
+              detail,
               style: TextStyle(
                 fontSize: 10,
                 color: normal

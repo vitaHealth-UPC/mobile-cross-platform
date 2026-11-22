@@ -1478,5 +1478,11 @@
     "placeholders": {
       "preference": { "type": "String" }
     }
-  }
+  },
+  "pfContrastActive": "High contrast enabled",
+  "pfContrastApplied": "Text, borders and controls use high contrast.",
+  "pfMotionReduced": "Reduced motion",
+  "pfMotionApplied": "Non-essential transitions use a reduced alternative.",
+  "pfReadingActive": "Reading assistance enabled",
+  "pfReadingApplied": "More space between lines and letters in supported content."
 }

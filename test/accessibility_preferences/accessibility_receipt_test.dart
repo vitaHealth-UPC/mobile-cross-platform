@@ -64,8 +64,11 @@ void main() {
       await tester.tap(toggle);
       await tester.pumpAndSettle();
       expect(remote.server.reducedMotion, isTrue);
-      expect(find.text('Preferencia guardada').hitTestable(), findsOneWidget);
-      expect(find.textContaining('Reducir movimiento:'), findsOneWidget);
+      expect(find.text('Movimiento reducido').hitTestable(), findsOneWidget);
+      expect(
+        find.textContaining('Las transiciones no esenciales'),
+        findsOneWidget,
+      );
       await captureWidget(
         tester,
         find.byKey(const Key('accessibility-receipt-capture')),
@@ -75,6 +78,7 @@ void main() {
       bloc.add(const AccessibilityChanged(ReducedMotionChange(false)));
       await tester.pumpAndSettle();
       expect(find.text('Preferencia guardada'), findsNothing);
+      expect(find.text('Movimiento reducido'), findsNothing);
       expect(bloc.state.sync, AccessibilitySyncStatus.pending);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());

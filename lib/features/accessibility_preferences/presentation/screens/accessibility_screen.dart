@@ -91,12 +91,16 @@ class AccessibilityScreen extends StatelessWidget {
       void change(AccessibilityChange value) =>
           bloc.add(AccessibilityChanged(value));
       final titleStyle = theme.textTheme.bodyMedium!.copyWith(
-        fontSize: 14,
+        fontSize: 16,
+        letterSpacing: 0,
+        height: 1.2,
         fontWeight: FontWeight.w600,
         color: colors.onSurface,
       );
       final hintStyle = theme.textTheme.bodySmall!.copyWith(
-        fontSize: 11,
+        fontSize: 12.5,
+        letterSpacing: 0,
+        height: 1.2,
         color: colors.onSurfaceVariant,
       );
       Widget icon(String asset, Color background) => CircleAvatar(
@@ -152,7 +156,10 @@ class AccessibilityScreen extends StatelessWidget {
             : Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  AccessibilitySaveReceipt(field: state.receipt!),
+                  AccessibilitySaveReceipt(
+                    field: state.receipt!,
+                    preferences: prefs,
+                  ),
                   ?navigationBar,
                 ],
               ),
@@ -172,7 +179,7 @@ class AccessibilityScreen extends StatelessWidget {
           child: SafeArea(
             bottom: navigationBar == null,
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(22, 28, 22, 24),
+              padding: const EdgeInsets.fromLTRB(22, 16, 22, 24),
               children: [
                 const _AccessibilityHeader(),
                 heading(text.pfViewGroup),
@@ -346,10 +353,15 @@ class _Group extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Material(
     color: Theme.of(context).colorScheme.surface,
-    borderRadius: BorderRadius.circular(18),
     clipBehavior: Clip.antiAlias,
     elevation: 3,
     shadowColor: const Color(0x141A2138),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(18),
+      side: MediaQuery.highContrastOf(context)
+          ? BorderSide(color: Theme.of(context).colorScheme.outline)
+          : BorderSide.none,
+    ),
     child: Column(
       children: [
         for (var index = 0; index < children.length; index++) ...[
