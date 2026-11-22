@@ -1471,5 +1471,12 @@
         "type": "int"
       }
     }
+  },
+  "pfAccessibilitySaved": "Preference saved",
+  "pfAccessibilityReceipt": "{preference}: your choice is kept for future sign-ins.",
+  "@pfAccessibilityReceipt": {
+    "placeholders": {
+      "preference": { "type": "String" }
+    }
   }
 }

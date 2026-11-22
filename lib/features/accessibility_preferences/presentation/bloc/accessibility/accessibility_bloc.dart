@@ -32,6 +32,7 @@ final class AccessibilityBloc
   final ChangeApplicationLanguage _changeLanguage;
   final SyncUserPreferences _sync;
   final String userId;
+  int _editVersion = 0;
 
   Future<void> _start(
     AccessibilityStarted event,
@@ -72,14 +73,18 @@ final class AccessibilityBloc
     AccessibilityChanged event,
     Emitter<AccessibilityState> emit,
   ) async {
+    final version = ++_editVersion;
+    emit(state.copyWith(clearReceipt: true));
     final result = await _update(userId, event.change);
-    if (emit.isDone) return;
+    if (emit.isDone || version != _editVersion) return;
     emit(switch (result) {
       AppSuccess<PreferenceUpdate>(:final value) => state.copyWith(
         accessibility: value.accessibility,
         sync: value.syncedWithServer
             ? AccessibilitySyncStatus.synced
             : AccessibilitySyncStatus.pending,
+        receipt: value.syncedWithServer ? event.change.field : null,
+        clearReceipt: !value.syncedWithServer,
       ),
       AppFailure<PreferenceUpdate>(:final code) => state.copyWith(
         errorCode: code,

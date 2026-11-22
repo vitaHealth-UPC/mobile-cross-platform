@@ -8,6 +8,7 @@ import '../../domain/value_objects/accessibility_preferences.dart';
 import '../bloc/accessibility/accessibility_bloc.dart';
 import '../bloc/accessibility/accessibility_event.dart';
 import '../bloc/accessibility/accessibility_state.dart';
+import '../widgets/accessibility_save_receipt.dart';
 
 /// Figma accessibility groups with native controls, four text sizes and account sync.
 /// Colors follow the selected theme; artwork never replaces a toggle or selector.
@@ -146,7 +147,15 @@ class AccessibilityScreen extends StatelessWidget {
         ),
       );
       return Scaffold(
-        bottomNavigationBar: navigationBar,
+        bottomNavigationBar: state.receipt == null
+            ? navigationBar
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AccessibilitySaveReceipt(field: state.receipt!),
+                  ?navigationBar,
+                ],
+              ),
         body: DecoratedBox(
           decoration: BoxDecoration(
             gradient: normal
