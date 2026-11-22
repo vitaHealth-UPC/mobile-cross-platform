@@ -1460,5 +1460,16 @@
   "tmFutureRegimenReceipt": "The new regimen will apply only to future doses.",
   "tmDeactivationReceipt": "No new doses will be generated. History is preserved.",
   "tmReactivationReceipt": "The medication is available again.",
-  "fmFollowUpNoteTitle": "Observation"
+  "fmFollowUpNoteTitle": "Observation",
+  "tmReminderLead": "Reminder lead time (minutes)",
+  "tmReminderLeadHelp": "Minutes before the dose, from 0 to 1440.",
+  "tmErrReminderLead": "Enter a lead time between 0 and 1440 minutes.",
+  "tmReminderLeadCompact": "reminder {minutes} min before",
+  "@tmReminderLeadCompact": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  }
 }

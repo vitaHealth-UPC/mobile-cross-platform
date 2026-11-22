@@ -7,6 +7,8 @@ import '../../application/readmodels/adherence_recommendation.dart';
 import 'adherence_labels.dart';
 import 'adherence_palette.dart';
 
+const _secondaryText = Color(0xFF637087);
+
 /// Recurring pattern in words and its concentration by time band and weekday.
 class PatternHeatmapCard extends StatelessWidget {
   const PatternHeatmapCard({super.key, required this.insight});
@@ -47,7 +49,7 @@ class PatternHeatmapCard extends StatelessWidget {
             style: const TextStyle(
               fontSize: 12,
               height: 1.25,
-              color: TataColors.muted,
+              color: _secondaryText,
             ),
           ),
           const SizedBox(height: 13),
@@ -154,7 +156,7 @@ class RecommendationCard extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 12,
                       height: 1.35,
-                      color: TataColors.muted,
+                      color: _secondaryText,
                     ),
                   ),
                 ],

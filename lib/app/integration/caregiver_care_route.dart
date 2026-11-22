@@ -3,9 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../features/accessibility_preferences/presentation/navigation/preferences_navigation.dart';
 import '../../features/adherence_analytics/presentation/bloc/level/level_bloc.dart';
-import '../../features/adherence_analytics/presentation/navigation/adherence_badge_view.dart';
 import '../../features/adherence_analytics/presentation/navigation/adherence_level_view.dart';
-import '../../features/adherence_analytics/presentation/navigation/treatment_adherence_view.dart';
 import '../../features/care_link/application/readmodels/caregiver_link_summary.dart';
 import '../../features/care_link/presentation/bloc/profile_editor/profile_editor_cubit.dart';
 import '../../features/care_link/presentation/navigation/profile_editor_route.dart';
@@ -21,6 +19,7 @@ import '../../features/treatment_management/domain/entities/medication.dart';
 import '../../features/treatment_management/presentation/navigation/treatment_navigation.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../shared/presentation/widgets/caregiver_tab_bar.dart';
+import 'caregiver_treatment_entry.dart';
 
 /// Care area of one confirmed profile: the family follow-up (summary, alerts, notes) with
 /// treatments, medications and settings under "More".
@@ -212,39 +211,14 @@ class CaregiverCareRoute extends StatelessWidget {
   }
 
   Future<void> _openTreatments(BuildContext context) {
-    return treatments.openTreatments(
+    return openCaregiverTreatments(
       context,
-      profile.olderAdultId,
-      onSessionInvalidated,
+      olderAdultId: profile.olderAdultId,
       personName: profile.fullName,
-      personBadgeBuilder: createPersonAdherenceBloc == null
-          ? null
-          : (invalidated) => AdherenceBadgeView(
-              createBloc: () =>
-                  createPersonAdherenceBloc!(profile.olderAdultId),
-              onSessionInvalidated: invalidated,
-            ),
-      adherenceBuilder: createTreatmentAdherenceBloc == null
-          ? null
-          : (id, invalidated) => TreatmentAdherenceView(
-              key: ValueKey('treatment-adherence-$id'),
-              createBloc: () =>
-                  createTreatmentAdherenceBloc!(profile.olderAdultId, id),
-              onSessionInvalidated: invalidated,
-            ),
-      navigationBuilder: (detailContext) => CaregiverTabBar(
-        selected: CaregiverTab.person,
-        enabledTabs: const {CaregiverTab.home, CaregiverTab.person},
-        onSelected: (tab) {
-          final navigator = Navigator.of(detailContext);
-          if (tab == CaregiverTab.home) {
-            navigator.popUntil((route) => route.isFirst);
-          } else if (tab == CaregiverTab.person) {
-            final person = ModalRoute.of(context);
-            navigator.popUntil((route) => route == person || route.isFirst);
-          }
-        },
-      ),
+      treatments: treatments,
+      onSessionInvalidated: onSessionInvalidated,
+      createPersonAdherenceBloc: createPersonAdherenceBloc,
+      createTreatmentAdherenceBloc: createTreatmentAdherenceBloc,
     );
   }
 }

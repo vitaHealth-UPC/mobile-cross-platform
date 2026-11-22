@@ -13,8 +13,8 @@ import '../widgets/recommendation_cards.dart';
 /// recommends, never a local conclusion.
 ///
 /// Pure rendering of a [RecommendationsState]; every effect is a callback.
-/// [onApplyAdjustments] stays null until the treatment flow that receives the
-/// adjustments exists, and the button is then not drawn at all.
+/// [onApplyAdjustments] starts the host-owned treatment review. Without that
+/// integration the action is omitted; this screen never changes a regimen.
 class AdherenceRecommendationsScreen extends StatelessWidget {
   const AdherenceRecommendationsScreen({
     super.key,
@@ -61,9 +61,16 @@ class AdherenceRecommendationsScreen extends StatelessWidget {
                         padding: const EdgeInsets.only(left: 2, top: 8),
                         child: Semantics(
                           header: true,
-                          child: Text(
-                            text.recommendationsTitle,
-                            style: TataTypography.heading,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              text.recommendationsTitle,
+                              maxLines: 1,
+                              style: TataTypography.heading.copyWith(
+                                fontSize: 28,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -127,16 +134,19 @@ class _Body extends StatelessWidget {
           onRetry: onRetry,
         );
       case RecommendationsStatus.insufficientEvidence:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            AdherenceEmptyCard(
-              title: text.recommendationsInsufficientTitle,
-              message: text.recommendationsInsufficientBody,
-            ),
-            const SizedBox(height: 48),
-            BackToHistoryButton(onPressed: onBackToHistory),
-          ],
+        return Padding(
+          padding: const EdgeInsets.only(top: 76),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AdherenceEmptyCard(
+                title: text.recommendationsInsufficientTitle,
+                message: text.recommendationsInsufficientBody,
+              ),
+              const SizedBox(height: 64),
+              BackToHistoryButton(onPressed: onBackToHistory),
+            ],
+          ),
         );
       case RecommendationsStatus.content:
         final insight = state.insight!;

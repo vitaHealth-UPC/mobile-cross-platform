@@ -158,12 +158,20 @@ final class TreatmentManagementBloc
     }
     final blank = event.delayMinutes.trim().isEmpty;
     final minutes = int.tryParse(event.delayMinutes.trim());
+    final lead = event.leadMinutes == null
+        ? null
+        : int.tryParse(event.leadMinutes!.trim());
+    if (event.leadMinutes != null &&
+        (lead == null || lead < 0 || lead > 1440)) {
+      emit(state.copyWith(errorCode: 'INVALID_REMINDER_LEAD'));
+      return;
+    }
     if (!blank && (minutes == null || minutes < 0 || minutes > 1440)) {
       emit(state.copyWith(errorCode: 'INVALID_REMINDER_DELAY'));
       return;
     }
     emit(state.copyWith(busy: true));
-    // The latest lead time is preserved: editing never changes ACTIVE/PAUSED state.
+    // Callers that do not edit lead time preserve it; lifecycle remains unchanged.
     final latest = await _detail(treatmentId);
     if (emit.isDone) return;
     if (latest is AppFailure<TreatmentDetail>) {
@@ -185,7 +193,7 @@ final class TreatmentManagementBloc
         scheduleText: event.scheduleText,
         instructions: event.instructions,
         followUpDelayMinutes: blank ? null : minutes,
-        reminderLeadMinutes: fresh.reminderLeadMinutes ?? 0,
+        reminderLeadMinutes: lead ?? fresh.reminderLeadMinutes ?? 0,
       ),
     );
     if (emit.isDone) return;

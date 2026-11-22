@@ -24,12 +24,16 @@ final class RegimenEdited extends TreatmentManagementEvent {
     required this.scheduleText,
     required this.instructions,
     required this.delayMinutes,
+    this.leadMinutes,
   });
   final String dose;
   final String frequency;
   final String scheduleText;
   final String instructions;
   final String delayMinutes;
+
+  /// Null preserves the latest lead time for callers that do not edit it.
+  final String? leadMinutes;
 }
 
 final class TreatmentMedicationReactivated extends TreatmentManagementEvent {

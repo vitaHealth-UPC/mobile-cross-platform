@@ -129,6 +129,8 @@ class TreatmentManagementCard extends StatelessWidget {
             Text(
               [
                 if (detail.instructions.trim().isNotEmpty) detail.instructions,
+                if ((detail.reminderLeadMinutes ?? 0) > 0)
+                  text.tmReminderLeadCompact(detail.reminderLeadMinutes!),
                 detail.followUpDelayMinutes == null
                     ? text.tmDefaultFollowUp
                     : text.tmFollowUpCompact(detail.followUpDelayMinutes!),

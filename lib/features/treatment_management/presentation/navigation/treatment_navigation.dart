@@ -115,7 +115,7 @@ final class TreatmentNavigation {
                   ),
                 ),
               );
-              list.add(const TreatmentListRequested());
+              if (listContext.mounted) list.add(const TreatmentListRequested());
             },
             onNew: () async {
               final list = listContext.read<TreatmentListBloc>();
@@ -126,7 +126,7 @@ final class TreatmentNavigation {
                 picking: true,
                 personName: personName,
               );
-              list.add(const TreatmentListRequested());
+              if (listContext.mounted) list.add(const TreatmentListRequested());
             },
           ),
         ),

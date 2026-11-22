@@ -257,6 +257,61 @@ void main() {
       expect(backend.configureCalls, calls);
     });
 
+    test('an invalid reminder lead is refused before any request', () async {
+      final (backend, bloc) = await active();
+      final calls = backend.configureCalls;
+      for (final lead in ['', '-1', '1441', 'not a number']) {
+        bloc.add(
+          RegimenEdited(
+            dose: '1 tableta',
+            frequency: 'cada día',
+            scheduleText: '08:00',
+            instructions: '',
+            delayMinutes: '',
+            leadMinutes: lead,
+          ),
+        );
+        await settle();
+        expect(bloc.state.errorCode, 'INVALID_REMINDER_LEAD');
+        expect(backend.configureCalls, calls);
+      }
+    });
+
+    test(
+      'a caller without lead input preserves the latest server value',
+      () async {
+        final (backend, bloc) = await active();
+        final previous = backend.stored!;
+        backend.stored = TreatmentDetail(
+          id: previous.id,
+          olderAdultId: previous.olderAdultId,
+          name: previous.name,
+          status: previous.status,
+          medicationId: previous.medicationId,
+          dose: previous.dose,
+          frequency: previous.frequency,
+          scheduledTimes: previous.scheduledTimes,
+          instructions: previous.instructions,
+          reminderLeadMinutes: 45,
+          followUpDelayMinutes: previous.followUpDelayMinutes,
+          recurrenceZone: previous.recurrenceZone,
+        );
+        bloc.add(
+          const RegimenEdited(
+            dose: '1 tableta',
+            frequency: 'cada día',
+            scheduleText: '08:00',
+            instructions: '',
+            delayMinutes: '15',
+          ),
+        );
+        await settle();
+        expect(backend.stored!.reminderLeadMinutes, 45);
+        expect(bloc.state.detail!.reminderLeadMinutes, 45);
+        expect(bloc.state.notice, TreatmentManagementNotice.regimenSaved);
+      },
+    );
+
     test(
       'an inactive medication blocks pause but can be reactivated',
       () async {

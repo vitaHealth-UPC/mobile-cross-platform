@@ -26,7 +26,7 @@ abstract final class AdherencePalette {
   static const chartAreaBottom = Color(0x006576E6);
   static const emptyStateSurface = Color(0xFFEBF5FC);
   static const emptyStateTitle = Color(0xFF121A2E);
-  static const emptyStateBody = Color(0xFF78859E);
+  static const emptyStateBody = Color(0xFF637087);
   static const outlinedAction = Color(0xFF21457A);
   static const retrySurface = Color(0xFFF0ECFF);
   static const weeklyStart = Color(0xFFE8F5EB);

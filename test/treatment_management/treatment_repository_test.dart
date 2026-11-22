@@ -187,6 +187,7 @@ void main() {
         final body = jsonDecode(request.body) as Map<String, dynamic>;
         expect(body['scheduledTimes'], ['08:00', '20:00']);
         expect(body['caregiverId'], 'caregiver-A');
+        expect(body['reminderLeadMinutes'], 15);
         expect(body.containsKey('followUpDelayMinutes'), isFalse);
         return http.Response(
           jsonEncode(
@@ -199,7 +200,7 @@ void main() {
                 // The backend answers seconds; they are normalized.
                 'scheduledTimes': ['20:00:00', '08:00:00'],
                 'instructions': 'Con comida',
-                'reminderLeadMinutes': 0,
+                'reminderLeadMinutes': 15,
               },
             ),
           ),
@@ -220,6 +221,7 @@ void main() {
               frequency: 'cada 12 horas',
               scheduleText: '20:00, 8:00',
               instructions: 'Con comida',
+              reminderLeadMinutes: 15,
             ),
           );
       expect(result, isA<AppSuccess>());

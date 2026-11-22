@@ -5,6 +5,7 @@ import 'app/di/app_dependencies.dart';
 import 'app/integration/adult_entry_route.dart';
 import 'app/integration/caregiver_adherence_entry.dart';
 import 'app/integration/caregiver_care_route.dart';
+import 'app/integration/caregiver_treatment_entry.dart';
 import 'app/tata_app.dart';
 import 'features/accessibility_preferences/presentation/navigation/preferences_navigation.dart';
 import 'features/care_link/presentation/navigation/caregiver_setup_route.dart';
@@ -99,6 +100,17 @@ Future<void> main() async {
                       createRecommendationsBloc:
                           dependencies.createAdherenceRecommendationsBloc,
                       onSessionInvalidated: invalidated,
+                      onApplyAdjustments: () => openCaregiverTreatments(
+                        careContext,
+                        olderAdultId: link.olderAdultId,
+                        personName: link.fullName,
+                        treatments: treatments,
+                        onSessionInvalidated: invalidated,
+                        createPersonAdherenceBloc:
+                            dependencies.createAdherenceWeekBloc,
+                        createTreatmentAdherenceBloc:
+                            dependencies.createTreatmentAdherenceBloc,
+                      ),
                     ),
                     onOpenSettings: (careContext) =>
                         openSettings(careContext, invalidated),

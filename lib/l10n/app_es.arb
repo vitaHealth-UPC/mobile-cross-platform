@@ -1634,5 +1634,16 @@
   "tmFutureRegimenReceipt": "La nueva pauta se aplicará solo a tomas futuras.",
   "tmDeactivationReceipt": "No se generarán nuevas tomas. El historial se conserva.",
   "tmReactivationReceipt": "El medicamento vuelve a estar disponible.",
-  "fmFollowUpNoteTitle": "Observación"
+  "fmFollowUpNoteTitle": "Observación",
+  "tmReminderLead": "Anticipación del recordatorio (minutos)",
+  "tmReminderLeadHelp": "Minutos antes de la toma, de 0 a 1440.",
+  "tmErrReminderLead": "Ingresa la anticipación entre 0 y 1440 minutos.",
+  "tmReminderLeadCompact": "recordatorio {minutes} min antes",
+  "@tmReminderLeadCompact": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  }
 }
