@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tata/features/adherence_analytics/application/readmodels/adherence_period.dart';
 import 'package:tata/features/adherence_analytics/presentation/bloc/history/history_state.dart';
 import 'package:tata/features/adherence_analytics/presentation/bloc/recommendations/recommendations_state.dart';
 import 'package:tata/features/adherence_analytics/presentation/screens/adherence_history_screen.dart';
@@ -13,7 +14,12 @@ import '../support/adherence_fixtures.dart';
 /// Checks the recommendation content and both legitimate empty-result variants.
 void main() {
   setUpAll(loadTataFonts);
-  for (final variant in ['recommendations', 'insufficient', 'empty-history']) {
+  for (final variant in [
+    'recommendations',
+    'insufficient',
+    'empty-history',
+    'no-data',
+  ]) {
     for (final scale in [1.0, 1.5]) {
       testWidgets('$variant renders with text scale $scale', (tester) async {
         tester.view.physicalSize = scale == 1
@@ -23,10 +29,15 @@ void main() {
         addTearDown(tester.view.reset);
         var applied = 0;
         var back = 0;
-        final screen = variant == 'empty-history'
+        AdherencePeriod? selectedPeriod;
+        final screen = variant == 'empty-history' || variant == 'no-data'
             ? AdherenceHistoryScreen(
-                state: const HistoryState(status: HistoryStatus.noResults),
-                onPeriodSelected: (_) {},
+                state: HistoryState(
+                  status: variant == 'no-data'
+                      ? HistoryStatus.insufficientData
+                      : HistoryStatus.noResults,
+                ),
+                onPeriodSelected: (value) => selectedPeriod = value,
                 onOpenRecommendations: () {},
                 onRetry: () {},
                 onTabSelected: (_) {},
@@ -68,9 +79,13 @@ void main() {
         } else if (variant == 'insufficient') {
           expect(find.text('Evidencia insuficiente'), findsOneWidget);
           expect(find.text('Aplicar ajustes'), findsNothing);
-        } else {
+        } else if (variant == 'empty-history') {
           expect(find.text('Sin resultados'), findsOneWidget);
           expect(find.text('92%'), findsNothing);
+        } else {
+          expect(find.text('Sin datos suficientes'), findsOneWidget);
+          expect(find.text('92%'), findsNothing);
+          expect(find.text('Reintentar'), findsNothing);
         }
         await captureWidget(
           tester,
@@ -88,7 +103,14 @@ void main() {
             '$variant-$scale-cards',
           );
         }
-        if (variant != 'empty-history') {
+        if (variant == 'no-data') {
+          await tester.tap(find.text('Últimos 30 días ⌄'));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('Últimos 7 días'));
+          await tester.pumpAndSettle();
+          expect(selectedPeriod, AdherencePeriod.lastWeek);
+        }
+        if (variant != 'empty-history' && variant != 'no-data') {
           final action = find.text(
             variant == 'recommendations'
                 ? 'Aplicar ajustes'
