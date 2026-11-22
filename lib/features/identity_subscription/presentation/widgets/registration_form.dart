@@ -37,7 +37,7 @@ class RegistrationForm extends StatelessWidget {
             textCapitalization: TextCapitalization.words,
             autofillHints: const [AutofillHints.name],
             textInputAction: TextInputAction.next,
-            style: const TextStyle(fontSize: 14),
+            style: const TextStyle(fontSize: 14, letterSpacing: 0, height: 1.2),
             decoration: _decoration(text.nameHint),
             validator: (value) =>
                 value == null ||
@@ -58,7 +58,7 @@ class RegistrationForm extends StatelessWidget {
             autocorrect: false,
             autofillHints: const [AutofillHints.newUsername],
             textInputAction: TextInputAction.next,
-            style: const TextStyle(fontSize: 14),
+            style: const TextStyle(fontSize: 14, letterSpacing: 0, height: 1.2),
             decoration: _decoration(text.emailHint),
             validator: (value) {
               try {
@@ -83,7 +83,7 @@ class RegistrationForm extends StatelessWidget {
             enableSuggestions: false,
             autofillHints: const [AutofillHints.newPassword],
             textInputAction: TextInputAction.done,
-            style: const TextStyle(fontSize: 14),
+            style: const TextStyle(fontSize: 14, letterSpacing: 0, height: 1.2),
             decoration: _decoration(text.registrationPasswordHint),
             validator: (value) =>
                 value == null ||
@@ -122,7 +122,10 @@ class RegistrationForm extends StatelessWidget {
             ),
           ],
         ),
-        child: field,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 58),
+          child: field,
+        ),
       ),
     ],
   );

@@ -97,6 +97,7 @@ class _CaregiverRegistrationScreenState
                     ),
                     const SizedBox(height: 16),
                     Container(
+                      width: double.infinity,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 8,
@@ -107,18 +108,18 @@ class _CaregiverRegistrationScreenState
                           colors: [Color(0xFFF1ECFF), Color(0xFFECF4FB)],
                         ),
                       ),
-                      child: Row(
+                      child: Wrap(
+                        spacing: 16,
+                        runSpacing: 10,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
-                          Flexible(
-                            child: Text(
-                              text.accountStep,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                              ),
+                          Text(
+                            text.accountStep,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                          const SizedBox(width: 16),
                           SizedBox(
                             width: 72,
                             child: LinearProgressIndicator(
@@ -128,12 +129,9 @@ class _CaregiverRegistrationScreenState
                               borderRadius: BorderRadius.circular(2),
                             ),
                           ),
-                          const SizedBox(width: 20),
-                          Flexible(
-                            child: Text(
-                              text.verificationStep,
-                              style: const TextStyle(fontSize: 11),
-                            ),
+                          Text(
+                            text.verificationStep,
+                            style: const TextStyle(fontSize: 11),
                           ),
                         ],
                       ),
@@ -153,6 +151,10 @@ class _CaregiverRegistrationScreenState
                     ),
                     const SizedBox(height: 10),
                     ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        elevation: 3,
+                        shadowColor: const Color(0x291A2138),
+                      ),
                       onPressed: widget.busy || widget.hasAccount
                           ? null
                           : _register,
@@ -172,6 +174,13 @@ class _CaregiverRegistrationScreenState
                         decoration: BoxDecoration(
                           color: const Color(0xFFFFF4E2),
                           borderRadius: BorderRadius.circular(18),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x141A2138),
+                              blurRadius: 18,
+                              offset: Offset(0, 6),
+                            ),
+                          ],
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -192,7 +201,7 @@ class _CaregiverRegistrationScreenState
                             TextField(
                               key: const Key('registration-code'),
                               controller: _code,
-                              enabled: !widget.busy,
+                              enabled: !widget.busy && !widget.codeExpired,
                               keyboardType: TextInputType.number,
                               autofillHints: const [AutofillHints.oneTimeCode],
                               maxLength: 6,
@@ -207,9 +216,15 @@ class _CaregiverRegistrationScreenState
                               ),
                               decoration: InputDecoration(
                                 labelText: text.verificationCode,
+                                floatingLabelBehavior:
+                                    FloatingLabelBehavior.never,
                                 counterText: '',
                                 filled: false,
                                 contentPadding: EdgeInsets.zero,
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                disabledBorder: InputBorder.none,
                               ),
                             ),
                           ],
@@ -222,6 +237,14 @@ class _CaregiverRegistrationScreenState
                           backgroundColor: const Color(0xFFF1ECFF),
                           foregroundColor: TataColors.primary,
                           side: const BorderSide(color: Color(0xFFC2B5E5)),
+                          elevation: 2,
+                          shadowColor: const Color(0x141A2138),
+                          textStyle: const TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(28),
                           ),
