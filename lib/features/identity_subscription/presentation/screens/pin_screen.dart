@@ -55,7 +55,7 @@ class PinScreen extends StatelessWidget {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 480),
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(22, 40, 22, 24),
+                padding: const EdgeInsets.fromLTRB(22, 24, 22, 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -91,14 +91,15 @@ class PinScreen extends StatelessWidget {
                       label: text.pinDigitsEntered(filled),
                       child: ExcludeSemantics(child: _PinDots(filled: filled)),
                     ),
-                    const SizedBox(height: 34),
+                    const SizedBox(height: 30),
                     _Keypad(
                       enabled: keysEnabled,
                       deleteLabel: text.pinDeleteDigit,
                       onDigit: onDigit,
                       onDelete: onDelete,
                     ),
-                    const SizedBox(height: 28),
+                    // Keypad rows already include 6 px of bottom spacing.
+                    const SizedBox(height: 2),
                     ElevatedButton(
                       onPressed: canSubmit ? onSubmit : null,
                       child: Text(
@@ -402,6 +403,7 @@ class _Notice extends StatelessWidget {
     return Semantics(
       liveRegion: error,
       child: Container(
+        constraints: const BoxConstraints(minHeight: 58),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: error ? TataColors.errorSurface : TataColors.infoSurface,
@@ -413,13 +415,23 @@ class _Notice extends StatelessWidget {
             Text(
               title,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 11,
+                letterSpacing: 0,
+                height: 1.2,
                 fontWeight: FontWeight.w600,
                 color: error ? TataColors.errorText : TataColors.infoText,
               ),
             ),
-            const SizedBox(height: 6),
-            Text(body, style: TataTypography.subtitle),
+            const SizedBox(height: 8),
+            Text(
+              body,
+              style: const TextStyle(
+                fontSize: 10,
+                letterSpacing: 0,
+                height: 1.3,
+                color: Color(0xFF637087),
+              ),
+            ),
           ],
         ),
       ),
