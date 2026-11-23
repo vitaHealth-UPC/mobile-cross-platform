@@ -181,6 +181,7 @@ import '../../l10n/generated/app_localizations.dart';
 import '../../shared/application/session/session_store.dart';
 import '../../shared/common/result/app_result.dart';
 import '../../shared/infrastructure/network/api_client.dart';
+import '../../shared/infrastructure/notifications/local_notification_platform.dart';
 import '../../shared/infrastructure/security/secure_session_store.dart';
 import '../config/app_config.dart';
 
@@ -491,10 +492,15 @@ final class AppDependencies {
 
   /// Device reminders of the signed-in adult's doses (US-05 and US-22), in the
   /// adult's app language; they keep working while the app is closed.
+  final _notifications = LocalNotificationPlatform();
+
   late final IntakeReminderSync intakeReminders = IntakeReminderSync(
     local: _localIntakes,
     sessions: _sessionStore,
-    scheduler: LocalReminderScheduler(texts: _reminderTexts),
+    scheduler: LocalReminderScheduler(
+      texts: _reminderTexts,
+      notifications: _notifications,
+    ),
   );
 
   /// Spanish unless the adult chose another language, like the app itself.

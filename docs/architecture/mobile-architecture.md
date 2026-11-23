@@ -34,3 +34,8 @@ Dependencias:
 - Efectos: BlocListener para navegación, snackbars y diálogos de resultado; BlocBuilder dibuja. No disparar escritura desde build ni repetir navegación en rebuild.
 - Widget local: controla foco, controller y animación de su ciclo de vida; StatefulWidget es válido para UI efímera. No todo control necesita Bloc.
 - Navegación: contratos de rutas tipados y argumentos mínimos; no transportar DTO completos ni credenciales. Revalidar permiso al abrir destino y en reanudación relevante.
+
+
+## Servicios de plataforma compartidos
+
+`shared/infrastructure/firebase/FirebaseRuntime` coordina la inicialización nativa entre identidad y mensajería. `shared/infrastructure/notifications/LocalNotificationPlatform` posee el callback del plugin y ofrece cancelación por canal o payload. Los contextos conservan sus permisos, contenido y reglas de navegación; estas utilidades no autorizan acceso clínico.

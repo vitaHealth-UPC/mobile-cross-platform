@@ -1,11 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../../../shared/common/result/app_result.dart';
+import '../../../../shared/infrastructure/firebase/firebase_runtime.dart';
 import '../../application/ports/social_credentials.dart';
 import '../../domain/value_objects/social_provider.dart';
 
@@ -23,7 +23,7 @@ final class FirebaseSocialCredentials implements SocialCredentials {
     _busy = true;
     FirebaseAuth? auth;
     try {
-      if (Firebase.apps.isEmpty) await Firebase.initializeApp();
+      await FirebaseRuntime.initialize();
       auth = FirebaseAuth.instance;
       await auth.signOut();
       final UserCredential result;

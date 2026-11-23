@@ -14,3 +14,10 @@
 La confirmación conserva la hora del toque en `confirmedAt` y la misma identidad de operación durante los reintentos. La clasificación definitiva corresponde al backend. La aceptación local permanece diferenciada de la confirmación remota.
 
 La ejecución en segundo plano y la integración desplegada se comprueban por plataforma; una prueba de repositorio no acredita entrega con la aplicación cerrada.
+
+
+## Notificaciones del dispositivo
+
+`LocalNotificationPlatform` inicializa el plugin una sola vez y distribuye los toques a los consumidores. Los recordatorios usan el canal `intake_reminders` y payloads `intake:<id>`. Se reconocen los UUID de recordatorios anteriores; otros payloads no se interpretan como una toma. La limpieza distingue notificaciones pendientes y visibles y conserva los canales ajenos.
+
+La fuente FCM lee direcciones con permiso autorizado o provisional y entrega las rotaciones al coordinador. El contrato actual del servidor utiliza tokens FCM; la migración a identificadores FID de las APIs nuevas del SDK se realiza junto con el emisor. La composición mantiene el registro push desactivado hasta conectar recepción, visualización y navegación autorizada completas.
