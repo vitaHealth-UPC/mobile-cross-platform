@@ -147,7 +147,8 @@ import '../../features/omission_escalation/application/usecases/follow_dose_remi
 import '../../features/omission_escalation/application/usecases/handle_incoming_omission_push.dart';
 import '../../features/omission_escalation/application/usecases/resolve_push_destination.dart';
 import '../../features/omission_escalation/infrastructure/local/push_local_stores.dart';
-import '../../features/omission_escalation/infrastructure/push/not_configured_push_token_source.dart';
+import '../../features/omission_escalation/infrastructure/push/firebase_push_token_source.dart';
+import '../../features/omission_escalation/infrastructure/push/local_omission_notifier.dart';
 import '../../features/omission_escalation/infrastructure/remote/push_device_api.dart';
 import '../../features/omission_escalation/infrastructure/repositories/remote_device_token_registry.dart';
 import '../../features/treatment_management/application/readmodels/my_medications_overview.dart';
@@ -730,16 +731,18 @@ final class AppDependencies {
     );
   }
 
-  /// Omission & Escalation facade. The Firebase and local-notification adapters are not
-  /// configured in this build, so the device is never registered and nothing is displayed;
-  /// the follow-up targets and the session cleanup still run. Call it once: the facade holds
-  /// the state of its coordinator.
+  /// Composes recipient authorization, native notices and authenticated device registration.
+  /// Registration remains disabled until the host connects the complete messaging lifecycle.
   OmissionPushFacade omissionPush({required String installationId}) {
     final targets = SharedPreferencesPushTargetStore();
-    const notifier = NotConfiguredOmissionNotifier();
     final policy = OmissionPushAccessPolicy(
       sessions: _sessionStore,
       targets: targets,
+    );
+    final notifier = LocalOmissionNotifier(
+      notifications: _notifications,
+      texts: _reminderTexts,
+      mayDisplay: policy.allows,
     );
     return OmissionPushFacade(
       policy: policy,
@@ -749,7 +752,7 @@ final class AppDependencies {
       handle: HandleIncomingOmissionPush(policy, notifier),
       registration: PushDeviceRegistrationCoordinator(
         sessions: _sessionStore,
-        tokens: const NotConfiguredPushTokenSource(),
+        tokens: FirebasePushTokenSource(),
         registry: RemoteDeviceTokenRegistry(
           api: PushDeviceApi(_client),
           store: _sessionStore,
