@@ -59,3 +59,6 @@ app.*.map.json
 
 # Kotlin compiler working state
 **/.kotlin/
+
+# Generated from the versioned ARB resources
+/lib/l10n/generated/
