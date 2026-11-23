@@ -1509,5 +1509,7 @@
   "landingToday": "Today",
   "landingMedication": "Losartan",
   "landingExampleTime": "8:00 p.m.",
-  "landingExampleAdherence": "92% adherence"
+  "landingExampleAdherence": "92% adherence",
+  "socialLinkRequired": "This email already has an account. Sign in with your password to explicitly link the provider.",
+  "socialEmailRequired": "The provider must share a verified email to create the account."
 }

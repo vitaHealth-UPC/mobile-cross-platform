@@ -1,7 +1,14 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+// Public Firebase client configuration stays local, as in the Android client.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
 }
 
 android {
@@ -17,6 +24,16 @@ android {
     }
 
     defaultConfig {
+        val socialConfig = Properties()
+        val localConfig = rootProject.file("local.properties")
+        if (localConfig.exists()) localConfig.inputStream().use { socialConfig.load(it) }
+        val facebookAppId = socialConfig.getProperty("TATA_FACEBOOK_APP_ID", "")
+            .takeIf { it.matches(Regex("[0-9]{5,30}")) }.orEmpty()
+        val facebookClientToken = socialConfig.getProperty("TATA_FACEBOOK_CLIENT_TOKEN", "")
+            .takeIf { it.matches(Regex("[A-Za-z0-9_-]{5,256}")) }.orEmpty()
+        resValue("string", "tata_facebook_app_id", facebookAppId)
+        resValue("string", "tata_facebook_client_token", facebookClientToken)
+        resValue("string", "fb_login_protocol_scheme", "fb$facebookAppId")
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.vitahealth.tata"
         // You can update the following values to match your application needs.
@@ -30,6 +47,8 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
+
+    buildFeatures { resValues = true }
 
     buildTypes {
         release {

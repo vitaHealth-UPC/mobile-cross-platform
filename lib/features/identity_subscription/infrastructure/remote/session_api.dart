@@ -6,6 +6,13 @@ final class SessionApi {
   const SessionApi(this._client);
   final ApiClient _client;
 
+  /// Exchanges Firebase evidence for Tata access; provider tokens are not bearers.
+  Future<ApiResponse> signInWithFirebase(String idToken) => _client.request(
+    'POST',
+    'api/v1/social-sessions',
+    body: {'firebaseIdToken': idToken},
+  );
+
   Future<ApiResponse> signIn(String email, String password) => _client.request(
     'POST',
     'api/v1/sessions',

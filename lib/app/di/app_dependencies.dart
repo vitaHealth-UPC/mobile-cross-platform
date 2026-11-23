@@ -61,6 +61,7 @@ import '../../features/identity_subscription/application/usecases/request_verifi
 import '../../features/identity_subscription/application/usecases/restore_session.dart';
 import '../../features/identity_subscription/application/usecases/sign_in.dart';
 import '../../features/identity_subscription/application/usecases/sign_in_with_pin.dart';
+import '../../features/identity_subscription/application/usecases/sign_in_with_social.dart';
 import '../../features/identity_subscription/application/usecases/sign_out.dart';
 import '../../features/identity_subscription/application/usecases/subscription_usecases.dart';
 import '../../features/identity_subscription/application/usecases/verify_email.dart';
@@ -76,7 +77,9 @@ import '../../features/identity_subscription/infrastructure/repositories/remote_
 import '../../features/identity_subscription/infrastructure/repositories/remote_pin_access.dart';
 import '../../features/identity_subscription/infrastructure/repositories/remote_public_plan_catalog.dart';
 import '../../features/identity_subscription/infrastructure/repositories/remote_session_repository.dart';
+import '../../features/identity_subscription/infrastructure/repositories/remote_social_session_repository.dart';
 import '../../features/identity_subscription/infrastructure/repositories/remote_subscription_repository.dart';
+import '../../features/identity_subscription/infrastructure/social/firebase_social_credentials.dart';
 import '../../features/identity_subscription/presentation/bloc/access/access_bloc.dart';
 import '../../features/identity_subscription/presentation/bloc/pin/pin_bloc.dart';
 import '../../features/identity_subscription/presentation/bloc/plan_choice/plan_choice_cubit.dart';
@@ -617,6 +620,14 @@ final class AppDependencies {
 
   /// Creates the access authority; its provider is responsible for closing it.
   AccessBloc createAccessBloc() => AccessBloc(
+    signInWithSocial: SignInWithSocial(
+      RemoteSocialSessionRepository(
+        credentials: FirebaseSocialCredentials(),
+        api: SessionApi(_client),
+        store: _sessionStore,
+        clock: DateTime.now,
+      ),
+    ),
     signIn: SignIn(_sessions),
     restore: RestoreSession(_sessions),
     signOut: SignOut(_sessions),
