@@ -19,106 +19,118 @@ class NextIntakeCard extends StatelessWidget {
     required this.now,
     this.onTap,
   });
-
   final Intake intake;
   final DateTime now;
-
-  /// Opens the dose detail, where the dose can be confirmed.
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final text = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context).toLanguageTag();
-    // Figma uses a 12-hour clock ("8:00 a. m."), which the es skeleton would not.
     final time = DateFormat(
       'h:mm a',
       locale,
     ).format(intake.scheduledAt.toLocal());
-    final card = Ink(
-      padding: const EdgeInsets.fromLTRB(18, 18, 8, 16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: const LinearGradient(
-          colors: [Color(0xFFEEE8FF), Color(0xFFE5DDF8)],
+    final largeText = MediaQuery.textScalerOf(context).scale(14) > 18;
+    final details = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          text.homeNextDose,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: TataColors.primary,
+          ),
         ),
-        boxShadow: _cardShadow,
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  text.homeNextDose,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: TataColors.primary,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  time,
-                  style: const TextStyle(
-                    fontSize: 31,
-                    fontWeight: FontWeight.w700,
-                    color: TataColors.ink,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  intake.medicationName,
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    color: TataColors.ink,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  intake.dose,
-                  style: const TextStyle(fontSize: 13, color: TataColors.muted),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    _remaining(text),
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF5961B2),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+        const SizedBox(height: 10),
+        Text(
+          time,
+          style: const TextStyle(
+            fontSize: 31,
+            height: 1.1,
+            fontWeight: FontWeight.w700,
+            color: TataColors.ink,
           ),
-          ExcludeSemantics(
-            child: Image.asset(
-              'assets/illustrations/home_tablet.png',
-              width: 120,
-              height: 120,
-              fit: BoxFit.contain,
-            ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          intake.medicationName,
+          style: const TextStyle(
+            fontSize: 17,
+            height: 1.2,
+            fontWeight: FontWeight.w600,
+            color: TataColors.ink,
           ),
-        ],
+        ),
+        const SizedBox(height: 3),
+        Text(
+          intake.dose,
+          style: const TextStyle(fontSize: 13, color: TataColors.muted),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(13),
+          ),
+          child: Text(
+            _remaining(text),
+            style: const TextStyle(fontSize: 12, color: Color(0xFF5961B2)),
+          ),
+        ),
+      ],
+    );
+    final tablet = ExcludeSemantics(
+      child: SizedBox.square(
+        dimension: largeText ? 112 : 132,
+        child: OverflowBox(
+          maxWidth: 176,
+          maxHeight: 176,
+          child: Image.asset(
+            'assets/illustrations/home_tablet.png',
+            width: 176,
+            height: 176,
+          ),
+        ),
       ),
     );
-    return Material(
-      type: MaterialType.transparency,
-      child: InkWell(
+    return Container(
+      decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        onTap: onTap,
-        child: card,
+        boxShadow: _cardShadow,
+      ),
+      child: Material(
+        borderRadius: BorderRadius.circular(20),
+        clipBehavior: Clip.antiAlias,
+        child: Ink(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFFEEE8FF), Color(0xFFE5DDF8)],
+            ),
+          ),
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(18, 18, 8, 10),
+              child: largeText
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        details,
+                        Align(alignment: Alignment.centerRight, child: tablet),
+                      ],
+                    )
+                  : Row(
+                      children: [
+                        Expanded(child: details),
+                        tablet,
+                      ],
+                    ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -307,7 +319,7 @@ class HomeShortcut extends StatelessWidget {
   final String subtitle;
   final String icon;
   final Color color;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {

@@ -8,7 +8,7 @@ import 'adult_session_request.dart';
 
 /// Sends touch confirmations with the adult session and validates the receipt.
 /// A receipt is accepted only for the same intake and adult, already taken.
-final class RemoteIntakeConfirmation implements IntakeConfirmation {
+final class RemoteIntakeConfirmation implements IntakeConfirmationReplay {
   const RemoteIntakeConfirmation({required this._api, required this._store});
 
   final IntakeApi _api;
@@ -16,27 +16,44 @@ final class RemoteIntakeConfirmation implements IntakeConfirmation {
 
   @override
   Future<AppResult<ConfirmationReceipt>> confirm(String intakeId) =>
-      adultSessionRequest(
-        _store,
-        (session) => _api.confirm(intakeId, session.accessToken),
-        (response, owner) {
-          final body = response.body;
-          final code = body is Map<String, dynamic> ? body['title'] : null;
-          if (response.status == 409 && code == 'INTAKE_NOT_CONFIRMABLE') {
-            return const AppFailure('INTAKE_NOT_CONFIRMABLE');
-          }
-          if (response.status == 404) {
-            return const AppFailure('INTAKE_NOT_FOUND');
-          }
-          if (response.status != 200) {
-            return const AppFailure('REQUEST_FAILED');
-          }
-          final receipt = IntakeMapper.receipt(body);
-          return receipt.intake.id == intakeId &&
-                  receipt.intake.olderAdultId == owner.id &&
-                  receipt.intake.taken
-              ? AppSuccess(receipt)
-              : const AppFailure('INVALID_RESPONSE');
-        },
-      );
+      _send(intakeId);
+
+  @override
+  Future<AppResult<ConfirmationReceipt>> replay(
+    String intakeId,
+    DateTime confirmedAt,
+  ) => _send(intakeId, confirmedAt: confirmedAt);
+
+  Future<AppResult<ConfirmationReceipt>> _send(
+    String intakeId, {
+    DateTime? confirmedAt,
+  }) => adultSessionRequest(
+    _store,
+    (session) =>
+        _api.confirm(intakeId, session.accessToken, confirmedAt: confirmedAt),
+    (response, owner) {
+      final body = response.body;
+      final code = body is Map<String, dynamic> ? body['title'] : null;
+      if (response.status == 400 &&
+          code == 'VALIDATION_ERROR' &&
+          confirmedAt != null) {
+        return const AppFailure('INVALID_CONFIRMATION_TIME');
+      }
+      if (response.status == 409 && code == 'INTAKE_NOT_CONFIRMABLE') {
+        return const AppFailure('INTAKE_NOT_CONFIRMABLE');
+      }
+      if (response.status == 404) {
+        return const AppFailure('INTAKE_NOT_FOUND');
+      }
+      if (response.status != 200) {
+        return const AppFailure('REQUEST_FAILED');
+      }
+      final receipt = IntakeMapper.receipt(body);
+      return receipt.intake.id == intakeId &&
+              receipt.intake.olderAdultId == owner.id &&
+              receipt.intake.taken
+          ? AppSuccess(receipt)
+          : const AppFailure('INVALID_RESPONSE');
+    },
+  );
 }

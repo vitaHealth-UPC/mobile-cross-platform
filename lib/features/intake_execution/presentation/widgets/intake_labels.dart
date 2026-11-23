@@ -14,6 +14,11 @@ String intakeStatusLabel(AppLocalizations text, IntakeStatus status) =>
       IntakeStatus.omitted => text.intakeStatusOmitted,
     };
 
+/// Status label for the adult; an unsent confirmation is not "pending".
+String intakeDisplayLabel(AppLocalizations text, Intake intake) => intake.queued
+    ? text.intakeStatusQueued
+    : intakeStatusLabel(text, intake.status);
+
 /// 12-hour local time as drawn in Figma ("8:00 a. m.").
 String intakeTime(BuildContext context, DateTime instant) => DateFormat(
   'h:mm a',
@@ -69,13 +74,19 @@ Color intakeCardColor(DateTime instant) {
 
 /// Round status mark at the end of an agenda card.
 class IntakeStatusMark extends StatelessWidget {
-  const IntakeStatusMark({super.key, required this.status});
+  const IntakeStatusMark({
+    super.key,
+    required this.status,
+    this.queued = false,
+  });
 
   final IntakeStatus status;
+  final bool queued;
 
   @override
   Widget build(BuildContext context) {
     final (icon, color) = switch (status) {
+      _ when queued => (Icons.cloud_upload_outlined, TataColors.primary),
       IntakeStatus.pending => (null, TataColors.muted),
       IntakeStatus.confirmed => (Icons.check, const Color(0xFF3E8E5E)),
       IntakeStatus.late => (Icons.schedule, const Color(0xFFC48C29)),
@@ -98,14 +109,20 @@ class IntakeStatusMark extends StatelessWidget {
 
 /// Small rounded label with the server status.
 class IntakeStatusChip extends StatelessWidget {
-  const IntakeStatusChip({super.key, required this.status});
+  const IntakeStatusChip({
+    super.key,
+    required this.status,
+    this.queued = false,
+  });
 
   final IntakeStatus status;
+  final bool queued;
 
   @override
   Widget build(BuildContext context) {
     final text = AppLocalizations.of(context);
     final (background, foreground) = switch (status) {
+      _ when queued => (TataColors.infoSurface, TataColors.infoText),
       IntakeStatus.pending => (
         const Color(0xFFFCEFD9),
         const Color(0xFFB0772A),
@@ -121,7 +138,7 @@ class IntakeStatusChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        intakeStatusLabel(text, status),
+        queued ? text.intakeStatusQueued : intakeStatusLabel(text, status),
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,

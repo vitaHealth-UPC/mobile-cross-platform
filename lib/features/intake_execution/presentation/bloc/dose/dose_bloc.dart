@@ -63,6 +63,12 @@ final class DoseBloc extends Bloc<DoseEvent, DoseState> {
           _ => ConfirmationOutcome.confirmed,
         };
         await _finish(emit, value.intake, outcome);
+      case AppFailure(code: 'PENDING_SYNC') when current != null:
+        await _finish(
+          emit,
+          current.withLocalConfirmation(LocalConfirmation.queued),
+          ConfirmationOutcome.pendingSync,
+        );
       case AppFailure(code: 'INTAKE_NOT_CONFIRMABLE'):
         await _reconcile(emit, current);
       case AppFailure(:final code):

@@ -8,3 +8,15 @@ abstract interface class IntakeConfirmation {
   /// and was not confirmed, for example after an omission.
   Future<AppResult<ConfirmationReceipt>> confirm(String intakeId);
 }
+
+/// Delivers a confirmation saved on the device, reporting when it really
+/// happened so the server can classify the original action.
+abstract interface class IntakeConfirmationReplay
+    implements IntakeConfirmation {
+  /// Fails with `INVALID_CONFIRMATION_TIME` when the server rejects
+  /// [confirmedAt], for example because the device clock is ahead.
+  Future<AppResult<ConfirmationReceipt>> replay(
+    String intakeId,
+    DateTime confirmedAt,
+  );
+}

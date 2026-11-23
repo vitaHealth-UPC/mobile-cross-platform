@@ -12,7 +12,8 @@ import '../remote/session_api.dart';
 import '../remote/session_dto.dart';
 
 /// Validates remote identity and coordinates session storage with generation checks.
-/// Cached metadata alone never authenticates a failed restore request.
+/// Cached metadata never authenticates a failed restore request, except an
+/// older adult with no network, who only reaches data stored for that adult.
 final class RemoteSessionRepository implements SessionRepository {
   const RemoteSessionRepository({
     required this._api,
@@ -95,6 +96,15 @@ final class RemoteSessionRepository implements SessionRepository {
       }
       return AppSuccess(_metadata(session));
     } on ApiTransportException catch (error) {
+      final session = _store.current;
+      // An adult without signal still reaches this device's own doses; every
+      // server request keeps validating the credential.
+      if (error.code == 'NETWORK_UNAVAILABLE' &&
+          session != null &&
+          session.owner.role == SessionRole.olderAdult &&
+          session.isValidAt(_clock())) {
+        return AppSuccess(_metadata(session));
+      }
       return AppFailure(error.code);
     } on Exception {
       return const AppFailure('SESSION_STORAGE_UNAVAILABLE');

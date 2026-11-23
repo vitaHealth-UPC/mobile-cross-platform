@@ -119,28 +119,31 @@ void main() {
       await bloc.close();
     });
 
-    test('setup treats an existing enrollment as completed', () async {
-      final bloc = setup(
-        FakePinAccess(
-          registerResult: const AppFailure('PIN_ALREADY_REGISTERED'),
-        ),
-      );
-      for (final digit in ['1', '3', '5', '7']) {
-        bloc.add(PinDigitPressed(digit));
-      }
-      bloc.add(const PinSubmitted());
-      await expectLater(
-        bloc.stream,
-        emitsThrough(
-          isA<PinState>().having(
-            (s) => s.status,
-            'status',
-            PinStatus.completed,
+    test(
+      'setup requires acknowledgement before using an existing PIN',
+      () async {
+        final bloc = setup(
+          FakePinAccess(
+            registerResult: const AppFailure('PIN_ALREADY_REGISTERED'),
           ),
-        ),
-      );
-      await bloc.close();
-    });
+        );
+        for (final digit in ['1', '3', '5', '7']) {
+          bloc.add(PinDigitPressed(digit));
+        }
+        bloc.add(const PinSubmitted());
+        await expectLater(
+          bloc.stream,
+          emitsThrough(
+            isA<PinState>().having(
+              (s) => s.status,
+              'status',
+              PinStatus.alreadyRegistered,
+            ),
+          ),
+        );
+        await bloc.close();
+      },
+    );
   });
 
   group('PinRoute', () {
@@ -204,6 +207,67 @@ void main() {
       await tester.pumpAndSettle();
       expect(fake.submitted, ['adult-A:9753']);
       expect(completed, 1);
+    });
+
+    testWidgets('existing PIN is disclosed before continuing', (tester) async {
+      phone(tester);
+      var completed = 0;
+      await tester.pumpWidget(
+        host(
+          PinRoute(
+            createBloc: () => setup(
+              FakePinAccess(
+                registerResult: const AppFailure('PIN_ALREADY_REGISTERED'),
+              ),
+            ),
+            adultName: 'Ana Pérez',
+            onCompleted: () => completed++,
+          ),
+        ),
+      );
+      for (final digit in ['1', '3', '5', '7']) {
+        await tester.tap(find.text(digit));
+        await tester.pump();
+      }
+      await tester.tap(find.text('Guardar PIN'));
+      await tester.pumpAndSettle();
+      expect(completed, 0);
+      expect(
+        find.text(
+          'Los dígitos ingresados no se guardaron. Conservas tu PIN anterior.',
+        ),
+        findsWidgets,
+      );
+      expect(find.byKey(const ValueKey('pin-dot-filled')), findsNothing);
+      await tester.ensureVisible(find.text('Continuar con mi PIN actual'));
+      await tester.tap(find.text('Continuar con mi PIN actual'));
+      expect(completed, 1);
+    });
+
+    testWidgets('lost consent during PIN setup requests revalidation', (
+      tester,
+    ) async {
+      phone(tester);
+      var invalidated = 0;
+      await tester.pumpWidget(
+        host(
+          PinRoute(
+            createBloc: () => setup(
+              FakePinAccess(registerResult: const AppFailure('ACCESS_DENIED')),
+            ),
+            adultName: null,
+            onCompleted: () {},
+            onSessionInvalidated: () => invalidated++,
+          ),
+        ),
+      );
+      for (final digit in ['1', '3', '5', '7']) {
+        await tester.tap(find.text(digit));
+        await tester.pump();
+      }
+      await tester.tap(find.text('Guardar PIN'));
+      await tester.pumpAndSettle();
+      expect(invalidated, 1);
     });
 
     testWidgets('setup explains the enrollment before saving', (tester) async {

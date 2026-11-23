@@ -4,7 +4,7 @@ import '../../../domain/value_objects/pin_code.dart';
 enum PinMode { setup, access }
 
 /// Observable PIN phases; completed means the server acknowledged the PIN.
-enum PinStatus { editing, busy, completed }
+enum PinStatus { editing, busy, completed, alreadyRegistered }
 
 /// Exposes how many digits are entered, never the digits themselves.
 final class PinState {

@@ -4,6 +4,7 @@ import '../ports/intake_reader.dart';
 import '../readmodels/daily_progress.dart';
 
 /// Counts today's taken intakes using the device's local calendar day.
+/// A dose confirmed offline counts: the adult already took it.
 final class GetDailyProgress {
   const GetDailyProgress(this._reader, this._clock);
   final IntakeReader _reader;
@@ -28,7 +29,9 @@ final class GetDailyProgress {
         }.values;
         return AppSuccess(
           DailyProgress(
-            taken: today.where((intake) => intake.taken).length,
+            taken: today
+                .where((intake) => intake.taken || intake.queued)
+                .length,
             total: today.length,
           ),
         );

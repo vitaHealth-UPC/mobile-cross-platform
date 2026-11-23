@@ -232,12 +232,19 @@ void main() {
       ),
     );
 
-    Future<void> precache(WidgetTester tester, Type type) => tester.runAsync(
-      () => precacheImage(
-        const AssetImage('assets/illustrations/home_tablet.png'),
-        tester.element(find.byType(type)),
-      ),
-    );
+    Future<void> precache(WidgetTester tester, Type type) =>
+        tester.runAsync(() async {
+          for (final asset in [
+            'home_tablet.png',
+            'dose_water_plant.png',
+            'dose_confetti.png',
+          ]) {
+            await precacheImage(
+              AssetImage('assets/illustrations/$asset'),
+              tester.element(find.byType(type)),
+            );
+          }
+        });
 
     testWidgets('pending dose confirms by touch and shows the outcome', (
       tester,

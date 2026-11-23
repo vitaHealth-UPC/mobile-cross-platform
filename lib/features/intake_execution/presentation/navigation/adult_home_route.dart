@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
+import '../../application/ports/intake_sync.dart';
+import '../../application/readmodels/intake_sync_status.dart';
 import '../bloc/home/home_bloc.dart';
 import '../bloc/home/home_event.dart';
 import '../bloc/home/home_state.dart';
@@ -20,6 +24,7 @@ class AdultHomeRoute extends StatefulWidget {
     this.onOpenVoice,
     this.onOpenAgenda,
     this.onOpenDose,
+    this.sync,
   });
 
   final HomeBloc Function() createBloc;
@@ -36,6 +41,9 @@ class AdultHomeRoute extends StatefulWidget {
   final Future<void> Function()? onOpenAgenda;
   final Future<void> Function(String intakeId)? onOpenDose;
 
+  /// Sends confirmations saved offline while this screen is open.
+  final IntakeSync? sync;
+
   @override
   State<AdultHomeRoute> createState() => _AdultHomeRouteState();
 }
@@ -43,19 +51,38 @@ class AdultHomeRoute extends StatefulWidget {
 class _AdultHomeRouteState extends State<AdultHomeRoute> {
   late final HomeBloc _bloc;
   late final AppLifecycleListener _lifecycle;
+  StreamSubscription<IntakeSyncStatus>? _syncChanges;
+  IntakeSyncStatus? _syncStatus;
 
   @override
   void initState() {
     super.initState();
     _bloc = widget.createBloc()..add(const HomeRequested());
     _lifecycle = AppLifecycleListener(
-      onResume: () => _bloc.add(const HomeRequested()),
+      onResume: () {
+        _bloc.add(const HomeRequested());
+        unawaited(widget.sync?.request());
+      },
+      onPause: () => widget.sync?.suspend(),
     );
+    if (widget.sync case final sync?) {
+      _syncStatus = sync.status;
+      _syncChanges = sync.changes.listen(_syncChanged);
+      unawaited(sync.request());
+    }
+  }
+
+  /// A server answer to a queued confirmation changes what the home shows.
+  void _syncChanged(IntakeSyncStatus status) {
+    final answered = status.resolved > (_syncStatus?.resolved ?? 0);
+    setState(() => _syncStatus = status);
+    if (answered) _bloc.add(const HomeRequested());
   }
 
   @override
   void dispose() {
     _lifecycle.dispose();
+    _syncChanges?.cancel();
     _bloc.close();
     super.dispose();
   }
@@ -92,6 +119,7 @@ class _AdultHomeRouteState extends State<AdultHomeRoute> {
         return AdultHomeScreen(
           state: state,
           adultName: widget.adultName,
+          syncStatus: _syncStatus,
           clock: widget.clock,
           errorText: switch (state.errorCode) {
             null => null,

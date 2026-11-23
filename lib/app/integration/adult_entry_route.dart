@@ -5,6 +5,7 @@ import '../../features/care_link/presentation/navigation/consent_management_rout
 import '../../features/identity_subscription/application/readmodels/remembered_adult.dart';
 import '../../features/identity_subscription/presentation/bloc/pin/pin_bloc.dart';
 import '../../features/identity_subscription/presentation/navigation/pin_route.dart';
+import '../../features/intake_execution/application/ports/intake_sync.dart';
 import '../../features/intake_execution/presentation/bloc/agenda/agenda_bloc.dart';
 import '../../features/intake_execution/presentation/bloc/dose/dose_bloc.dart';
 import '../../features/intake_execution/presentation/bloc/home/home_bloc.dart';
@@ -31,6 +32,7 @@ class AdultEntryRoute extends StatefulWidget {
     required this.createConsentBloc,
     required this.onSignOut,
     required this.onSessionChanged,
+    this.intakeSync,
   });
 
   final String olderAdultId;
@@ -47,6 +49,7 @@ class AdultEntryRoute extends StatefulWidget {
   final AgendaBloc Function() createAgendaBloc;
   final DoseBloc Function(String intakeId) createDoseBloc;
   final ConsentBloc Function() createConsentBloc;
+  final IntakeSync? intakeSync;
   final VoidCallback onSignOut;
 
   /// Asks Identity to revalidate access after expiry, change or withdrawal.
@@ -141,10 +144,18 @@ class _AdultEntryRouteState extends State<AdultEntryRoute> {
         MaterialPageRoute(
           builder: (routeContext) => DoseRoute(
             createBloc: () => widget.createDoseBloc(intakeId),
+            onAgenda: () {
+              Navigator.of(routeContext).popUntil((route) => route.isFirst);
+              _openAgenda(context);
+            },
             onBack: () => Navigator.of(routeContext).pop(),
             onBackHome: () =>
                 Navigator.of(routeContext).popUntil((route) => route.isFirst),
             onSessionInvalidated: () => _leaveForRevalidation(routeContext),
+            onMore: () {
+              Navigator.of(routeContext).popUntil((route) => route.isFirst);
+              _openMore(context);
+            },
           ),
         ),
       );
@@ -157,6 +168,10 @@ class _AdultEntryRouteState extends State<AdultEntryRoute> {
             onOpenDose: (intakeId) => _openDose(routeContext, intakeId),
             onBack: () => Navigator.of(routeContext).pop(),
             onSessionInvalidated: () => _leaveForRevalidation(routeContext),
+            onMore: () {
+              Navigator.of(routeContext).popUntil((route) => route.isFirst);
+              _openMore(context);
+            },
           ),
         ),
       );
@@ -207,6 +222,7 @@ class _AdultEntryRouteState extends State<AdultEntryRoute> {
     _Phase.home => AdultHomeRoute(
       createBloc: widget.createHomeBloc,
       adultName: _name,
+      sync: widget.intakeSync,
       onOpenMore: () => _openMore(context),
       onOpenAgenda: () => _openAgenda(context),
       onOpenDose: (intakeId) => _openDose(context, intakeId),

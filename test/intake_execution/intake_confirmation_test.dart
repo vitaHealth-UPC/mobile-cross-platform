@@ -88,6 +88,37 @@ void main() {
       expect(receipt.alreadyConfirmed, isFalse);
     });
 
+    test('an offline delivery reports the original UTC instant', () async {
+      final repo = RemoteIntakeConfirmation(
+        api: api((request) async {
+          expect(jsonDecode(request.body), {
+            'channel': 'TOUCH',
+            'confirmedAt': '2026-11-03T12:58:00.000Z',
+          });
+          return _json(evidence(), 200);
+        }),
+        store: MemorySessionStore(session()),
+      );
+
+      final result = await repo.replay(
+        'intake-1',
+        DateTime.utc(2026, 11, 3, 12, 58),
+      );
+
+      expect(result, isA<AppSuccess<ConfirmationReceipt>>());
+    });
+
+    test('a rejected device time has its own stable code', () async {
+      final repo = RemoteIntakeConfirmation(
+        api: api((_) async => _json({'title': 'VALIDATION_ERROR'}, 400)),
+        store: MemorySessionStore(session()),
+      );
+
+      final result = await repo.replay('intake-1', DateTime.utc(2030));
+
+      expect((result as AppFailure).code, 'INVALID_CONFIRMATION_TIME');
+    });
+
     test('an idempotent replay is reported as already confirmed', () async {
       final repo = RemoteIntakeConfirmation(
         api: api((_) async => _json(evidence(alreadyConfirmed: true), 200)),

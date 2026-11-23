@@ -1,17 +1,18 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/presentation/theme/tata_colors.dart';
 import '../../../../shared/presentation/widgets/initials_avatar.dart';
+import '../../application/readmodels/intake_sync_status.dart';
 import '../../domain/entities/intake.dart';
 import '../bloc/home/home_state.dart';
+import '../widgets/adult_navigation_bar.dart';
 import '../widgets/home_cards.dart';
 
-/// Figma 563:58 adult home. Shortcuts appear only when their flow exists.
+/// Figma 563:58 adult home. Unconnected actions retain their layout and are disabled explicitly.
 class AdultHomeScreen extends StatefulWidget {
   const AdultHomeScreen({
     super.key,
@@ -24,6 +25,7 @@ class AdultHomeScreen extends StatefulWidget {
     this.onOpenVoice,
     this.onOpenAgenda,
     this.onOpenDose,
+    this.syncStatus,
   });
 
   final HomeState state;
@@ -34,6 +36,9 @@ class AdultHomeScreen extends StatefulWidget {
   /// Opens account actions such as consent management and switching account.
   final VoidCallback onOpenMore;
   final String? errorText;
+
+  /// Shown only when stored data is in use or confirmations are unsent.
+  final IntakeSyncStatus? syncStatus;
   final ValueChanged<String>? onOpenVoice;
   final VoidCallback? onOpenAgenda;
 
@@ -72,10 +77,8 @@ class _AdultHomeScreenState extends State<AdultHomeScreen> {
     final state = widget.state;
     final next = state.next;
     return Scaffold(
-      bottomNavigationBar: _AdultTabBar(
-        homeLabel: text.homeTabStart,
-        agendaLabel: text.homeTabAgenda,
-        moreLabel: text.homeTabMore,
+      bottomNavigationBar: AdultNavigationBar(
+        selected: AdultDestination.home,
         onAgenda: widget.onOpenAgenda,
         onMore: widget.onOpenMore,
       ),
@@ -84,6 +87,7 @@ class _AdultHomeScreenState extends State<AdultHomeScreen> {
         child: RefreshIndicator(
           onRefresh: widget.onRefresh,
           child: ListView(
+            key: const PageStorageKey('adult-home'),
             padding: const EdgeInsets.fromLTRB(22, 28, 22, 24),
             children: [
               Row(
@@ -117,6 +121,29 @@ class _AdultHomeScreenState extends State<AdultHomeScreen> {
                 ],
               ),
               const SizedBox(height: 20),
+              if (_syncNotice(text) case final notice?) ...[
+                Semantics(
+                  liveRegion: true,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: TataColors.infoSurface,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text(
+                      notice,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: TataColors.infoText,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+              ],
               switch ((state.status, next)) {
                 (HomeStatus.loading, _) => HomeMessageCard(
                   title: text.homeLoading,
@@ -162,18 +189,33 @@ class _AdultHomeScreenState extends State<AdultHomeScreen> {
     );
   }
 
+  String? _syncNotice(AppLocalizations text) {
+    final status = widget.syncStatus;
+    if (status == null) return null;
+    final queued = status.queued > 0
+        ? text.homeQueuedBanner(status.queued)
+        : null;
+    return status.offline
+        ? [text.homeOfflineBanner, ?queued].join(' ')
+        : queued;
+  }
+
   Widget? _shortcuts(AppLocalizations text, String? nextId) {
     final voice = widget.onOpenVoice;
     final agenda = widget.onOpenAgenda;
     final tiles = [
-      if (voice != null && nextId != null)
-        HomeShortcut(
+      Tooltip(
+        message: voice == null
+            ? text.homeVoiceUnavailable
+            : text.homeVoiceSubtitle,
+        child: HomeShortcut(
           title: text.homeVoiceTitle,
           subtitle: text.homeVoiceSubtitle,
           icon: 'assets/icons/home_mic.svg',
           color: TataColors.mint,
-          onTap: () => voice(nextId),
+          onTap: voice != null && nextId != null ? () => voice(nextId) : null,
         ),
+      ),
       if (agenda != null)
         HomeShortcut(
           title: text.homeAgendaTitle,
@@ -193,133 +235,6 @@ class _AdultHomeScreenState extends State<AdultHomeScreen> {
             Expanded(child: tiles[index]),
           ],
         ],
-      ),
-    );
-  }
-}
-
-/// Adult navigation from Figma 563:58, limited to destinations that exist.
-class _AdultTabBar extends StatelessWidget {
-  const _AdultTabBar({
-    required this.homeLabel,
-    required this.agendaLabel,
-    required this.moreLabel,
-    required this.onMore,
-    this.onAgenda,
-  });
-
-  final String homeLabel;
-  final String agendaLabel;
-  final String moreLabel;
-  final VoidCallback onMore;
-  final VoidCallback? onAgenda;
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: Container(
-        margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(28),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x14173B70),
-              blurRadius: 16,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: _TabItem(
-                label: homeLabel,
-                icon: 'assets/icons/adult_tab_home.svg',
-                selected: true,
-              ),
-            ),
-            if (onAgenda case final open?)
-              Expanded(
-                child: _TabItem(
-                  label: agendaLabel,
-                  icon: 'assets/icons/adult_tab_agenda.svg',
-                  selected: false,
-                  onTap: open,
-                ),
-              ),
-            Expanded(
-              child: _TabItem(
-                label: moreLabel,
-                icon: 'assets/icons/adult_tab_more.svg',
-                selected: false,
-                onTap: onMore,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _TabItem extends StatelessWidget {
-  const _TabItem({
-    required this.label,
-    required this.icon,
-    required this.selected,
-    this.onTap,
-  });
-
-  final String label;
-  final String icon;
-  final bool selected;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      selected: selected,
-      label: label,
-      excludeSemantics: true,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: onTap,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 38,
-              height: 30,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: selected ? TataColors.primary : Colors.transparent,
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: SvgPicture.asset(
-                icon,
-                width: 22,
-                height: 22,
-                colorFilter: ColorFilter.mode(
-                  selected ? Colors.white : TataColors.muted,
-                  BlendMode.srcIn,
-                ),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                color: selected ? TataColors.primary : TataColors.muted,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

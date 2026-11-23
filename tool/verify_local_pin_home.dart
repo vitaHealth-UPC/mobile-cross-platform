@@ -153,6 +153,29 @@ Future<void> main(List<String> arguments) async {
       AppFailure() => false,
     }, 'Weekly agenda does not show the confirmed intake');
     stdout.writeln('Agenda: the confirmed dose appears as taken this week');
+
+    // The second dose is confirmed as if saved offline a moment ago.
+    final secondId = switch (await GetNextIntake(intakes)()) {
+      AppSuccess(:final value?) => value.id,
+      _ => throw StateError('No second intake to replay'),
+    };
+    final future = await confirmations.replay(
+      secondId,
+      DateTime.now().toUtc().add(const Duration(hours: 1)),
+    );
+    _check(
+      _code(future) == 'INVALID_CONFIRMATION_TIME',
+      'A device time in the future was not rejected',
+    );
+    final tapped = DateTime.now().toUtc();
+    final delivered = await confirmations.replay(secondId, tapped);
+    _check(switch (delivered) {
+      AppSuccess(:final value) =>
+        value.intake.status == IntakeStatus.confirmed &&
+            value.intake.confirmedAt == tapped,
+      AppFailure() => false,
+    }, 'The offline tap time was not stored as the evidence');
+    stdout.writeln('Offline: tap time stored; a future device time rejected');
     stdout.writeln('PIN + Home + confirmation probe passed');
   } finally {
     client.close();
@@ -218,7 +241,10 @@ Future<void> _prepareTreatment(
       'medicationId': medicationId,
       'dose': '1 tableta',
       'frequency': 'DAILY',
-      'scheduledTimes': [at(const Duration(minutes: 25))],
+      'scheduledTimes': [
+        at(const Duration(minutes: 25)),
+        at(const Duration(minutes: 50)),
+      ],
       'instructions': 'Con un vaso de agua',
       'reminderLeadMinutes': 10,
     },

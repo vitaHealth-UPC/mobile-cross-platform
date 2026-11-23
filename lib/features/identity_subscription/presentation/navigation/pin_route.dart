@@ -39,7 +39,8 @@ class PinRoute extends StatelessWidget {
         if (state.status == PinStatus.completed) {
           onCompleted();
         } else if (state.errorCode == 'AUTHENTICATION_REQUIRED' ||
-            state.errorCode == 'SESSION_CHANGED') {
+            state.errorCode == 'SESSION_CHANGED' ||
+            state.errorCode == 'ACCESS_DENIED') {
           onSessionInvalidated?.call();
         }
       },
@@ -51,14 +52,20 @@ class PinRoute extends StatelessWidget {
           mode: bloc.mode,
           adultName: adultName,
           filled: state.length,
-          busy: state.status != PinStatus.editing,
+          busy:
+              state.status == PinStatus.busy ||
+              state.status == PinStatus.completed,
+          existingPin: state.status == PinStatus.alreadyRegistered,
           locked: state.locked,
-          canSubmit: state.canSubmit,
+          canSubmit:
+              state.canSubmit || state.status == PinStatus.alreadyRegistered,
           errorTitle: title,
           errorText: body,
           onDigit: (digit) => bloc.add(PinDigitPressed(digit)),
           onDelete: () => bloc.add(const PinDeletePressed()),
-          onSubmit: () => bloc.add(const PinSubmitted()),
+          onSubmit: state.status == PinStatus.alreadyRegistered
+              ? onCompleted
+              : () => bloc.add(const PinSubmitted()),
           onBack: onBack,
         );
       },
@@ -70,6 +77,10 @@ class PinRoute extends StatelessWidget {
         null => (null, null),
         'INVALID_PIN' ||
         'INVALID_PIN_FORMAT' => (text.pinIncorrectTitle, text.pinIncorrectBody),
+        'PIN_ALREADY_REGISTERED' => (
+          text.pinExistingTitle,
+          text.pinExistingBody,
+        ),
         'PIN_LOCKED' => (text.pinLockedTitle, text.pinLockedBody),
         'NETWORK_UNAVAILABLE' => (text.pinErrorTitle, text.networkUnavailable),
         'RATE_LIMITED' => (text.pinErrorTitle, text.rateLimited),

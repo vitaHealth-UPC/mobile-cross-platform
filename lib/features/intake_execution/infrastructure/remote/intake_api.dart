@@ -22,11 +22,19 @@ final class IntakeApi {
   );
 
   /// Manual confirmation; the backend accepts only the TOUCH channel here.
-  Future<ApiResponse> confirm(String intakeId, String token) => _client.request(
+  /// [confirmedAt] reports an offline action; omit it to use server time.
+  Future<ApiResponse> confirm(
+    String intakeId,
+    String token, {
+    DateTime? confirmedAt,
+  }) => _client.request(
     'POST',
     'api/v1/intakes/${Uri.encodeComponent(intakeId)}/confirmation',
     token: token,
-    body: {'channel': 'TOUCH'},
+    body: {
+      'channel': 'TOUCH',
+      'confirmedAt': ?confirmedAt?.toUtc().toIso8601String(),
+    },
   );
 
   /// Ordered evidence scheduled between the UTC instants [from] and [to].

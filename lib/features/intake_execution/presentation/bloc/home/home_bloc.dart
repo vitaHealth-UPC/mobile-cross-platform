@@ -29,6 +29,15 @@ final class HomeBloc extends Bloc<HomeEvent, HomeState> {
     final next = await pendingNext;
     final progress = await pendingProgress;
     if (revision != _revision || emit.isDone) return;
+    if (progress case AppFailure(:final code)
+        when const {
+          'AUTHENTICATION_REQUIRED',
+          'SESSION_CHANGED',
+          'ACCESS_DENIED',
+        }.contains(code)) {
+      emit(HomeState(status: HomeStatus.failure, errorCode: code));
+      return;
+    }
     switch (next) {
       case AppFailure<Intake?>(:final code):
         emit(HomeState(status: HomeStatus.failure, errorCode: code));

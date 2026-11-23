@@ -3,7 +3,8 @@ import '../../../domain/entities/intake.dart';
 /// Observable phases of the dose detail.
 enum DoseStatus { loading, ready, failure }
 
-/// Result of a confirmation attempt, always as the server decided it.
+/// Result of a confirmation attempt; only [ConfirmationOutcome.pendingSync]
+/// is not a server decision.
 enum ConfirmationOutcome {
   /// Confirmed before the scheduled instant (Figma 563:291).
   confirmed,
@@ -16,6 +17,9 @@ enum ConfirmationOutcome {
 
   /// The dose was omitted and the omission stays in the history (563:3844).
   omissionPreserved,
+
+  /// Saved on the device; the server has not answered yet.
+  pendingSync,
 }
 
 /// Dose evidence plus the in-flight confirmation and its outcome.

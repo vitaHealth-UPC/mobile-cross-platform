@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:tata/features/identity_subscription/application/usecases/sign_in.dart';
+import 'package:tata/features/identity_subscription/domain/entities/account_session.dart';
 import 'package:tata/features/identity_subscription/infrastructure/remote/session_api.dart';
 import 'package:tata/features/identity_subscription/infrastructure/repositories/remote_session_repository.dart';
 import 'package:tata/shared/application/session/session_owner.dart';
@@ -134,6 +135,52 @@ void main() {
       expect(store.current, isNull);
     },
   );
+
+  group('restore without network', () {
+    StoredSession adult(DateTime expiresAt) => StoredSession(
+      accessToken: 'token-A',
+      expiresAt: expiresAt,
+      owner: SessionOwner(
+        'adult-A',
+        SessionRole.olderAdult,
+        careLinkId: 'link-A',
+      ),
+    );
+    Future<http.Response> unreachable(http.Request _) async =>
+        throw http.ClientException('offline');
+
+    test('a valid adult session continues to stored doses', () async {
+      final store = MemorySessionStore(adult(DateTime.utc(2030)));
+      final result = await repository(store, unreachable).restore();
+      expect(
+        result,
+        isA<AppSuccess<AccountSession?>>().having(
+          (value) => value.value?.owner.id,
+          'owner',
+          'adult-A',
+        ),
+      );
+      expect(store.current, isNotNull);
+    });
+
+    test('an expired adult session is not restored', () async {
+      final store = MemorySessionStore(adult(DateTime.utc(2020)));
+      final result = await repository(store, unreachable).restore();
+      expect(result, isA<AppFailure<AccountSession?>>());
+    });
+
+    test('a caregiver still needs the server', () async {
+      final store = MemorySessionStore(saved());
+      final result = await repository(store, unreachable).restore();
+      expect(result, isA<AppFailure<AccountSession?>>());
+    });
+
+    test('a server outage is not treated as no network', () async {
+      final store = MemorySessionStore(adult(DateTime.utc(2030)));
+      final repo = repository(store, (_) async => http.Response('{}', 503));
+      expect(await repo.restore(), isA<AppFailure<AccountSession?>>());
+    });
+  });
 
   test(
     'server outage is a failure and never authenticated cache fallback',

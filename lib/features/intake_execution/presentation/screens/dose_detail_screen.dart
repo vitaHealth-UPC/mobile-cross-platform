@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/presentation/theme/tata_colors.dart';
 import '../../domain/entities/intake.dart';
+import '../widgets/adult_navigation_bar.dart';
 import '../widgets/intake_labels.dart';
 
 /// Figma 563:3266 (pending), 563:3370 (confirmed), 563:3474 (late) and
@@ -18,6 +19,9 @@ class DoseDetailScreen extends StatelessWidget {
     required this.onConfirm,
     required this.onBack,
     this.errorText,
+    this.onBackHome,
+    this.onMore,
+    this.onAgenda,
   });
 
   final Intake intake;
@@ -27,33 +31,44 @@ class DoseDetailScreen extends StatelessWidget {
   final VoidCallback onConfirm;
   final VoidCallback onBack;
   final String? errorText;
+  final VoidCallback? onBackHome;
+  final VoidCallback? onMore;
+  final VoidCallback? onAgenda;
 
   @override
   Widget build(BuildContext context) {
     final text = AppLocalizations.of(context);
     final time = intakeTime(context, intake.scheduledAt);
     final day = intakeDay(context, intake.scheduledAt, now);
-    final pending = intake.status == IntakeStatus.pending;
+    final pending = intake.confirmable;
     return PopScope(
       canPop: !confirming,
       child: Scaffold(
         // The main action stays visible above the system bar on any screen height.
-        bottomNavigationBar: pending
-            ? SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(22, 8, 22, 12),
-                  child: ElevatedButton(
-                    onPressed: canConfirm ? onConfirm : null,
-                    child: Text(
-                      confirming ? text.doseConfirming : text.doseConfirm,
-                    ),
+        bottomNavigationBar: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (pending)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(22, 8, 22, 12),
+                child: ElevatedButton(
+                  onPressed: canConfirm ? onConfirm : null,
+                  child: Text(
+                    confirming ? text.doseConfirming : text.doseConfirm,
                   ),
                 ),
-              )
-            : null,
+              ),
+            AdultNavigationBar(
+              selected: AdultDestination.medications,
+              onHome: confirming ? null : onBackHome ?? onBack,
+              onAgenda: confirming ? null : onAgenda,
+              onMore: confirming ? null : onMore,
+            ),
+          ],
+        ),
         body: SafeArea(
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(14, 12, 22, 24),
+            padding: const EdgeInsets.fromLTRB(14, 28, 22, 24),
             children: [
               Row(
                 children: [
@@ -178,7 +193,7 @@ class _Hero extends StatelessWidget {
                 Text(
                   intake.medicationName,
                   style: const TextStyle(
-                    fontFamily: 'DMSerifDisplay',
+                    fontWeight: FontWeight.w700,
                     fontSize: 24,
                     color: TataColors.ink,
                   ),
@@ -214,13 +229,14 @@ class _ScheduleCard extends StatelessWidget {
     required this.day,
     required this.time,
   });
-
   final Intake intake;
   final String day;
   final String time;
 
   @override
   Widget build(BuildContext context) {
+    final largeText = MediaQuery.textScalerOf(context).scale(14) > 18;
+    final chip = IntakeStatusChip(status: intake.status, queued: intake.queued);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -248,10 +264,11 @@ class _ScheduleCard extends StatelessWidget {
                     color: TataColors.ink,
                   ),
                 ),
+                if (largeText) ...[const SizedBox(height: 8), chip],
               ],
             ),
           ),
-          IntakeStatusChip(status: intake.status),
+          if (!largeText) ...[const SizedBox(width: 8), chip],
         ],
       ),
     );
@@ -323,37 +340,55 @@ class _BeforeDose extends StatelessWidget {
         color: TataColors.lavender,
         borderRadius: BorderRadius.circular(18),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: TataColors.ink,
-            ),
-          ),
-          const SizedBox(height: 10),
-          for (final item in items)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Row(
-                children: [
-                  const Icon(Icons.check, size: 18, color: TataColors.primary),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      item,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: TataColors.ink,
-                      ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: TataColors.ink,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                for (final item in items)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.check,
+                          size: 18,
+                          color: TataColors.primary,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            item,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: TataColors.ink,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
+              ],
             ),
+          ),
+          const SizedBox(width: 8),
+          ExcludeSemantics(
+            child: Image.asset(
+              'assets/illustrations/dose_water_plant.png',
+              width: 88,
+              height: 100,
+            ),
+          ),
         ],
       ),
     );
@@ -368,6 +403,9 @@ class _StatusNote extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = AppLocalizations.of(context);
     final message = switch (intake.status) {
+      _ when intake.localConfirmation == LocalConfirmation.rejected =>
+        text.doseMessageRejected,
+      IntakeStatus.pending when intake.queued => text.doseMessageQueued,
       IntakeStatus.pending => text.doseMessagePending,
       IntakeStatus.confirmed => text.doseMessageConfirmed,
       IntakeStatus.late => text.doseMessageLate,
@@ -384,7 +422,7 @@ class _StatusNote extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            text.doseState(intakeStatusLabel(text, intake.status)),
+            text.doseState(intakeDisplayLabel(text, intake)),
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,

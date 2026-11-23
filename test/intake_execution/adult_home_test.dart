@@ -105,7 +105,7 @@ void main() {
         intake('next', IntakeStatus.pending, DateTime(2026, 11, 3, 8)),
       ]),
     );
-    await pumpHome(tester, reader);
+    await pumpHome(tester, reader, onAgenda: () async {}, onDose: (_) async {});
 
     expect(find.text('Hoy'), findsOneWidget);
     expect(find.text('Martes, 3 de noviembre'), findsOneWidget);
@@ -118,7 +118,11 @@ void main() {
     expect(find.text('2/3'), findsOneWidget);
     expect(find.text('¡Vas muy bien!'), findsOneWidget);
     // Voice and agenda flows are not in Flutter yet, so no dead shortcuts.
-    expect(find.text('Confirmar con voz'), findsNothing);
+    expect(find.text('Confirmar con voz'), findsOneWidget);
+    expect(
+      find.byTooltip('La confirmación por voz no está disponible.'),
+      findsOneWidget,
+    );
     await captureWidget(tester, find.byKey(const Key('home-capture')), 'home');
   });
 
@@ -154,6 +158,30 @@ void main() {
     expect(reader.reads, 2);
     expect(invalidated, 1);
   });
+
+  for (final code in [
+    'ACCESS_DENIED',
+    'AUTHENTICATION_REQUIRED',
+    'SESSION_CHANGED',
+  ]) {
+    testWidgets('progress $code invalidates home even if next dose succeeded', (
+      tester,
+    ) async {
+      var invalidated = 0;
+      await pumpHome(
+        tester,
+        FakeIntakeReader(
+          nextResult: AppSuccess(
+            intake('next', IntakeStatus.pending, DateTime(2026, 11, 3, 8)),
+          ),
+          agendaResult: AppFailure(code),
+        ),
+        onInvalidated: () => invalidated++,
+      );
+      expect(invalidated, 1);
+      expect(find.text('Losartán 50 mg'), findsNothing);
+    });
+  }
 
   testWidgets('the tip can be dismissed and More opens account actions', (
     tester,
@@ -194,7 +222,11 @@ void main() {
       );
       expect(find.text('Ver todas mis tomas'), findsOneWidget);
       expect(find.bySemanticsLabel('Agenda'), findsOneWidget);
-      expect(find.text('Confirmar con voz'), findsNothing);
+      expect(find.text('Confirmar con voz'), findsOneWidget);
+      expect(
+        find.byTooltip('La confirmación por voz no está disponible.'),
+        findsOneWidget,
+      );
 
       await tester.tap(find.text('Losartán 50 mg'));
       await tester.pumpAndSettle();
