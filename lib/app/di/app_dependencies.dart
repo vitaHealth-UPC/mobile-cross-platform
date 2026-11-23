@@ -139,6 +139,7 @@ import '../../features/inventory_replenishment/infrastructure/remote/inventory_a
 import '../../features/inventory_replenishment/infrastructure/repositories/remote_inventory_repository.dart';
 import '../../features/inventory_replenishment/presentation/bloc/inventory_bloc.dart';
 import '../../features/omission_escalation/application/policies/omission_push_access_policy.dart';
+import '../../features/omission_escalation/application/services/omission_delivery_coordinator.dart';
 import '../../features/omission_escalation/application/services/omission_notification_session_cleanup.dart';
 import '../../features/omission_escalation/application/services/omission_push_facade.dart';
 import '../../features/omission_escalation/application/services/push_device_registration_coordinator.dart';
@@ -147,6 +148,7 @@ import '../../features/omission_escalation/application/usecases/follow_dose_remi
 import '../../features/omission_escalation/application/usecases/handle_incoming_omission_push.dart';
 import '../../features/omission_escalation/application/usecases/resolve_push_destination.dart';
 import '../../features/omission_escalation/infrastructure/local/push_local_stores.dart';
+import '../../features/omission_escalation/infrastructure/push/firebase_omission_message_source.dart';
 import '../../features/omission_escalation/infrastructure/push/firebase_push_token_source.dart';
 import '../../features/omission_escalation/infrastructure/push/local_omission_notifier.dart';
 import '../../features/omission_escalation/infrastructure/remote/push_device_api.dart';
@@ -763,6 +765,17 @@ final class AppDependencies {
       registrationEnabled: false,
     );
   }
+
+  /// Connects SDK messages, token rotation and native taps to the application coordinator.
+  OmissionDeliveryCoordinator createOmissionDelivery(OmissionPushFacade push) =>
+      OmissionDeliveryCoordinator(
+        source: FirebaseOmissionMessageSource(),
+        facade: push,
+        sessions: _sessionStore,
+        rotatedTokens: FirebasePushTokenSource().refreshedTokens,
+        localTaps: _notifications.opened,
+        initialLocalPayload: _notifications.launchPayload,
+      );
 
   /// Opaque identity of this installation for the push registry.
   Future<String> readPushInstallationId() =>

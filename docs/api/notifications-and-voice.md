@@ -14,6 +14,14 @@ The visible body is generic and the Android notice has private lock-screen visib
 
 Display and cleanup operations are serialized. Recipient access is checked around asynchronous work; a session change during display removes omission notices while retaining scheduled-dose notices. Clearing a notice does not acknowledge or close an alert on the server.
 
+## Transport and application lifecycle
+
+`FirebaseOmissionMessageSource` maps foreground messages, remote taps and the initial remote message through the versioned data mapper. It rejects unsupported versions and nonstring fields. Visible notification text never substitutes for the data contract.
+
+`OmissionDeliveryCoordinator` connects that source, token rotations and native taps to the facade. It holds a valid launch payload until access restoration permits navigation, emits authorized destination read models and discards pending navigation on owner change or sign-out. SDK availability gates device synchronization. Native launch evidence remains usable when the remote SDK is unavailable.
+
+The host calls `sessionChanged` after access changes, `beforeSignOut` while the credential still exists, and `dispose` when the lifecycle ends. Stream subscriptions and registration retries are released together. Permission is rechecked for each SDK token rotation without prompting again.
+
 ## Delivery boundary
 
 The SDK token source and native notifier are composed in production. Device registration remains disabled while the host messaging lifecycle is completed. Local adapter tests do not establish background delivery or a successful remote push. The integration also requires Firebase configuration for the target platform, permission, message reception, token rotation, authenticated cleanup and authorized tap handling.

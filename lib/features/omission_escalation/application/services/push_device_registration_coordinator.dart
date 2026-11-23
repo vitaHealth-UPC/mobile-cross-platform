@@ -52,6 +52,9 @@ final class PushDeviceRegistrationCoordinator {
   bool _registrationAttempted = false;
   int _run = 0;
 
+  /// Stops future retries when the messaging lifecycle is disposed.
+  void cancelPending() => _run++;
+
   /// Registers this installation for the session in force; a later call supersedes the
   /// retries of an earlier one.
   Future<void> synchronize() async {

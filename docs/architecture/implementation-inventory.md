@@ -584,3 +584,14 @@ Cada archivo agrupa una operación pública o una familia cohesiva. Los tipos de
 | `lib/features/treatment_management/domain/repositories/treatment_repository.dart` | `TreatmentRepository` |
 | `lib/features/treatment_management/domain/repositories/medication_management_repository.dart` | `MedicationManagementRepository` |
 | `lib/features/treatment_management/domain/repositories/treatment_lifecycle_repository.dart` | `TreatmentLifecycleRepository` |
+
+
+## Transporte de omisiones
+
+| Archivo | Responsabilidad |
+| --- | --- |
+| `lib/features/omission_escalation/application/ports/omission_message_source.dart` | Eventos y evidencia de apertura sin tipos Firebase |
+| `lib/features/omission_escalation/infrastructure/push/firebase_omission_message_source.dart` | Configuración y mapeo del contrato de datos FCM |
+| `lib/features/omission_escalation/application/services/omission_delivery_coordinator.dart` | Suscripciones, sesión, cola de apertura y destinos autorizados |
+
+El coordinador emite modelos de destino; el host de aplicación ejecuta la navegación y comunica los cambios de acceso. El receptor de segundo plano requiere una composición de infraestructura propia, sin crear la base de datos de toda la aplicación.
