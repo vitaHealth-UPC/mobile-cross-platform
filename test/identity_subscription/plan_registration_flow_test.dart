@@ -104,6 +104,11 @@ void main() {
     await tester.ensureVisible(find.text('Comenzar'));
     await tester.tap(find.text('Comenzar'));
     await tester.pumpAndSettle();
+    expect(find.text('Funciones principales'), findsOneWidget);
+    await tester.ensureVisible(find.text('Comenzar'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Comenzar'));
+    await tester.pumpAndSettle();
     expect(find.text('Elige cómo empezar'), findsOneWidget);
     expect(find.text('No disponible'), findsOneWidget);
     await tester.tap(find.text('Elegir Familiar'));
@@ -188,6 +193,11 @@ void main() {
     );
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Comenzar'));
+    await tester.tap(find.text('Comenzar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Funciones principales'), findsOneWidget);
+    await tester.ensureVisible(find.text('Comenzar'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Comenzar'));
     await tester.pumpAndSettle();
     await tester.tap(find.byType(BackButton));

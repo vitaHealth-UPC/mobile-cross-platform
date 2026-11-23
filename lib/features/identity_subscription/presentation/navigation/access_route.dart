@@ -11,6 +11,7 @@ import '../bloc/pin/pin_bloc.dart';
 import '../bloc/plan_choice/plan_choice_cubit.dart';
 import '../bloc/recovery/recovery_bloc.dart';
 import '../bloc/registration/registration_bloc.dart';
+import '../screens/landing_value_screen.dart';
 import '../screens/login_screen.dart';
 import '../screens/onboarding_screen.dart';
 import '../screens/password_recovery_screen.dart';
@@ -111,6 +112,14 @@ class _AccessRouteState extends State<AccessRoute> {
   Future<void> _start(BuildContext context) async {
     final plans = widget.createPlanChoiceCubit;
     if (plans == null) return _register(context);
+    final continueToPlans = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (landingContext) => LandingValueScreen(
+          onStart: () => Navigator.of(landingContext).pop(true),
+        ),
+      ),
+    );
+    if (continueToPlans != true || !context.mounted) return;
     final choice = await Navigator.of(context).push<PlanChoice>(
       MaterialPageRoute(
         builder: (_) => PlanChoiceRoute(

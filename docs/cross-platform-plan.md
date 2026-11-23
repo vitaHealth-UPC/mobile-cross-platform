@@ -1155,13 +1155,13 @@ No registrar porcentajes estimados como validación. Separar implementación, co
 
 ## Registro de variantes Flutter
 
-Balance vigente (22-11-2026): 69 de 70 variantes representadas y 69 aceptadas visualmente de forma proporcional. La variante restante es Landing - Value & Features, que conserva su implementación específica abierta. La aceptación visual no equivale a integración desplegada ni a cierre funcional.
+Balance vigente (22-11-2026): 70 de 70 variantes representadas y 70 aceptadas visualmente de forma proporcional. La aceptación visual no equivale a integración desplegada ni a cierre funcional.
 
 Inventario de referencia:70 variantes. Estado inicial compartido:1 completa aceptada,3 parciales comparadas,66 sin implementación específica. Tras el corte PIN + Home (03-11-2026): 1 completa, 8 parciales, 61 sin implementación específica. Tras agenda y confirmación (03-11-2026): 1 completa, 18 parciales, 51 sin implementación específica. Tras analítica de adherencia (11-11-2026): 1 completa, 20 parciales, 49 sin implementación específica. Tras integración del 12-11-2026: 1 completa, 27 parciales y 42 sin implementación específica; 15 variantes aceptadas visualmente de forma proporcional. La funcionalidad se registra por recorrido y actor, sin equiparar aprobación visual con cierre funcional. Las extensiones INV-01 (invitación), REC-01 (recuperación) y WDR-01 (retirada) tienen comportamiento implementado y pruebas propias; no amplían este denominador.
 
 | # | Variante | Nodo Figma | Implementación | Fidelidad visual | Funcionalidad y evidencia |
 | --- | --- | --- | --- | --- | --- |
-| 1 | Landing - Value & Features | 563:1849 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
+| 1 | Landing - Value & Features | 563:1849 | Completa | Aceptada proporcionalmente en renders ES/EN normal y texto 150 %, 22-11-2026 | LandingValueScreen nativa entre bienvenida y planes; Comenzar continúa al catálogo y al registro. Vista de ejemplo aislada de datos de cuenta, recursos originales y contenido localizado. |
 | 2 | Landing - Plans & Contact | 563:1913 | Completa | Aceptada proporcionalmente en emulador (18-11-2026) con TATA_CONTACT_URL configurado; sin el pie de la landing web | PlanChoiceScreen entre Comenzar y el registro con /api/v1/plans público; plan_choice_test.dart y plan_registration_flow_test.dart |
 | 3 | Onboarding | 563:5 | Completa | Aceptada proporcionalmente | Acciones y navegación comprobadas en widgets; onboarding_screen_test.dart; falta dispositivo |
 | 4 | Caregiver Registration | 563:1398 | Parcial | Aceptada proporcionalmente en renders normal y texto 150 %, 22-11-2026 | Alta y verificación mediante casos de uso; contraseña borrada tras crear, entrada nativa del código, indicador de pasos adaptable y reenvío comprobados. Pruebas de ruta existentes; ejecución instalada separada. |
@@ -1806,3 +1806,23 @@ AccessibilityScreen delega la acción existente LanguageToggled. AppearanceCubit
 language_selection_visual_test.dart usa AccessibilityBloc, AppearanceCubit y los casos de uso reales con almacenamiento de prueba. Comprueba idioma inicial, selección persistida de inglés, rótulos traducidos de pantalla y barra, y vuelta a español. Se revisan seis capturas de ES/EN en 393x883 y 360x640 con texto normal/150 %. Pasan las 76 pruebas de preferencias e integración de aplicación; análisis y formato quedan limpios. Esta aceptación corresponde al nodo 665:183 y no certifica todas las pantallas en inglés.
 
 El inventario conserva 69 variantes representadas y alcanza 69 aceptadas visualmente. Resta Landing - Value & Features sin implementación específica. La evidencia local no añade ejecución nueva en Render, teléfono físico o APK. La autenticación social continúa abierta como integración funcional independiente. Backend e informe académico no cambian.
+
+### Corte 22-11-2026: presentación de valor y funciones
+
+Se consulta Figma 563:1849. LandingValueScreen compone marca, hero, vista ilustrativa, tres funciones, testimonio y dos datos del producto mediante Text, Row, Column, Wrap, Container y botones Material. La mariposa SVG se reutiliza del recurso existente. El retrato se descarga como PNG original de Figma de 96x96 y se presenta en un círculo de 58 px, sin ampliación artificial del archivo ni sustitución por una fotografía distinta. La ilustración de ejemplo se construye con widgets; no se exportan pantallas o tarjetas como imágenes.
+
+La vista de ejemplo conserva los números y textos de la composición de Figma, permanece dentro de un widget privado de presentación y se identifica mediante semántica como datos ilustrativos. No consulta ni altera repositorios de salud. El contenido se localiza en ES/EN. Con texto ampliado, el hero y las funciones pasan a disposición vertical. Las cifras de funciones y roles se conservan como contenido informativo del diseño.
+
+AccessRoute abre esta presentación al comenzar el recorrido público con catálogo de planes. Comenzar continúa a la selección existente; el plan se aplica después del registro verificado con la sesión nueva. La vuelta desde planes conserva la bienvenida. El modo de composición sin catálogo mantiene el alta directa existente. Cuatro pruebas nuevas de LandingValueScreen cubren ES/EN y texto normal/150 %, la acción y las partes superior e inferior. Las pruebas de planes y registro incluyen ahora el paso por la presentación. Pasan 114 pruebas de identidad e integración de aplicación; la comprobación final de las cuatro variantes visuales también pasa y el análisis del alcance queda sin incidencias.
+
+El inventario alcanza 70 variantes representadas y 70 aceptadas visualmente de forma proporcional. Este conteo no cierra la autenticación social, las pruebas remotas o la demostración física. Backend e informe académico no cambian.
+
+## Cierre de integración y publicación
+
+- Completar la integración social pendiente y comparar los contratos y comportamientos equivalentes de Flutter y Android. Las correcciones de Flutter permanecen en temp; las de Android usan su rama fix existente.
+- Contrastar el catálogo real de historias con el historial de contribuciones para crear ramas feature/us-xx pertinentes, conservando hashes, autores y alcance de los commits originales. Registrar explícitamente los commits que abarcan varias historias; no inventar contribuciones ni un historial anterior.
+- Organizar docs/ con la estructura técnica de Android: arquitectura, contextos, historias, mapa Figma, sincronización offline y contratos API, adaptados a Dart/Flutter. Sustituir el formato de bitácora por documentación del comportamiento actual y conservar la evidencia necesaria fuera de esa narración.
+- Integrar mediante merges verificables a develop, preparar la rama release y publicar main y sus tags solo después de superar los controles del alcance. Mantener temp con las últimas correcciones y evitar ramas duplicadas o prefijos codex/.
+
+La suite completa del cliente pasa 827 pruebas. La comparación remota de Android confirma su rama fix/android-architecture limpia; Flutter conserva temp como rama de ajustes. Ambos main/develop se revisan antes de cualquier integración; el historial original de los colaboradores queda preservado.
+El APK debug compila con el recorrido de presentación, planes y registro actualizado. Conserva los avisos existentes de herramientas Android/Kotlin.
