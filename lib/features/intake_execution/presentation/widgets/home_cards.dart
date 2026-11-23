@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/presentation/theme/tata_colors.dart';
 import '../../../../shared/presentation/widgets/status_notice.dart';
+import '../../application/policies/intake_reminder_policy.dart';
 import '../../application/readmodels/daily_progress.dart';
 import '../../domain/entities/intake.dart';
 
@@ -542,9 +543,8 @@ class DueIntakeReminder extends StatelessWidget {
     this.onTap,
   });
 
-  /// Mirrors the backend default (tata.intake.unconfirmed-after = PT15M), when
-  /// the server reports the dose as unconfirmed and sends its reinforced reminder.
-  static const reinforceAfter = Duration(minutes: 15);
+  /// Same moment as the device notification of the second reminder.
+  static const reinforceAfter = IntakeReminderPolicy.reinforceAfter;
 
   final Intake intake;
   final DateTime now;

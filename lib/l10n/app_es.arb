@@ -1387,5 +1387,11 @@
   "@planChoiceIncluded": {"placeholders": {"name": {"type": "String"}}},
   "planChoiceNotIncluded": "No incluido en {name}",
   "@planChoiceNotIncluded": {"placeholders": {"name": {"type": "String"}}},
-  "planChoiceApplyFailed": "Tu cuenta está lista. No pudimos activar el plan elegido; puedes cambiarlo en Ajustes."
+  "planChoiceApplyFailed": "Tu cuenta está lista. No pudimos activar el plan elegido; puedes cambiarlo en Ajustes.",
+  "reminderChannelName": "Recordatorios de tomas",
+  "reminderChannelDescription": "Avisos a la hora de cada toma y si sigue pendiente.",
+  "reminderDueBody": "{medication} · {dose}. Confírmala cuando la hayas tomado.",
+  "@reminderDueBody": {"placeholders": {"medication": {"type": "String"}, "dose": {"type": "String"}}},
+  "reminderReinforcedBody": "{medication} sigue pendiente. Confírmala cuando la tomes.",
+  "@reminderReinforcedBody": {"placeholders": {"medication": {"type": "String"}}}
 }

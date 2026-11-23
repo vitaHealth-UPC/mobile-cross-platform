@@ -195,6 +195,16 @@ final class IntakeDao implements IntakeLocalStore {
     )..where((row) => row.ownerId.equals(olderAdultId))).go();
   });
 
+  @override
+  Stream<void> changes() => _db
+      .tableUpdates(
+        TableUpdateQuery.onAllTables([
+          _db.cachedIntakes,
+          _db.pendingConfirmations,
+        ]),
+      )
+      .map((_) {});
+
   Expression<bool> _ownedIntake($CachedIntakesTable row, SessionOwner owner) =>
       row.ownerId.equals(owner.id) & row.careLinkId.equals(owner.careLinkId!);
 

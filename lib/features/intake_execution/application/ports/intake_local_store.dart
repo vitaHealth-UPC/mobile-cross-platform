@@ -60,4 +60,7 @@ abstract interface class IntakeLocalStore {
 
   /// Deletes everything stored for an adult, for example after consent withdrawal.
   Future<void> clearAdult(String olderAdultId);
+
+  /// Emits after any write to stored intakes or queued confirmations.
+  Stream<void> changes();
 }

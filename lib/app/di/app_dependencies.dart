@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 
 import '../../features/accessibility_preferences/application/ports/preferences_ports.dart';
 import '../../features/accessibility_preferences/application/usecases/preferences_usecases.dart';
+import '../../features/accessibility_preferences/domain/value_objects/accessibility_preferences.dart';
 import '../../features/accessibility_preferences/infrastructure/local/shared_preferences_stores.dart';
 import '../../features/accessibility_preferences/infrastructure/remote/preferences_api.dart';
 import '../../features/accessibility_preferences/infrastructure/repositories/offline_first_user_preferences.dart';
@@ -11,6 +12,7 @@ import '../../features/accessibility_preferences/presentation/bloc/accessibility
 import '../../features/accessibility_preferences/presentation/bloc/notifications/notification_preferences_bloc.dart';
 import '../../features/accessibility_preferences/presentation/cubit/appearance_cubit.dart';
 import '../../features/accessibility_preferences/presentation/navigation/preferences_navigation.dart';
+import '../../features/accessibility_preferences/presentation/theme/appearance.dart';
 import '../../features/adherence_analytics/application/usecases/get_adherence_summary.dart';
 import '../../features/adherence_analytics/application/usecases/get_recommendations.dart';
 import '../../features/adherence_analytics/infrastructure/remote/analytics_api.dart';
@@ -84,6 +86,7 @@ import '../../features/intake_execution/application/ports/intake_local_store.dar
 import '../../features/intake_execution/application/ports/intake_reader.dart';
 import '../../features/intake_execution/application/ports/intake_sync.dart';
 import '../../features/intake_execution/application/ports/voice_confirmation.dart';
+import '../../features/intake_execution/application/services/intake_reminder_sync.dart';
 import '../../features/intake_execution/application/usecases/confirm_intake.dart';
 import '../../features/intake_execution/application/usecases/confirm_intake_by_voice.dart';
 import '../../features/intake_execution/application/usecases/get_daily_progress.dart';
@@ -95,6 +98,7 @@ import '../../features/intake_execution/infrastructure/audio/device_phrase_speak
 import '../../features/intake_execution/infrastructure/audio/microphone_voice_recorder.dart';
 import '../../features/intake_execution/infrastructure/local/dao/intake_dao.dart';
 import '../../features/intake_execution/infrastructure/local/intake_database.dart';
+import '../../features/intake_execution/infrastructure/notifications/local_reminder_scheduler.dart';
 import '../../features/intake_execution/infrastructure/remote/intake_api.dart';
 import '../../features/intake_execution/infrastructure/repositories/offline_intake_repository.dart';
 import '../../features/intake_execution/infrastructure/repositories/remote_intake_confirmation.dart';
@@ -134,6 +138,7 @@ import '../../features/treatment_management/presentation/bloc/treatment_list/tre
 import '../../features/treatment_management/presentation/bloc/treatment_management/treatment_management_bloc.dart';
 import '../../features/treatment_management/presentation/bloc/treatment_setup/treatment_setup_bloc.dart';
 import '../../features/treatment_management/presentation/navigation/treatment_navigation.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../shared/application/session/session_store.dart';
 import '../../shared/common/result/app_result.dart';
 import '../../shared/infrastructure/network/api_client.dart';
@@ -444,6 +449,31 @@ final class AppDependencies {
 
   /// Adult remembered on this device after PIN enrollment, if any.
   Future<RememberedAdult?> readRememberedAdult() => _rememberedAdults.read();
+
+  /// Device reminders of the signed-in adult's doses (US-05 and US-22), in the
+  /// adult's app language; they keep working while the app is closed.
+  late final IntakeReminderSync intakeReminders = IntakeReminderSync(
+    local: _localIntakes,
+    sessions: _sessionStore,
+    scheduler: LocalReminderScheduler(texts: _reminderTexts),
+  );
+
+  /// Spanish unless the adult chose another language, like the app itself.
+  Future<AppLocalizations> _reminderTexts() async {
+    var language = AppLanguage.spanish;
+    final owner = _sessionStore.current?.owner.id;
+    if (owner != null) {
+      try {
+        language = await _languageStore
+            .watch(owner)
+            .first
+            .timeout(const Duration(seconds: 2));
+      } on Object {
+        // Unreadable preference: keep the default language.
+      }
+    }
+    return lookupAppLocalizations(Appearance.localeFor(language));
+  }
 
   /// Stores the PIN shortcut after the server acknowledged enrollment.
   Future<void> rememberAdult(RememberedAdult adult) =>
