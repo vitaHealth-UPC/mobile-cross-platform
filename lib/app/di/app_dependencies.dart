@@ -98,6 +98,10 @@ import '../../features/intake_execution/presentation/bloc/agenda/agenda_bloc.dar
 import '../../features/intake_execution/presentation/bloc/dose/dose_bloc.dart';
 import '../../features/intake_execution/presentation/bloc/home/home_bloc.dart';
 import '../../features/intake_execution/presentation/bloc/voice/voice_bloc.dart';
+import '../../features/inventory_replenishment/application/usecases/inventory_usecases.dart';
+import '../../features/inventory_replenishment/infrastructure/remote/inventory_api.dart';
+import '../../features/inventory_replenishment/infrastructure/repositories/remote_inventory_repository.dart';
+import '../../features/inventory_replenishment/presentation/bloc/inventory_bloc.dart';
 import '../../features/omission_escalation/application/policies/omission_push_access_policy.dart';
 import '../../features/omission_escalation/application/services/omission_notification_session_cleanup.dart';
 import '../../features/omission_escalation/application/services/omission_push_facade.dart';
@@ -253,6 +257,20 @@ final class AppDependencies {
   final SessionStore _sessionStore;
   final AccessibilityLocalStore _accessibilityStore;
   final ApplicationLanguageStore _languageStore;
+
+  /// Stock of one medication for the caregiver (Inventory & Replenishment).
+  InventoryBloc createInventoryBloc(String medicationId) {
+    final repository = RemoteInventoryRepository(
+      api: InventoryApi(_client),
+      store: _sessionStore,
+    );
+    return InventoryBloc(
+      medicationId: medicationId,
+      read: GetInventory(repository),
+      registerInitial: RegisterInitialInventory(repository),
+      replenish: RegisterReplenishment(repository),
+    );
+  }
 
   /// Treatment Management blocs; each factory shares the captured session store.
   TreatmentFactories get treatmentFactories {

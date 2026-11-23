@@ -1175,5 +1175,98 @@
         "type": "String"
       }
     }
-  }
+  },
+  "invTitle": "Inventario",
+  "invSubtitle": "Stock inicial, disponibilidad y reposiciones de {name}.",
+  "@invSubtitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "invSubtitleGeneric": "Stock inicial, disponibilidad y reposiciones.",
+  "invStatusLow": "Stock bajo",
+  "invStatusAvailable": "Stock disponible",
+  "invUnitsRemaining": "{count, plural, =1{1 unidad restante} other{{count} unidades restantes}}",
+  "@invUnitsRemaining": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "invDaysEstimate": "≈ {days, plural, =1{1 día} other{{days} días}} de tratamiento",
+  "@invDaysEstimate": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "invNoEstimate": "Sin estimación de días",
+  "invDaysShort": "{days, plural, =1{día} other{días}}",
+  "@invDaysShort": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "invDaysSemantics": "{days, plural, =1{Alcanza para 1 día} other{Alcanza para {days} días}}",
+  "@invDaysSemantics": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "invDefineInitial": "Definir stock inicial",
+  "invInitialInfo": "El stock inicial ya está registrado. Usa una reposición para añadir unidades.",
+  "invUnderstood": "Entendido",
+  "invRegisterReplenishment": "Registrar reposición",
+  "invQuantityReceived": "Cantidad recibida",
+  "invQuantityHint": "Ej. 30",
+  "invLot": "Lote / nota",
+  "invLotHint": "Ej. Lote 2026-09",
+  "invInvalidQuantity": "Cantidad inválida",
+  "invInvalidQuantityHint": "Ingresa una cantidad mayor que cero antes de guardar.",
+  "invInvalidThreshold": "Ingresa un umbral de cero o más.",
+  "invInvalidLot": "El lote o la nota admite hasta 200 caracteres.",
+  "invSaveReplenishment": "Guardar reposición",
+  "invSaving": "Guardando…",
+  "invReplenished": "Reposición registrada.",
+  "invLastReplenishment": "Última reposición",
+  "invRegistered": "Registrado",
+  "invBatchUnits": "{count, plural, =1{1 unidad} other{{count} unidades}}",
+  "@invBatchUnits": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "invBatchWithLot": "{units}, {lot}",
+  "@invBatchWithLot": {
+    "placeholders": {
+      "units": {
+        "type": "String"
+      },
+      "lot": {
+        "type": "String"
+      }
+    }
+  },
+  "invNotInitialized": "Este medicamento aún no tiene stock registrado. Define cuántas unidades hay y desde cuándo avisar.",
+  "invInitialQuantity": "Cantidad inicial",
+  "invThreshold": "Umbral de reposición",
+  "invThresholdHint": "Ej. 5",
+  "invThresholdHelp": "El stock se marca como bajo al llegar a esta cantidad.",
+  "invSaveInitial": "Guardar stock inicial",
+  "invRetry": "Reintentar",
+  "invErrMedicationNotFound": "Este medicamento ya no existe. Actualiza la lista de medicamentos.",
+  "invErrMedicationInactive": "Este medicamento está inactivo. Reactívalo para registrar su stock.",
+  "invErrConcurrent": "El inventario cambió mientras guardabas. Inténtalo de nuevo.",
+  "invErrInvalidResponse": "El servicio devolvió datos inesperados.",
+  "invErrGeneric": "No pudimos completar la solicitud. Inténtalo de nuevo."
 }

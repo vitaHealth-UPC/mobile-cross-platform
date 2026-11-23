@@ -18,6 +18,7 @@ class MedicationManagementScreen extends StatelessWidget {
     required this.onCreateTreatment,
     required this.onSessionInvalidated,
     this.pickingForTreatment = false,
+    this.onOpenInventory,
   });
 
   final VoidCallback onRegister;
@@ -26,6 +27,9 @@ class MedicationManagementScreen extends StatelessWidget {
 
   /// True when opened to choose the medication of a new treatment.
   final bool pickingForTreatment;
+
+  /// Opens the stock of a medication; owned by the host, absent when not wired.
+  final void Function(Medication medication)? onOpenInventory;
 
   Future<void> _edit(BuildContext context, Medication medication) async {
     final text = AppLocalizations.of(context);
@@ -200,6 +204,13 @@ class MedicationManagementScreen extends StatelessWidget {
                                   child: Text(text.tmCreateTreatment),
                                 ),
                               if (!pickingForTreatment) ...[
+                                if (onOpenInventory case final open?)
+                                  TextButton(
+                                    onPressed: state.busy
+                                        ? null
+                                        : () => open(medication),
+                                    child: Text(text.invTitle),
+                                  ),
                                 TextButton(
                                   onPressed: state.busy
                                       ? null

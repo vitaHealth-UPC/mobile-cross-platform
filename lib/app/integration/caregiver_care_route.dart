@@ -6,8 +6,10 @@ import '../../features/adherence_analytics/presentation/navigation/adherence_bad
 import '../../features/adherence_analytics/presentation/navigation/treatment_adherence_view.dart';
 import '../../features/care_link/application/readmodels/caregiver_link_summary.dart';
 import '../../features/family_monitoring/presentation/navigation/family_monitoring_navigation.dart';
+import '../../features/inventory_replenishment/presentation/navigation/inventory_navigation.dart';
 import '../../features/omission_escalation/application/services/omission_push_facade.dart';
 import '../../features/omission_escalation/presentation/widgets/follow_omission_push.dart';
+import '../../features/treatment_management/domain/entities/medication.dart';
 import '../../features/treatment_management/presentation/navigation/treatment_navigation.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../shared/presentation/widgets/caregiver_tab_bar.dart';
@@ -27,6 +29,7 @@ class CaregiverCareRoute extends StatelessWidget {
     required this.onSessionInvalidated,
     this.createTreatmentAdherenceBloc,
     this.createPersonAdherenceBloc,
+    this.inventory,
   });
 
   final CaregiverLinkSummary profile;
@@ -34,6 +37,9 @@ class CaregiverCareRoute extends StatelessWidget {
   final TreatmentNavigation treatments;
   final FamilyMonitoringNavigation monitoring;
   final OmissionPushFacade push;
+
+  /// Stock of each medication (US-40 to US-43); absent when not wired.
+  final InventoryNavigation? inventory;
   final LevelBloc Function(String olderAdultId)? createPersonAdherenceBloc;
   final LevelBloc Function(String olderAdultId, String treatmentId)?
   createTreatmentAdherenceBloc;
@@ -58,6 +64,7 @@ class CaregiverCareRoute extends StatelessWidget {
           inner,
           profile.olderAdultId,
           onSessionInvalidated,
+          onOpenInventory: _inventoryOpener(inner),
         ),
         onPerson: () => Navigator.of(inner).maybePop(),
         onMore: () => _openMore(inner),
@@ -65,6 +72,34 @@ class CaregiverCareRoute extends StatelessWidget {
       ),
     ),
   );
+
+  /// Opens the stock of a medication with the person bar, as Figma 563:1632 draws it.
+  void Function(BuildContext, Medication)? _inventoryOpener(
+    BuildContext personContext,
+  ) {
+    final navigation = inventory;
+    if (navigation == null) return null;
+    return (context, medication) => navigation.open(
+      context,
+      medicationId: medication.id,
+      medicationLabel: medication.label,
+      personName: profile.fullName,
+      onSessionInvalidated: onSessionInvalidated,
+      navigationBuilder: (inventoryContext) => CaregiverTabBar(
+        selected: CaregiverTab.person,
+        enabledTabs: const {CaregiverTab.home, CaregiverTab.person},
+        onSelected: (tab) {
+          final navigator = Navigator.of(inventoryContext);
+          if (tab == CaregiverTab.home) {
+            navigator.popUntil((route) => route.isFirst);
+          } else {
+            final person = ModalRoute.of(personContext);
+            navigator.popUntil((route) => route == person || route.isFirst);
+          }
+        },
+      ),
+    );
+  }
 
   void _openMore(BuildContext context) {
     final text = AppLocalizations.of(context);
@@ -137,6 +172,7 @@ class CaregiverCareRoute extends StatelessWidget {
                   context,
                   profile.olderAdultId,
                   onSessionInvalidated,
+                  onOpenInventory: _inventoryOpener(context),
                 );
               },
             ),
