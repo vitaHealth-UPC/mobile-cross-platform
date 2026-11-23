@@ -1155,7 +1155,7 @@ No registrar porcentajes estimados como validación. Separar implementación, co
 
 ## Registro de variantes Flutter
 
-Balance vigente (22-11-2026): 69 de 70 variantes representadas y 68 aceptadas visualmente de forma proporcional. Las 2 restantes incluyen Landing - Value & Features, que conserva su implementación específica abierta. La aceptación visual no equivale a integración desplegada ni a cierre funcional.
+Balance vigente (22-11-2026): 69 de 70 variantes representadas y 69 aceptadas visualmente de forma proporcional. La variante restante es Landing - Value & Features, que conserva su implementación específica abierta. La aceptación visual no equivale a integración desplegada ni a cierre funcional.
 
 Inventario de referencia:70 variantes. Estado inicial compartido:1 completa aceptada,3 parciales comparadas,66 sin implementación específica. Tras el corte PIN + Home (03-11-2026): 1 completa, 8 parciales, 61 sin implementación específica. Tras agenda y confirmación (03-11-2026): 1 completa, 18 parciales, 51 sin implementación específica. Tras analítica de adherencia (11-11-2026): 1 completa, 20 parciales, 49 sin implementación específica. Tras integración del 12-11-2026: 1 completa, 27 parciales y 42 sin implementación específica; 15 variantes aceptadas visualmente de forma proporcional. La funcionalidad se registra por recorrido y actor, sin equiparar aprobación visual con cierre funcional. Las extensiones INV-01 (invitación), REC-01 (recuperación) y WDR-01 (retirada) tienen comportamiento implementado y pruebas propias; no amplían este denominador.
 
@@ -1230,7 +1230,7 @@ Inventario de referencia:70 variantes. Estado inicial compartido:1 completa acep
 | 67 | Stock Replenished | 563:5284 | Parcial | Aceptada proporcionalmente en emulador (14-11-2026); fecha sin punto abreviado según intl | Reposición de 30 con lote: stock 35, Stock disponible, 35 días y Última reposición con el lote; el backend confirmó el mismo estado |
 | 68 | Subscription Updated | 563:5354 | Parcial | Aceptada proporcionalmente en emulador (17-11-2026) | Cambio de Esencial a Familiar confirmado por el servidor: tarjeta del plan, Próxima renovación y aviso Suscripción actualizada; el backend devolvió FAMILY activo |
 | 69 | External Destination Unavailable | 563:5425 | Completa | Aceptada proporcionalmente en emulador (18-11-2026) | Sin TATA_CONTACT_URL válido o si el destino no abre, Contactar pasa a No disponible deshabilitado con pista accesible; plan_choice_test.dart |
-| 70 | Internationalization | 665:183 | Parcial | Sin aceptación visual específica registrada | AppearanceCubit y ARB es/en: Idioma por usuario aplicado a la app y controles traducidos; falta contraste visual completo con el prototipo EN. |
+| 70 | Internationalization | 665:183 | Parcial | Aceptada proporcionalmente en renders ES/EN normal y texto 150 %, 22-11-2026 | Selector nativo con globo original; LanguageToggled persiste por usuario y AppearanceCubit actualiza pantalla y barra. Prueba de ida y vuelta ES/EN/ES; no extiende la comparación a todas las vistas en inglés. |
 
 
 ## Revisión del lote integrado (11-11-2026)
@@ -1796,3 +1796,13 @@ Se consulta Figma 563:2834 y se revisa la implementación existente de HistorySt
 analytics_empty_visual_test.dart incorpora este estado a las variantes capturadas. Comprueba Sin datos suficientes, ausencia de porcentajes y de Reintentar, y selección efectiva de Últimos 7 días. Las pruebas existentes de HistoryBloc y del caso de uso distinguen la respuesta sin evidencia de NETWORK_UNAVAILABLE; no se convierte un fallo de conexión en una pantalla vacía. Pasan 143 pruebas de analítica e integración de aplicación. Análisis y formato quedan limpios.
 
 El inventario conserva 69 variantes representadas y alcanza 68 aceptadas visualmente. Restan Landing - Value & Features e Internationalization. Esta evidencia local no acredita una ejecución nueva en Render, dispositivo físico o APK. Backend e informe académico no cambian.
+
+### Corte 22-11-2026: selección de idioma
+
+Se consulta Figma 665:183. LanguagePreferenceTile, en lib/features/accessibility_preferences/presentation/widgets/language_preference_tile.dart, sustituye la fila genérica con icono de traducción. Conserva ListTile y OutlinedButton nativos, el globo SVG original descargado en assets/icons/language_globe.svg y el fondo circular de 32 px. El selector incluye el nombre del idioma y chevrons Material; mantiene un área táctil mínima de 44 px en lugar de los 30 px del dibujo. Con texto ampliado pasa debajo de la descripción, sin recortar la elección. El icono y las superficies siguen el tema oscuro o de contraste.
+
+AccessibilityScreen delega la acción existente LanguageToggled. AppearanceCubit observa la misma persistencia por propietario y actualiza la locale; la pantalla y la barra inferior cambian juntas. Español continúa siendo el valor inicial. El mockup muestra English en el selector y conserva rótulos españoles; la implementación traduce los controles al elegir inglés. Los nuevos textos de ayuda se localizan en ambos ARB.
+
+language_selection_visual_test.dart usa AccessibilityBloc, AppearanceCubit y los casos de uso reales con almacenamiento de prueba. Comprueba idioma inicial, selección persistida de inglés, rótulos traducidos de pantalla y barra, y vuelta a español. Se revisan seis capturas de ES/EN en 393x883 y 360x640 con texto normal/150 %. Pasan las 76 pruebas de preferencias e integración de aplicación; análisis y formato quedan limpios. Esta aceptación corresponde al nodo 665:183 y no certifica todas las pantallas en inglés.
+
+El inventario conserva 69 variantes representadas y alcanza 69 aceptadas visualmente. Resta Landing - Value & Features sin implementación específica. La evidencia local no añade ejecución nueva en Render, teléfono físico o APK. La autenticación social continúa abierta como integración funcional independiente. Backend e informe académico no cambian.

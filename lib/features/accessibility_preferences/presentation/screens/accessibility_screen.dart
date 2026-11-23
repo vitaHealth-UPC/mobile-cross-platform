@@ -9,6 +9,7 @@ import '../bloc/accessibility/accessibility_bloc.dart';
 import '../bloc/accessibility/accessibility_event.dart';
 import '../bloc/accessibility/accessibility_state.dart';
 import '../widgets/accessibility_save_receipt.dart';
+import '../widgets/language_preference_tile.dart';
 
 /// Figma accessibility groups with native controls, four text sizes and account sync.
 /// Colors follow the selected theme; artwork never replaces a toggle or selector.
@@ -304,14 +305,9 @@ class AccessibilityScreen extends StatelessWidget {
                 const SizedBox(height: 24),
                 _Group(
                   children: [
-                    ListTile(
-                      title: Text(text.pfLanguage, style: titleStyle),
-                      subtitle: Text(
-                        state.language.displayName,
-                        style: hintStyle,
-                      ),
-                      trailing: Icon(Icons.translate, color: colors.primary),
-                      onTap: () => bloc.add(const LanguageToggled()),
+                    LanguagePreferenceTile(
+                      language: state.language,
+                      onChanged: () => bloc.add(const LanguageToggled()),
                     ),
                   ],
                 ),

@@ -1660,5 +1660,6 @@
   "pfReadingActive": "Ayuda de lectura activa",
   "pfReadingApplied": "Más espacio entre líneas y letras en el contenido compatible.",
   "linkPendingBadge": "Pendiente",
-  "linkConfirmedBadge": "Confirmado"
+  "linkConfirmedBadge": "Confirmado",
+  "pfLanguageHint": "Idioma de la aplicación"
 }

@@ -1486,5 +1486,6 @@
   "pfReadingActive": "Reading assistance enabled",
   "pfReadingApplied": "More space between lines and letters in supported content.",
   "linkPendingBadge": "Pending",
-  "linkConfirmedBadge": "Confirmed"
+  "linkConfirmedBadge": "Confirmed",
+  "pfLanguageHint": "Application language"
 }
