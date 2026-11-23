@@ -56,11 +56,17 @@ class ConsentRoute extends StatelessWidget {
           'RATE_LIMITED' => text.rateLimited,
           _ => text.genericLinkError,
         };
+        final title = switch (state.errorCode) {
+          'INVALID_LINKING_CODE' ||
+          'LINKING_CODE_EXPIRED_OR_USED' => text.linkFailedTitle,
+          _ => null,
+        };
         final bloc = context.read<ConsentBloc>();
         if (invitationEntry) {
           return InvitationScreen(
             loading: state.loading,
             errorText: error,
+            errorTitle: title,
             onSubmit: (text) => bloc.add(InvitationSubmitted(text)),
           );
         }
@@ -68,6 +74,7 @@ class ConsentRoute extends StatelessWidget {
           loading: state.loading,
           ready: state.link != null,
           errorText: error,
+          errorTitle: title,
           onDecision: (value) => bloc.add(ConsentDecisionSubmitted(value)),
           onRetry: () => bloc.add(const ConsentRequested()),
           onSignOut: onSignOut,

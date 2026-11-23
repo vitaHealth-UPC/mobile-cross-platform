@@ -207,14 +207,18 @@ class _AdultHomeScreenState extends State<AdultHomeScreen> {
   Widget? _shortcuts(AppLocalizations text, String? nextId) {
     final voice = widget.onOpenVoice;
     final agenda = widget.onOpenAgenda;
+    // Voice confirms the next intake, so without one the tile says why it is off.
+    final voiceHint = voice == null
+        ? text.homeVoiceUnavailable
+        : nextId == null
+        ? text.homeVoiceNoIntake
+        : null;
     final tiles = [
       Tooltip(
-        message: voice == null
-            ? text.homeVoiceUnavailable
-            : text.homeVoiceSubtitle,
+        message: voiceHint ?? text.homeVoiceSubtitle,
         child: HomeShortcut(
           title: text.homeVoiceTitle,
-          subtitle: text.homeVoiceSubtitle,
+          subtitle: voiceHint ?? text.homeVoiceSubtitle,
           icon: 'assets/icons/home_mic.svg',
           color: TataColors.mint,
           onTap: voice != null && nextId != null ? () => voice(nextId) : null,

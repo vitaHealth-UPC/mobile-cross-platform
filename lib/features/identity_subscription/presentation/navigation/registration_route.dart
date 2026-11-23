@@ -27,17 +27,24 @@ class RegistrationRoute extends StatelessWidget {
             'INVALID_NAME' => text.invalidName,
             'INVALID_EMAIL' => text.invalidEmail,
             'INVALID_PASSWORD' => text.registrationPasswordError,
-            'DUPLICATE_EMAIL' => text.duplicateEmail,
+            'DUPLICATE_EMAIL' => text.regDuplicateEmailBody,
             'INVALID_VERIFICATION' => text.invalidVerification,
-            'VERIFICATION_EXPIRED' => text.verificationExpired,
+            'VERIFICATION_EXPIRED' => text.regVerificationExpiredBody,
             'NETWORK_UNAVAILABLE' => text.networkUnavailable,
             'RATE_LIMITED' => text.rateLimited,
             _ => text.genericAccessError,
+          };
+          final title = switch (state.errorCode) {
+            'DUPLICATE_EMAIL' => text.regDuplicateEmailTitle,
+            'VERIFICATION_EXPIRED' => text.regVerificationExpiredTitle,
+            _ => null,
           };
           return CaregiverRegistrationScreen(
             busy: state.busy,
             hasAccount: state.hasAccount,
             errorText: error,
+            errorTitle: title,
+            codeExpired: state.errorCode == 'VERIFICATION_EXPIRED',
             resent: state.resent,
             onRegister: (name, email, password) =>
                 bloc.add(RegistrationSubmitted(name, email, password)),

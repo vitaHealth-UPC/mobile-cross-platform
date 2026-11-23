@@ -49,15 +49,15 @@ final class FamilyMonitoringNavigation {
 
   /// Caregiver home of one followed person. The shell owns the Home/Alerts/Notes tabs; the
   /// Person and More tabs are decided by the host through [onPerson] and [onMore].
-  /// The summary is read again when [onAddMedication] or [onOpenStock] completes,
-  /// because medications or stock may have changed there.
+  /// The summary is read again when [onAddMedication], [onOpenStock] or [onMore]
+  /// completes, because medications or stock may have changed there.
   Widget caregiverHome({
     required String olderAdultId,
     required String olderAdultName,
     required VoidCallback onHistory,
     required FutureOr<void> Function() onAddMedication,
     required VoidCallback onPerson,
-    required VoidCallback onMore,
+    required FutureOr<void> Function() onMore,
     required VoidCallback onSessionInvalidated,
     FutureOr<void> Function(StockAttention stock)? onOpenStock,
   }) => _CaregiverShell(
@@ -112,7 +112,7 @@ class _CaregiverShell extends StatefulWidget {
   final VoidCallback onHistory;
   final FutureOr<void> Function() onAddMedication;
   final VoidCallback onPerson;
-  final VoidCallback onMore;
+  final FutureOr<void> Function() onMore;
   final VoidCallback onSessionInvalidated;
   final FutureOr<void> Function(StockAttention stock)? onOpenStock;
 
@@ -154,7 +154,7 @@ class _CaregiverShellState extends State<_CaregiverShell> {
       case CaregiverTab.person:
         widget.onPerson();
       case CaregiverTab.more:
-        widget.onMore();
+        _thenRefresh(widget.onMore);
       case CaregiverTab.home || CaregiverTab.alerts || CaregiverTab.notes:
         // A tab that opens is refreshed: the data may have changed meanwhile.
         if (tab != _tab) {

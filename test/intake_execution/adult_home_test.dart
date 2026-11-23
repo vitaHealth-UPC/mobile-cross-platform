@@ -6,6 +6,7 @@ import 'package:tata/features/intake_execution/application/usecases/get_next_int
 import 'package:tata/features/intake_execution/domain/entities/intake.dart';
 import 'package:tata/features/intake_execution/presentation/bloc/home/home_bloc.dart';
 import 'package:tata/features/intake_execution/presentation/navigation/adult_home_route.dart';
+import 'package:tata/features/intake_execution/presentation/widgets/home_cards.dart';
 import 'package:tata/l10n/generated/app_localizations.dart';
 import 'package:tata/shared/common/result/app_result.dart';
 import 'package:tata/shared/presentation/theme/tata_theme.dart';
@@ -54,6 +55,7 @@ void main() {
     VoidCallback? onMore,
     Future<void> Function()? onAgenda,
     Future<void> Function(String)? onDose,
+    ValueChanged<String>? onVoice,
   }) async {
     tester.view
       ..physicalSize = const Size(1179, 2649)
@@ -79,6 +81,7 @@ void main() {
             onSessionInvalidated: onInvalidated ?? () {},
             onOpenAgenda: onAgenda,
             onOpenDose: onDose,
+            onOpenVoice: onVoice,
           ),
         ),
       ),
@@ -143,6 +146,52 @@ void main() {
     await tester.scrollUntilVisible(find.text('Agenda al día'), 200);
     expect(find.text('No existen próximas tomas pendientes.'), findsOneWidget);
     expect(find.textContaining('En '), findsNothing);
+  });
+
+  testWidgets('voice is off and says why when there is no intake to confirm', (
+    tester,
+  ) async {
+    final opened = <String>[];
+    await pumpHome(
+      tester,
+      FakeIntakeReader(
+        nextResult: const AppSuccess(null),
+        agendaResult: const AppSuccess([]),
+      ),
+      onVoice: opened.add,
+    );
+    final hint = find.text('No hay una toma por confirmar ahora.');
+    expect(hint, findsOneWidget);
+    expect(find.text('Es rápido y fácil'), findsNothing);
+    final tile = find.ancestor(
+      of: find.text('Confirmar con voz'),
+      matching: find.byType(HomeShortcut),
+    );
+    expect(tester.widget<HomeShortcut>(tile).onTap, isNull);
+    await tester.ensureVisible(hint);
+    await tester.tap(hint, warnIfMissed: false);
+    expect(opened, isEmpty);
+  });
+
+  testWidgets('voice opens the next intake when there is one', (tester) async {
+    final opened = <String>[];
+    final pending = intake(
+      'next',
+      IntakeStatus.pending,
+      DateTime(2026, 11, 3, 8),
+    );
+    await pumpHome(
+      tester,
+      FakeIntakeReader(
+        nextResult: AppSuccess(pending),
+        agendaResult: AppSuccess([pending]),
+      ),
+      onVoice: opened.add,
+    );
+    expect(find.text('No hay una toma por confirmar ahora.'), findsNothing);
+    await tester.ensureVisible(find.text('Es rápido y fácil'));
+    await tester.tap(find.text('Es rápido y fácil'));
+    expect(opened, ['next']);
   });
 
   testWidgets('a pending intake does not show the agenda notice', (

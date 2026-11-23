@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/presentation/theme/tata_typography.dart';
+import '../../../../shared/presentation/widgets/status_notice.dart';
 
 /// Collects the complete invitation without requesting a caregiver's password.
 class InvitationScreen extends StatefulWidget {
@@ -10,10 +11,14 @@ class InvitationScreen extends StatefulWidget {
     required this.onSubmit,
     required this.loading,
     this.errorText,
+    this.errorTitle,
   });
   final ValueChanged<String> onSubmit;
   final bool loading;
   final String? errorText;
+
+  /// Names a refused invitation above [errorText] (Figma 563:2254).
+  final String? errorTitle;
   @override
   State<InvitationScreen> createState() => _InvitationScreenState();
 }
@@ -60,17 +65,12 @@ class _InvitationScreenState extends State<InvitationScreen> {
                         labelText: text.invitationLabel,
                       ),
                     ),
-                    if (widget.errorText != null)
+                    if (widget.errorText case final error?)
                       Padding(
                         padding: const EdgeInsets.only(top: 16),
-                        child: Semantics(
-                          liveRegion: true,
-                          child: Text(
-                            widget.errorText!,
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
-                            ),
-                          ),
+                        child: StatusNotice(
+                          title: widget.errorTitle,
+                          body: error,
                         ),
                       ),
                     const SizedBox(height: 24),

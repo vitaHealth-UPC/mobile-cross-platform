@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/presentation/theme/tata_typography.dart';
+import '../../../../shared/presentation/widgets/status_notice.dart';
 
 /// Adult decision controls based on the consent panel of Figma 563:1440.
 /// Receiving an invitation is separate from approving access to follow-up data.
@@ -14,6 +15,7 @@ class ConsentScreen extends StatelessWidget {
     required this.onRetry,
     required this.onSignOut,
     this.errorText,
+    this.errorTitle,
   });
   final bool loading;
   final bool ready;
@@ -21,6 +23,9 @@ class ConsentScreen extends StatelessWidget {
   final VoidCallback onRetry;
   final VoidCallback onSignOut;
   final String? errorText;
+
+  /// Names a refused link above [errorText] (Figma 563:2254).
+  final String? errorTitle;
 
   @override
   Widget build(BuildContext context) {
@@ -111,17 +116,9 @@ class ConsentScreen extends StatelessWidget {
                       padding: EdgeInsets.all(20),
                       child: Center(child: CircularProgressIndicator()),
                     ),
-                  if (errorText != null) ...[
+                  if (errorText case final error?) ...[
                     const SizedBox(height: 20),
-                    Semantics(
-                      liveRegion: true,
-                      child: Text(
-                        errorText!,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.error,
-                        ),
-                      ),
-                    ),
+                    StatusNotice(title: errorTitle, body: error),
                     TextButton(
                       onPressed: loading ? null : onRetry,
                       child: Text(text.checkConsent),

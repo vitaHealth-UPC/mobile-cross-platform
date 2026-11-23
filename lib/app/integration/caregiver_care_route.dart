@@ -121,95 +121,106 @@ class CaregiverCareRoute extends StatelessWidget {
     ),
   );
 
-  void _openMore(BuildContext context) {
+  /// Completes when the chosen flow closes, so the summary can be read again.
+  Future<void> _openMore(BuildContext context) async {
     final text = AppLocalizations.of(context);
-    showModalBottomSheet<void>(
+    final choice = await showModalBottomSheet<_MoreChoice>(
       context: context,
       showDragHandle: true,
-      builder: (sheet) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+      builder: (sheet) {
+        Widget option(_MoreChoice choice, IconData icon, String title) =>
             ListTile(
-              leading: const Icon(Icons.insights_outlined),
-              title: Text(text.adherenceHistoryTitle),
-              onTap: () {
-                Navigator.of(sheet).pop();
-                onOpenAdherence(context);
-              },
+              leading: Icon(icon),
+              title: Text(title),
+              onTap: () => Navigator.of(sheet).pop(choice),
+            );
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              option(
+                _MoreChoice.adherence,
+                Icons.insights_outlined,
+                text.adherenceHistoryTitle,
+              ),
+              option(
+                _MoreChoice.treatments,
+                Icons.assignment_outlined,
+                text.tmTreatmentsTitle,
+              ),
+              option(
+                _MoreChoice.medications,
+                Icons.medication_outlined,
+                text.tmMedicationsTitle,
+              ),
+              option(
+                _MoreChoice.settings,
+                Icons.settings_outlined,
+                text.pfSettings,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+    if (choice == null || !context.mounted) return;
+    switch (choice) {
+      case _MoreChoice.adherence:
+        onOpenAdherence(context);
+      case _MoreChoice.treatments:
+        await _openTreatments(context);
+      case _MoreChoice.medications:
+        await treatments.openMedications(
+          context,
+          profile.olderAdultId,
+          onSessionInvalidated,
+          onOpenInventory: _inventoryOpener(context),
+        );
+      case _MoreChoice.settings:
+        onOpenSettings(context);
+    }
+  }
+
+  Future<void> _openTreatments(BuildContext context) {
+    return treatments.openTreatments(
+      context,
+      profile.olderAdultId,
+      onSessionInvalidated,
+      personName: profile.fullName,
+      personBadgeBuilder: createPersonAdherenceBloc == null
+          ? null
+          : (invalidated) => AdherenceBadgeView(
+              createBloc: () =>
+                  createPersonAdherenceBloc!(profile.olderAdultId),
+              onSessionInvalidated: invalidated,
             ),
-            ListTile(
-              leading: const Icon(Icons.assignment_outlined),
-              title: Text(text.tmTreatmentsTitle),
-              onTap: () {
-                Navigator.of(sheet).pop();
-                treatments.openTreatments(
-                  context,
-                  profile.olderAdultId,
-                  onSessionInvalidated,
-                  personName: profile.fullName,
-                  personBadgeBuilder: createPersonAdherenceBloc == null
-                      ? null
-                      : (invalidated) => AdherenceBadgeView(
-                          createBloc: () =>
-                              createPersonAdherenceBloc!(profile.olderAdultId),
-                          onSessionInvalidated: invalidated,
-                        ),
-                  adherenceBuilder: createTreatmentAdherenceBloc == null
-                      ? null
-                      : (id, invalidated) => TreatmentAdherenceView(
-                          key: ValueKey('treatment-adherence-$id'),
-                          createBloc: () => createTreatmentAdherenceBloc!(
-                            profile.olderAdultId,
-                            id,
-                          ),
-                          onSessionInvalidated: invalidated,
-                        ),
-                  navigationBuilder: (detailContext) => CaregiverTabBar(
-                    selected: CaregiverTab.person,
-                    enabledTabs: const {CaregiverTab.home, CaregiverTab.person},
-                    onSelected: (tab) {
-                      final navigator = Navigator.of(detailContext);
-                      if (tab == CaregiverTab.home) {
-                        navigator.popUntil((route) => route.isFirst);
-                      } else if (tab == CaregiverTab.person) {
-                        final person = ModalRoute.of(context);
-                        navigator.popUntil(
-                          (route) => route == person || route.isFirst,
-                        );
-                      }
-                    },
-                  ),
-                );
-              },
+      adherenceBuilder: createTreatmentAdherenceBloc == null
+          ? null
+          : (id, invalidated) => TreatmentAdherenceView(
+              key: ValueKey('treatment-adherence-$id'),
+              createBloc: () =>
+                  createTreatmentAdherenceBloc!(profile.olderAdultId, id),
+              onSessionInvalidated: invalidated,
             ),
-            ListTile(
-              leading: const Icon(Icons.medication_outlined),
-              title: Text(text.tmMedicationsTitle),
-              onTap: () {
-                Navigator.of(sheet).pop();
-                treatments.openMedications(
-                  context,
-                  profile.olderAdultId,
-                  onSessionInvalidated,
-                  onOpenInventory: _inventoryOpener(context),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.settings_outlined),
-              title: Text(text.pfSettings),
-              onTap: () {
-                Navigator.of(sheet).pop();
-                onOpenSettings(context);
-              },
-            ),
-          ],
-        ),
+      navigationBuilder: (detailContext) => CaregiverTabBar(
+        selected: CaregiverTab.person,
+        enabledTabs: const {CaregiverTab.home, CaregiverTab.person},
+        onSelected: (tab) {
+          final navigator = Navigator.of(detailContext);
+          if (tab == CaregiverTab.home) {
+            navigator.popUntil((route) => route.isFirst);
+          } else if (tab == CaregiverTab.person) {
+            final person = ModalRoute.of(context);
+            navigator.popUntil((route) => route == person || route.isFirst);
+          }
+        },
       ),
     );
   }
 }
+
+/// Options of the caregiver's More sheet.
+enum _MoreChoice { adherence, treatments, medications, settings }
 
 /// The caregiver's own settings: notification delivery and accessibility.
 class CaregiverSettingsRoute extends StatelessWidget {

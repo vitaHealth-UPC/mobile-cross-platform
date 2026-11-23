@@ -39,8 +39,6 @@
   "invalidName": "Ingresa tu nombre, de hasta 120 caracteres.",
   "registrationPasswordHint": "Mínimo 8 caracteres",
   "registrationPasswordError": "Usa al menos 8 caracteres y como máximo 72 bytes.",
-  "duplicateEmail": "Este correo ya está registrado. Inicia sesión con tu cuenta.",
-  "verificationExpired": "El código venció. Solicita uno nuevo.",
   "invalidVerification": "Ingresa un código válido de 6 dígitos.",
   "backToSignIn": "Volver al acceso",
   "recoveryTitle": "Recupera tu acceso",
@@ -211,6 +209,7 @@
   "homeProgressEncouragement": "Cada toma cuenta",
   "homeVoiceTitle": "Confirmar con voz",
   "homeVoiceSubtitle": "Es rápido y fácil",
+  "homeVoiceNoIntake": "No hay una toma por confirmar ahora.",
   "homeAgendaTitle": "Ver todas mis tomas",
   "homeAgendaSubtitle": "Horario completo",
   "homeTipTitle": "Consejo del día",
@@ -1337,5 +1336,11 @@
   "subDescFamily": "Alertas, seguimiento e insights para la familia.",
   "subErrPlan": "Ese plan ya no está disponible. Actualiza la lista.",
   "subErrInvalidResponse": "El servicio devolvió datos inesperados.",
-  "subErrGeneric": "No pudimos completar la solicitud. Inténtalo de nuevo."
+  "subErrGeneric": "No pudimos completar la solicitud. Inténtalo de nuevo.",
+  "regDuplicateEmailTitle": "Correo ya registrado",
+  "regDuplicateEmailBody": "Utiliza otro correo o inicia sesión con la cuenta existente.",
+  "regVerificationExpiredTitle": "Verificación vencida",
+  "regVerificationExpiredBody": "Solicita un nuevo código para habilitar la cuenta.",
+  "regRequestNewCode": "Solicitar nuevo código",
+  "linkFailedTitle": "No se pudo vincular"
 }
