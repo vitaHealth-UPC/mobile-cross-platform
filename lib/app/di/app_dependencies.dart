@@ -60,6 +60,7 @@ import '../../features/identity_subscription/application/usecases/sign_in_with_p
 import '../../features/identity_subscription/application/usecases/sign_out.dart';
 import '../../features/identity_subscription/application/usecases/subscription_usecases.dart';
 import '../../features/identity_subscription/application/usecases/verify_email.dart';
+import '../../features/identity_subscription/infrastructure/launcher/url_destination_launcher.dart';
 import '../../features/identity_subscription/infrastructure/local/secure_remembered_adult_store.dart';
 import '../../features/identity_subscription/infrastructure/remote/password_recovery_api.dart';
 import '../../features/identity_subscription/infrastructure/remote/pin_api.dart';
@@ -69,10 +70,12 @@ import '../../features/identity_subscription/infrastructure/remote/subscription_
 import '../../features/identity_subscription/infrastructure/repositories/remote_account_registration.dart';
 import '../../features/identity_subscription/infrastructure/repositories/remote_password_recovery.dart';
 import '../../features/identity_subscription/infrastructure/repositories/remote_pin_access.dart';
+import '../../features/identity_subscription/infrastructure/repositories/remote_public_plan_catalog.dart';
 import '../../features/identity_subscription/infrastructure/repositories/remote_session_repository.dart';
 import '../../features/identity_subscription/infrastructure/repositories/remote_subscription_repository.dart';
 import '../../features/identity_subscription/presentation/bloc/access/access_bloc.dart';
 import '../../features/identity_subscription/presentation/bloc/pin/pin_bloc.dart';
+import '../../features/identity_subscription/presentation/bloc/plan_choice/plan_choice_cubit.dart';
 import '../../features/identity_subscription/presentation/bloc/recovery/recovery_bloc.dart';
 import '../../features/identity_subscription/presentation/bloc/registration/registration_bloc.dart';
 import '../../features/identity_subscription/presentation/bloc/subscription/subscription_bloc.dart';
@@ -160,6 +163,7 @@ final class AppDependencies {
     this._sessionStore,
     this._accessibilityStore,
     this._languageStore,
+    this._contactUri,
   );
 
   /// Composes real HTTP and secure storage using environment configuration.
@@ -234,6 +238,7 @@ final class AppDependencies {
       store,
       SharedPreferencesAccessibilityStore(),
       SharedPreferencesLanguageStore(),
+      config.contactUri,
     );
   }
 
@@ -261,6 +266,30 @@ final class AppDependencies {
   final SessionStore _sessionStore;
   final AccessibilityLocalStore _accessibilityStore;
   final ApplicationLanguageStore _languageStore;
+
+  final Uri? _contactUri;
+
+  /// Where a visitor reaches the team; null shows the contact as unavailable.
+  Uri? get contactUri => _contactUri;
+
+  /// Opens the contact destination outside the app.
+  Future<bool> openContact(Uri uri) => openExternalDestination(uri);
+
+  /// Public plans a visitor compares before registering (US-48, US-49).
+  PlanChoiceCubit createPlanChoiceCubit() => PlanChoiceCubit(
+    GetPublicPlans(RemotePublicPlanCatalog(SubscriptionApi(_client))),
+  );
+
+  /// Activates the plan chosen before registration for the new account.
+  Future<bool> applyChosenPlan(String planCode) async {
+    final result = await ApplyChosenPlan(
+      RemoteSubscriptionRepository(
+        api: SubscriptionApi(_client),
+        store: _sessionStore,
+      ),
+    ).call(planCode);
+    return result is AppSuccess;
+  }
 
   /// Plan and subscription of the signed-in caregiver's account (US-44, US-45).
   SubscriptionBloc createSubscriptionBloc() {

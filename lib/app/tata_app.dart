@@ -8,6 +8,7 @@ import '../features/identity_subscription/presentation/bloc/access/access_bloc.d
 import '../features/identity_subscription/presentation/bloc/access/access_event.dart';
 import '../features/identity_subscription/presentation/bloc/access/access_state.dart';
 import '../features/identity_subscription/presentation/bloc/pin/pin_bloc.dart';
+import '../features/identity_subscription/presentation/bloc/plan_choice/plan_choice_cubit.dart';
 import '../features/identity_subscription/presentation/bloc/recovery/recovery_bloc.dart';
 import '../features/identity_subscription/presentation/bloc/registration/registration_bloc.dart';
 import '../features/identity_subscription/presentation/navigation/access_route.dart';
@@ -29,6 +30,10 @@ class TataApp extends StatelessWidget {
     this.loadRememberedAdult,
     this.createPinAccessBloc,
     this.createAppearanceCubit,
+    this.createPlanChoiceCubit,
+    this.contactUri,
+    this.openContact,
+    this.applyChosenPlan,
   });
 
   final AccessBloc Function() createAccessBloc;
@@ -42,6 +47,10 @@ class TataApp extends StatelessWidget {
   final Widget Function(BuildContext, VoidCallback, VoidCallback)? adultBuilder;
   final Future<RememberedAdult?> Function()? loadRememberedAdult;
   final PinBloc Function(String olderAdultId)? createPinAccessBloc;
+  final PlanChoiceCubit Function()? createPlanChoiceCubit;
+  final Uri? contactUri;
+  final Future<bool> Function(Uri uri)? openContact;
+  final Future<bool> Function(String planCode)? applyChosenPlan;
 
   /// Optional app-wide appearance (accessibility and language of the signed-in owner).
   /// Without it the application keeps the default light Spanish experience.
@@ -76,6 +85,10 @@ class TataApp extends StatelessWidget {
         adultBuilder: adultBuilder,
         loadRememberedAdult: loadRememberedAdult,
         createPinAccessBloc: createPinAccessBloc,
+        createPlanChoiceCubit: createPlanChoiceCubit,
+        contactUri: contactUri,
+        openContact: openContact,
+        applyChosenPlan: applyChosenPlan,
       ),
     );
   }
