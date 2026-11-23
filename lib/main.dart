@@ -9,15 +9,45 @@ import 'app/tata_app.dart';
 import 'features/accessibility_preferences/presentation/navigation/preferences_navigation.dart';
 import 'features/care_link/presentation/navigation/caregiver_setup_route.dart';
 import 'features/care_link/presentation/navigation/consent_route.dart';
+import 'features/family_monitoring/presentation/navigation/family_monitoring_navigation.dart';
 import 'features/identity_subscription/presentation/bloc/access/access_bloc.dart';
 import 'features/treatment_management/presentation/navigation/treatment_navigation.dart';
 
 /// Initializes Flutter platform bindings and composes production dependencies.
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final dependencies = AppDependencies.production();
   final treatments = TreatmentNavigation(dependencies.treatmentFactories);
   final preferences = PreferencesNavigation(dependencies.preferencesFactories);
+  final monitoring = FamilyMonitoringNavigation(
+    dependencies.familyMonitoringFactories,
+  );
+  final push = dependencies.omissionPush(
+    installationId: await dependencies.readPushInstallationId(),
+  );
+
+  void openSettings(
+    BuildContext settingsContext,
+    VoidCallback onSessionInvalidated,
+  ) {
+    final caregiverId = settingsContext
+        .read<AccessBloc>()
+        .state
+        .session
+        ?.owner
+        .id;
+    if (caregiverId == null) return;
+    Navigator.of(settingsContext).push<void>(
+      MaterialPageRoute(
+        builder: (_) => CaregiverSettingsRoute(
+          caregiverId: caregiverId,
+          preferences: preferences,
+          onSessionInvalidated: onSessionInvalidated,
+        ),
+      ),
+    );
+  }
+
   runApp(
     TataApp(
       createAccessBloc: dependencies.createAccessBloc,
@@ -31,45 +61,44 @@ void main() {
             createBloc: dependencies.createProfilesBloc,
             onSignOut: signOut,
             onSessionInvalidated: invalidated,
-            onOpenProfile: (link) => Navigator.of(context).push<void>(
-              MaterialPageRoute(
-                builder: (_) => CaregiverCareRoute(
-                  profile: link,
-                  treatments: treatments,
-                  createPersonAdherenceBloc:
-                      dependencies.createAdherenceWeekBloc,
-                  createTreatmentAdherenceBloc:
-                      dependencies.createTreatmentAdherenceBloc,
-                  onOpenAdherence: (careContext) => openAdherenceFlow(
-                    careContext,
-                    link: link,
-                    createHistoryBloc: dependencies.createAdherenceHistoryBloc,
-                    createRecommendationsBloc:
-                        dependencies.createAdherenceRecommendationsBloc,
-                    onSessionInvalidated: invalidated,
-                  ),
-                  onSessionInvalidated: invalidated,
-                ),
-              ),
-            ),
-            onOpenSettings: (settingsContext) {
-              final caregiverId = settingsContext
+            onOpenProfile: (link) {
+              final caregiverId = context
                   .read<AccessBloc>()
                   .state
                   .session
                   ?.owner
                   .id;
               if (caregiverId == null) return;
-              Navigator.of(settingsContext).push<void>(
+              Navigator.of(context).push<void>(
                 MaterialPageRoute(
-                  builder: (_) => CaregiverSettingsRoute(
+                  builder: (_) => CaregiverCareRoute(
+                    profile: link,
                     caregiverId: caregiverId,
-                    preferences: preferences,
+                    treatments: treatments,
+                    monitoring: monitoring,
+                    push: push,
+                    createPersonAdherenceBloc:
+                        dependencies.createAdherenceWeekBloc,
+                    createTreatmentAdherenceBloc:
+                        dependencies.createTreatmentAdherenceBloc,
+                    onOpenAdherence: (careContext) => openAdherenceFlow(
+                      careContext,
+                      link: link,
+                      createHistoryBloc:
+                          dependencies.createAdherenceHistoryBloc,
+                      createRecommendationsBloc:
+                          dependencies.createAdherenceRecommendationsBloc,
+                      onSessionInvalidated: invalidated,
+                    ),
+                    onOpenSettings: (careContext) =>
+                        openSettings(careContext, invalidated),
                     onSessionInvalidated: invalidated,
                   ),
                 ),
               );
             },
+            onOpenSettings: (settingsContext) =>
+                openSettings(settingsContext, invalidated),
           ),
       consentBuilder: (_, signOut, changed) => ConsentRoute(
         createBloc: dependencies.createConsentBloc,
@@ -96,6 +125,8 @@ void main() {
           onSessionChanged: changed,
           treatments: treatments,
           preferences: preferences,
+          monitoring: monitoring,
+          push: push,
         );
       },
       invitationBuilder: (context) => ConsentRoute(
