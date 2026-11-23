@@ -45,6 +45,7 @@ Future<void> main() async {
           caregiverId: caregiverId,
           preferences: preferences,
           onSessionInvalidated: onSessionInvalidated,
+          createSubscriptionBloc: dependencies.createSubscriptionBloc,
         ),
       ),
     );

@@ -143,6 +143,108 @@ class NextIntakeCard extends StatelessWidget {
   }
 }
 
+/// Figma 563:3178 hero when nothing is pending: same card as the next dose,
+/// without an invented time or medication.
+class NoNextIntakeCard extends StatelessWidget {
+  const NoNextIntakeCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final text = AppLocalizations.of(context);
+    final largeText = MediaQuery.textScalerOf(context).scale(14) > 18;
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: _cardShadow,
+        gradient: const LinearGradient(
+          colors: [Color(0xFFEEE8FF), Color(0xFFE5DDF8)],
+        ),
+      ),
+      padding: const EdgeInsets.fromLTRB(18, 18, 8, 18),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  text.homeEmptyTitle,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: TataColors.primary,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  text.homeEmptyDescription,
+                  style: const TextStyle(
+                    fontSize: 19,
+                    height: 1.25,
+                    fontWeight: FontWeight.w600,
+                    color: TataColors.ink,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (!largeText)
+            ExcludeSemantics(
+              child: Opacity(
+                opacity: 0.7,
+                child: Image.asset(
+                  'assets/illustrations/home_tablet.png',
+                  width: 112,
+                  height: 112,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Figma 563:3178 notice at the end of the home when no dose is pending.
+class AgendaClearNotice extends StatelessWidget {
+  const AgendaClearNotice({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final text = AppLocalizations.of(context);
+    return Semantics(
+      container: true,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+        decoration: BoxDecoration(
+          color: TataColors.mint,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              text.homeAgendaClearTitle,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF3A7B56),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              text.homeAgendaClearBody,
+              style: const TextStyle(fontSize: 12, color: TataColors.muted),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// Plain card for loading, empty and error states of the next intake.
 class HomeMessageCard extends StatelessWidget {
   const HomeMessageCard({
