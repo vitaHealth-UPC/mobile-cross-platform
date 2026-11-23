@@ -305,5 +305,228 @@
   "outcomeOmittedBody": "El periodo permitido terminó sin confirmación.",
   "outcomeProgressTitle": "Tu progreso se ha actualizado",
   "outcomeProgressBody": "La toma queda registrada en tu historial.",
-  "outcomeBackHome": "Volver al inicio"
+  "outcomeBackHome": "Volver al inicio",
+  "caregiverTabBarSemantics": "Navegación principal",
+  "caregiverTabHome": "Inicio",
+  "caregiverTabAlerts": "Alertas",
+  "caregiverTabNotes": "Notas",
+  "caregiverTabPerson": "Persona",
+  "caregiverTabMore": "Más",
+  "adherenceHistoryTitle": "Historial e insights",
+  "adherencePeriodLabel": "Últimos {days} días",
+  "@adherencePeriodLabel": {
+    "description": "Rolling period selected in the adherence history.",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "adherencePeriodSelectorHint": "Cambiar período",
+  "adherenceMetricAdherence": "Adherencia",
+  "adherenceMetricOnTime": "Tomas a tiempo",
+  "adherenceMetricLateOmitted": "Tardías, omitidas",
+  "adherenceChangeVsPrevious": "{change} vs. {days} días previos",
+  "@adherenceChangeVsPrevious": {
+    "description": "Change against the previous period; [change] is an arrow with its percentage.",
+    "placeholders": {
+      "change": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "adherenceLateOmittedCaption": "últ. {days} días",
+  "@adherenceLateOmittedCaption": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "adherenceTrendTitle": "Evolución de adherencia",
+  "adherenceTrendInfo": "Porcentaje de tomas confirmadas en cada fecha.",
+  "adherenceTrendSemantics": "Evolución de adherencia: {percent}% el {date}.",
+  "@adherenceTrendSemantics": {
+    "description": "Screen reader summary of the trend chart: its latest point.",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "adherencePatternTitle": "Patrón detectado",
+  "adherencePatternExcellent": "Excelente progreso",
+  "adherencePatternAttention": "Atención a los horarios",
+  "adherenceBandMorning": "mañana",
+  "adherenceBandAfternoon": "tarde",
+  "adherenceBandNight": "noche",
+  "adherencePatternSummary": "{omitted, plural, one{1 omisión} other{{omitted} omisiones}} y {late, plural, one{1 toma tardía} other{{late} tomas tardías}} se concentran en la {band}.",
+  "@adherencePatternSummary": {
+    "placeholders": {
+      "omitted": {
+        "type": "int"
+      },
+      "late": {
+        "type": "int"
+      },
+      "band": {
+        "type": "String"
+      }
+    }
+  },
+  "adherenceSeeRecommendations": "Ver recomendaciones",
+  "adherenceRecentTitle": "Tomas recientes",
+  "adherenceOutcomeOnTime": "a tiempo",
+  "adherenceOutcomeLate": "tarde",
+  "adherenceOutcomeLateMinutes": "{minutes} min tarde",
+  "@adherenceOutcomeLateMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "adherenceOutcomeOmitted": "omitida",
+  "adherenceDayToday": "Hoy",
+  "adherenceDayYesterday": "Ayer",
+  "adherenceRecentWhen": "{day}, {time}",
+  "@adherenceRecentWhen": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "adherenceRecentSemantics": "{when}, {medication}, {outcome}",
+  "@adherenceRecentSemantics": {
+    "description": "Screen reader summary of one recent intake.",
+    "placeholders": {
+      "when": {
+        "type": "String"
+      },
+      "medication": {
+        "type": "String"
+      },
+      "outcome": {
+        "type": "String"
+      }
+    }
+  },
+  "adherenceInsufficientDataTitle": "Sin datos suficientes",
+  "adherenceInsufficientDataBody": "No existen tomas en este período para calcular adherencia.",
+  "adherenceNoResultsTitle": "Sin resultados",
+  "adherenceNoResultsBody": "No existen tomas registradas dentro del período seleccionado.",
+  "adherencePeriodUpdatedTitle": "Período actualizado",
+  "adherencePeriodUpdatedBody": "Los indicadores se calculan solo con las tomas del período seleccionado.",
+  "adherenceLoading": "Consultando tu historial…",
+  "adherenceErrorTitle": "No pudimos cargar el historial",
+  "adherenceErrorBody": "Inténtalo nuevamente en unos minutos.",
+  "adherenceRetry": "Reintentar",
+  "recommendationsTitle": "Recomendaciones",
+  "recommendationsSubtitle": "Basadas en patrones de los últimos {days} días.",
+  "@recommendationsSubtitle": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "recommendationsPatternOmission": "Patrón de omisiones por la {band}",
+  "@recommendationsPatternOmission": {
+    "placeholders": {
+      "band": {
+        "type": "String"
+      }
+    }
+  },
+  "recommendationsPatternLateness": "Patrón de tardanzas por la {band}",
+  "@recommendationsPatternLateness": {
+    "placeholders": {
+      "band": {
+        "type": "String"
+      }
+    }
+  },
+  "recommendationsPatternSummary": "{omitted, plural, one{1 omisión} other{{omitted} omisiones}} y {late, plural, one{1 toma tardía} other{{late} tomas tardías}} se concentran entre {range}",
+  "@recommendationsPatternSummary": {
+    "description": "Sentence without its final period: the hour range may already end with one.",
+    "placeholders": {
+      "omitted": {
+        "type": "int"
+      },
+      "late": {
+        "type": "int"
+      },
+      "range": {
+        "type": "String"
+      }
+    }
+  },
+  "adherenceAm": "a. m.",
+  "adherencePm": "p. m.",
+  "recommendationsHourRangeShared": "{from} y {to} {suffix}",
+  "@recommendationsHourRangeShared": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      },
+      "suffix": {
+        "type": "String"
+      }
+    }
+  },
+  "recommendationsHourRangeSplit": "{from} {fromSuffix} y {to} {toSuffix}",
+  "@recommendationsHourRangeSplit": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "fromSuffix": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      },
+      "toSuffix": {
+        "type": "String"
+      }
+    }
+  },
+  "recommendationsConcentration": "Concentración por horario",
+  "recommendationsHeatmapSemantics": "Concentración de tomas tardías u omitidas por franja horaria y día de la semana.",
+  "recommendationAdjustTitle": "Ajusta el recordatorio",
+  "recommendationAdjustBody": "Prueba avisar 15 minutos antes de la toma.",
+  "recommendationReviewTitle": "Revisa el horario",
+  "recommendationReviewBody": "Elige una hora asociada a una rutina estable.",
+  "recommendationFollowUpTitle": "Acompaña durante una semana",
+  "recommendationFollowUpBody": "Comprueba si el nuevo horario reduce retrasos.",
+  "recommendationItemTitle": "{index}. {title}",
+  "@recommendationItemTitle": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "recommendationsInsufficientTitle": "Evidencia insuficiente",
+  "recommendationsInsufficientBody": "Todavía no hay datos suficientes para presentar una recomendación concluyente.",
+  "recommendationsBack": "Volver a historial",
+  "recommendationsApply": "Aplicar ajustes",
+  "recommendationsLoading": "Consultando tus recomendaciones…",
+  "recommendationsErrorTitle": "No pudimos cargar las recomendaciones"
 }
