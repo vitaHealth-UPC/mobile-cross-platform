@@ -42,17 +42,19 @@ class AdherenceHistoryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final text = AppLocalizations.of(context);
-    // Figma text has no letter spacing; Material adds 0.25 to body text.
-    const tight = TextStyle(letterSpacing: 0);
+    // Figma text has no letter spacing and its natural line height (about
+    // 1.2); Material adds 0.25 of spacing and a 1.43 line height to body text.
+    const tight = TextStyle(letterSpacing: 0, height: 1.2);
     return Scaffold(
       backgroundColor: TataColors.background,
+      // The tab bar floats over the content, as in Figma: the body runs
+      // underneath it and keeps its own bottom padding to stay reachable.
+      extendBody: true,
       bottomNavigationBar: DefaultTextStyle.merge(
         style: tight,
-        child: SafeArea(
-          child: CaregiverTabBar(
-            selected: CaregiverTab.home,
-            onSelected: onTabSelected,
-          ),
+        child: CaregiverTabBar(
+          selected: CaregiverTab.home,
+          onSelected: onTabSelected,
         ),
       ),
       body: DefaultTextStyle.merge(
@@ -61,24 +63,33 @@ class AdherenceHistoryScreen extends StatelessWidget {
           children: [
             const _BackgroundGlow(),
             SafeArea(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(22, 16, 22, 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _Header(
-                      period: state.period,
-                      onPeriodSelected: onPeriodSelected,
-                    ),
-                    const SizedBox(height: 14),
-                    _Body(
-                      state: state,
-                      text: text,
-                      now: clock(),
-                      onOpenRecommendations: onOpenRecommendations,
-                      onRetry: onRetry,
-                    ),
-                  ],
+              bottom: false,
+              child: Builder(
+                // Under extendBody the padding here includes the tab bar.
+                builder: (context) => SingleChildScrollView(
+                  padding: EdgeInsets.fromLTRB(
+                    22,
+                    16,
+                    22,
+                    16 + MediaQuery.paddingOf(context).bottom,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _Header(
+                        period: state.period,
+                        onPeriodSelected: onPeriodSelected,
+                      ),
+                      const SizedBox(height: 14),
+                      _Body(
+                        state: state,
+                        text: text,
+                        now: clock(),
+                        onOpenRecommendations: onOpenRecommendations,
+                        onRetry: onRetry,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

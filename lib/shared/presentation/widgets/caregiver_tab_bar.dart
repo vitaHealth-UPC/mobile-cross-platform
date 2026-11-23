@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -56,7 +58,15 @@ class CaregiverTabBar extends StatelessWidget {
       label: text.caregiverTabBarSemantics,
       child: Container(
         height: 68,
-        margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+        // Figma keeps the bar 16 px above the frame bottom, over the home
+        // indicator area; on gesture navigation the system inset is used when
+        // it is larger, so the bar is never covered.
+        margin: EdgeInsets.fromLTRB(
+          14,
+          0,
+          14,
+          math.max(16, MediaQuery.paddingOf(context).bottom),
+        ),
         decoration: BoxDecoration(
           color: const Color(0xF7FFFFFF),
           borderRadius: BorderRadius.circular(28),
@@ -105,6 +115,8 @@ class _TabItem extends StatelessWidget {
     button: true,
     selected: active,
     label: label,
+    // The inner ink well is excluded, so the tap action is declared here.
+    onTap: onTap,
     excludeSemantics: true,
     child: InkWell(
       borderRadius: BorderRadius.circular(28),

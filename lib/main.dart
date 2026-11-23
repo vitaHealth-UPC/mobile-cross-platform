@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'app/di/app_dependencies.dart';
 import 'app/integration/adult_entry_route.dart';
+import 'app/integration/caregiver_adherence_entry.dart';
 import 'app/tata_app.dart';
 import 'features/care_link/presentation/navigation/caregiver_setup_route.dart';
 import 'features/care_link/presentation/navigation/consent_route.dart';
@@ -19,11 +20,20 @@ void main() {
       createRecoveryBloc: dependencies.createRecoveryBloc,
       loadRememberedAdult: dependencies.readRememberedAdult,
       createPinAccessBloc: dependencies.createPinAccessBloc,
-      authenticatedBuilder: (_, signOut, invalidated) => CaregiverSetupRoute(
-        createBloc: dependencies.createProfilesBloc,
-        onSignOut: signOut,
-        onSessionInvalidated: invalidated,
-      ),
+      authenticatedBuilder: (context, signOut, invalidated) =>
+          CaregiverSetupRoute(
+            createBloc: dependencies.createProfilesBloc,
+            onSignOut: signOut,
+            onSessionInvalidated: invalidated,
+            onOpenProfile: (link) => openAdherenceFlow(
+              context,
+              link: link,
+              createHistoryBloc: dependencies.createAdherenceHistoryBloc,
+              createRecommendationsBloc:
+                  dependencies.createAdherenceRecommendationsBloc,
+              onSessionInvalidated: invalidated,
+            ),
+          ),
       consentBuilder: (_, signOut, changed) => ConsentRoute(
         createBloc: dependencies.createConsentBloc,
         onSessionChanged: changed,
