@@ -1,0 +1,578 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:intl/intl.dart';
+
+import '../../../../l10n/generated/app_localizations.dart';
+import '../../../../shared/presentation/theme/tata_colors.dart';
+import '../../../../shared/presentation/widgets/status_notice.dart';
+import '../../application/policies/intake_reminder_policy.dart';
+import '../../application/readmodels/daily_progress.dart';
+import '../../domain/entities/intake.dart';
+
+const _cardShadow = [
+  BoxShadow(color: Color(0x12173B70), blurRadius: 16, offset: Offset(0, 6)),
+];
+
+/// Figma 563:58 next-dose card: local time, medication, dose and time remaining.
+class NextIntakeCard extends StatelessWidget {
+  const NextIntakeCard({
+    super.key,
+    required this.intake,
+    required this.now,
+    this.onTap,
+  });
+  final Intake intake;
+  final DateTime now;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = AppLocalizations.of(context);
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    final time = DateFormat(
+      'h:mm a',
+      locale,
+    ).format(intake.scheduledAt.toLocal());
+    final largeText = MediaQuery.textScalerOf(context).scale(14) > 18;
+    final details = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          text.homeNextDose,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: TataColors.primary,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          time,
+          style: const TextStyle(
+            fontSize: 31,
+            height: 1.1,
+            fontWeight: FontWeight.w700,
+            color: TataColors.ink,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          intake.medicationName,
+          style: const TextStyle(
+            fontSize: 17,
+            height: 1.2,
+            fontWeight: FontWeight.w600,
+            color: TataColors.ink,
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          intake.dose,
+          style: const TextStyle(fontSize: 13, color: TataColors.muted),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(13),
+          ),
+          child: Text(
+            _remaining(text),
+            style: const TextStyle(fontSize: 12, color: Color(0xFF5961B2)),
+          ),
+        ),
+      ],
+    );
+    final tablet = ExcludeSemantics(
+      child: SizedBox.square(
+        dimension: largeText ? 112 : 132,
+        child: OverflowBox(
+          maxWidth: 176,
+          maxHeight: 176,
+          child: Image.asset(
+            'assets/illustrations/home_tablet.png',
+            width: 176,
+            height: 176,
+          ),
+        ),
+      ),
+    );
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: _cardShadow,
+      ),
+      child: Material(
+        borderRadius: BorderRadius.circular(20),
+        clipBehavior: Clip.antiAlias,
+        child: Ink(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFFEEE8FF), Color(0xFFE5DDF8)],
+            ),
+          ),
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(18, 18, 8, 10),
+              child: largeText
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        details,
+                        Align(alignment: Alignment.centerRight, child: tablet),
+                      ],
+                    )
+                  : Row(
+                      children: [
+                        Expanded(child: details),
+                        tablet,
+                      ],
+                    ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _remaining(AppLocalizations text) {
+    final minutes = (intake.scheduledAt.difference(now).inSeconds / 60).ceil();
+    if (minutes <= 0) return text.homeDueNow;
+    if (minutes < 60) return text.homeInMinutes(minutes);
+    return text.homeInHours(minutes ~/ 60);
+  }
+}
+
+/// Figma 563:3178 hero when nothing is pending: same card as the next dose,
+/// without an invented time or medication.
+class NoNextIntakeCard extends StatelessWidget {
+  const NoNextIntakeCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final text = AppLocalizations.of(context);
+    final largeText = MediaQuery.textScalerOf(context).scale(14) > 18;
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: _cardShadow,
+        gradient: const LinearGradient(
+          colors: [Color(0xFFEEE8FF), Color(0xFFE5DDF8)],
+        ),
+      ),
+      padding: const EdgeInsets.fromLTRB(18, 18, 8, 18),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  text.homeEmptyTitle,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: TataColors.primary,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  text.homeEmptyDescription,
+                  style: const TextStyle(
+                    fontSize: 19,
+                    height: 1.25,
+                    fontWeight: FontWeight.w600,
+                    color: TataColors.ink,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (!largeText)
+            ExcludeSemantics(
+              child: Opacity(
+                opacity: 0.7,
+                child: Image.asset(
+                  'assets/illustrations/home_tablet.png',
+                  width: 112,
+                  height: 112,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Figma 563:3178 notice at the end of the home when no dose is pending.
+class AgendaClearNotice extends StatelessWidget {
+  const AgendaClearNotice({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final text = AppLocalizations.of(context);
+    return Semantics(
+      container: true,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+        decoration: BoxDecoration(
+          color: TataColors.mint,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              text.homeAgendaClearTitle,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF3A7B56),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              text.homeAgendaClearBody,
+              style: const TextStyle(fontSize: 12, color: TataColors.muted),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Plain card for loading, empty and error states of the next intake.
+class HomeMessageCard extends StatelessWidget {
+  const HomeMessageCard({
+    super.key,
+    required this.title,
+    this.body,
+    this.action,
+    this.onAction,
+  });
+
+  final String title;
+  final String? body;
+  final String? action;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: _cardShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: TataColors.ink,
+            ),
+          ),
+          if (body case final message?) ...[
+            const SizedBox(height: 6),
+            Text(
+              message,
+              style: const TextStyle(fontSize: 13, color: TataColors.muted),
+            ),
+          ],
+          if ((action, onAction) case (final label?, final retry?)) ...[
+            const SizedBox(height: 12),
+            ElevatedButton(onPressed: retry, child: Text(label)),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Figma 563:58 progress card; null progress means today's agenda is unavailable.
+class DailyProgressCard extends StatelessWidget {
+  const DailyProgressCard({super.key, required this.progress, this.onOpen});
+
+  final DailyProgress? progress;
+  final VoidCallback? onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = AppLocalizations.of(context);
+    final value = progress;
+    final message = switch (value) {
+      null => text.homeProgressUnavailable,
+      DailyProgress(total: 0) => text.homeProgressEmpty,
+      DailyProgress(:final taken, :final total) when taken == total =>
+        text.homeProgressDone,
+      DailyProgress(taken: > 0) => text.homeProgressInProgress,
+      _ => text.homeProgressEncouragement,
+    };
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(18),
+      shadowColor: const Color(0x33173B70),
+      elevation: 3,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onOpen,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                text.homeProgressTitle,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: TataColors.ink,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  SizedBox.square(
+                    dimension: 48,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Positioned.fill(
+                          child: CircularProgressIndicator(
+                            value: value?.ratio ?? 0,
+                            strokeWidth: 5,
+                            color: const Color(0xFF7D6BE5),
+                            backgroundColor: TataColors.lavender,
+                          ),
+                        ),
+                        Text(
+                          value == null
+                              ? '—'
+                              : text.homeProgressValue(
+                                  value.taken,
+                                  value.total,
+                                ),
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: TataColors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 20),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          text.homeCompleted,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: TataColors.muted,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          message,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: TataColors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (onOpen != null)
+                    const Icon(Icons.chevron_right, color: TataColors.primary),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Figma 563:58 shortcut tile for voice confirmation or the full agenda.
+/// Without [onTap] the tile is drawn faded and announced as disabled.
+class HomeShortcut extends StatelessWidget {
+  const HomeShortcut({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final String icon;
+  final Color color;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onTap != null;
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      child: Opacity(opacity: enabled ? 1 : 0.55, child: _tile(enabled)),
+    );
+  }
+
+  Widget _tile(bool enabled) {
+    return Material(
+      color: color,
+      borderRadius: BorderRadius.circular(18),
+      shadowColor: const Color(0x33173B70),
+      elevation: enabled ? 2 : 0,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 12, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 19,
+                        height: 1.2,
+                        fontWeight: FontWeight.w700,
+                        color: TataColors.ink,
+                      ),
+                    ),
+                  ),
+                  SvgPicture.asset(icon, width: 28, height: 28),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: const TextStyle(fontSize: 12, color: TataColors.muted),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Dismissible daily tip from Figma 563:58.
+class DailyTipCard extends StatelessWidget {
+  const DailyTipCard({super.key, required this.onDismiss});
+
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = AppLocalizations.of(context);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 14, 6, 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFFF4E2), Color(0xFFFBE9CD)],
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.wb_sunny_outlined, color: Color(0xFFC48C29)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  text.homeTipTitle,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFFC48C29),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  text.homeTipDescription,
+                  style: const TextStyle(fontSize: 14, color: TataColors.ink),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: onDismiss,
+            tooltip: text.homeDismissTip,
+            icon: const Icon(Icons.close, size: 18, color: TataColors.muted),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Figma 563:2619 and 563:3682: a dose whose time has come is still pending.
+/// After [reinforceAfter] the same dose is announced as a second reminder.
+class DueIntakeReminder extends StatelessWidget {
+  const DueIntakeReminder({
+    super.key,
+    required this.intake,
+    required this.now,
+    this.onTap,
+  });
+
+  /// Same moment as the device notification of the second reminder.
+  static const reinforceAfter = IntakeReminderPolicy.reinforceAfter;
+
+  final Intake intake;
+  final DateTime now;
+
+  /// Opens the dose, where it can be confirmed.
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = AppLocalizations.of(context);
+    final reinforced =
+        now.toUtc().difference(intake.scheduledAt) >= reinforceAfter;
+    final notice = StatusNotice(
+      tone: NoticeTone.warning,
+      title: reinforced ? text.homeReinforcedTitle : text.homeDueTitle,
+      body: reinforced
+          ? text.homeReinforcedBody
+          : text.homeDueBody(intake.medicationName),
+    );
+    final open = onTap;
+    if (open == null) return notice;
+    return Semantics(
+      button: true,
+      child: InkWell(
+        onTap: open,
+        borderRadius: BorderRadius.circular(16),
+        child: notice,
+      ),
+    );
+  }
+}

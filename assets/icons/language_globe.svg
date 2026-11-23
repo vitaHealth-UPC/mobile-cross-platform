@@ -1,0 +1,13 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Language / Globe">
+<circle id="Ellipse" cx="14" cy="14" r="9.25" stroke-width="1.5" stroke="#213875"/>
+<mask id="stroke0_0_55" fill="white">
+<path d="M18.5 14C18.5 19.5228 16.4853 24 14 24C11.5147 24 9.5 19.5228 9.5 14C9.5 8.47715 11.5147 4 14 4C16.4853 4 18.5 8.47715 18.5 14Z"/>
+</mask>
+<ellipse id="Ellipse_2" cx="14" cy="14" rx="4.5" ry="10" stroke-width="2.2" stroke="#213875" mask="url(#stroke0_0_55)"/>
+<mask id="stroke1_0_55" fill="white">
+<path d="M14 19C8.47715 19 4 16.9853 4 14.5C4 12.0147 8.47715 10 14 10C19.5228 10 24 12.0147 24 14.5C24 16.9853 19.5228 19 14 19Z"/>
+</mask>
+<ellipse id="Ellipse_3" cx="14" cy="14.5" rx="10" ry="4.5" stroke-width="2.2" stroke="#213875" mask="url(#stroke1_0_55)"/>
+</g>
+</svg>

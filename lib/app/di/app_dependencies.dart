@@ -1,0 +1,774 @@
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
+
+import '../../features/accessibility_preferences/application/ports/accessibility_local_store.dart';
+import '../../features/accessibility_preferences/application/ports/application_language_store.dart';
+import '../../features/accessibility_preferences/application/ports/user_preferences_repository.dart';
+import '../../features/accessibility_preferences/application/usecases/change_application_language.dart';
+import '../../features/accessibility_preferences/application/usecases/get_notification_preferences.dart';
+import '../../features/accessibility_preferences/application/usecases/observe_accessibility.dart';
+import '../../features/accessibility_preferences/application/usecases/observe_application_language.dart';
+import '../../features/accessibility_preferences/application/usecases/sync_user_preferences.dart';
+import '../../features/accessibility_preferences/application/usecases/update_accessibility.dart';
+import '../../features/accessibility_preferences/application/usecases/update_notification_policy.dart';
+import '../../features/accessibility_preferences/application/usecases/update_notification_preferences.dart';
+import '../../features/accessibility_preferences/domain/value_objects/accessibility_preferences.dart';
+import '../../features/accessibility_preferences/infrastructure/local/shared_preferences_stores.dart';
+import '../../features/accessibility_preferences/infrastructure/remote/preferences_api.dart';
+import '../../features/accessibility_preferences/infrastructure/repositories/offline_first_user_preferences.dart';
+import '../../features/accessibility_preferences/infrastructure/repositories/remote_user_preferences.dart';
+import '../../features/accessibility_preferences/presentation/bloc/accessibility/accessibility_bloc.dart';
+import '../../features/accessibility_preferences/presentation/bloc/notifications/notification_preferences_bloc.dart';
+import '../../features/accessibility_preferences/presentation/cubit/appearance_cubit.dart';
+import '../../features/accessibility_preferences/presentation/navigation/preferences_navigation.dart';
+import '../../features/accessibility_preferences/presentation/theme/appearance.dart';
+import '../../features/adherence_analytics/application/usecases/get_adherence_summary.dart';
+import '../../features/adherence_analytics/application/usecases/get_recommendations.dart';
+import '../../features/adherence_analytics/infrastructure/remote/analytics_api.dart';
+import '../../features/adherence_analytics/infrastructure/repositories/remote_adherence_repository.dart';
+import '../../features/adherence_analytics/presentation/bloc/history/history_bloc.dart';
+import '../../features/adherence_analytics/presentation/bloc/level/level_bloc.dart';
+import '../../features/adherence_analytics/presentation/bloc/level/level_state.dart';
+import '../../features/adherence_analytics/presentation/bloc/recommendations/recommendations_bloc.dart';
+import '../../features/care_link/application/usecases/accept_care_link.dart';
+import '../../features/care_link/application/usecases/generate_linking_code.dart';
+import '../../features/care_link/application/usecases/register_consent.dart';
+import '../../features/care_link/application/usecases/register_older_adult.dart';
+import '../../features/care_link/application/usecases/update_caregiver_profile.dart';
+import '../../features/care_link/application/usecases/withdraw_consent.dart';
+import '../../features/care_link/infrastructure/remote/care_link_api.dart';
+import '../../features/care_link/infrastructure/repositories/remote_adult_profile_reader.dart';
+import '../../features/care_link/infrastructure/repositories/remote_care_link_consent.dart';
+import '../../features/care_link/infrastructure/repositories/remote_care_link_repository.dart';
+import '../../features/care_link/presentation/bloc/consent/consent_bloc.dart';
+import '../../features/care_link/presentation/bloc/profile_editor/profile_editor_cubit.dart';
+import '../../features/care_link/presentation/bloc/profiles/profiles_bloc.dart';
+import '../../features/family_monitoring/application/usecases/create_personal_note.dart';
+import '../../features/family_monitoring/application/usecases/get_alert_detail.dart';
+import '../../features/family_monitoring/application/usecases/get_alert_timeline.dart';
+import '../../features/family_monitoring/application/usecases/get_contact_option.dart';
+import '../../features/family_monitoring/application/usecases/get_family_summary.dart';
+import '../../features/family_monitoring/application/usecases/get_follow_up_notes.dart';
+import '../../features/family_monitoring/application/usecases/get_personal_notes.dart';
+import '../../features/family_monitoring/application/usecases/register_follow_up_note.dart';
+import '../../features/family_monitoring/application/usecases/update_alert_status.dart';
+import '../../features/family_monitoring/infrastructure/launcher/url_contact_launcher.dart';
+import '../../features/family_monitoring/infrastructure/remote/family_monitoring_api.dart';
+import '../../features/family_monitoring/infrastructure/repositories/remote_alerts_repository.dart';
+import '../../features/family_monitoring/infrastructure/repositories/remote_contact_repository.dart';
+import '../../features/family_monitoring/infrastructure/repositories/remote_family_monitoring_repository.dart';
+import '../../features/family_monitoring/infrastructure/repositories/remote_monitoring_readers.dart';
+import '../../features/family_monitoring/infrastructure/repositories/remote_notes_repositories.dart';
+import '../../features/family_monitoring/presentation/bloc/alert_detail/alert_detail_bloc.dart';
+import '../../features/family_monitoring/presentation/bloc/alerts/alerts_bloc.dart';
+import '../../features/family_monitoring/presentation/bloc/notes/note_composer_cubit.dart';
+import '../../features/family_monitoring/presentation/bloc/notes/notes_bloc.dart';
+import '../../features/family_monitoring/presentation/bloc/personal_notes/personal_notes_bloc.dart';
+import '../../features/family_monitoring/presentation/bloc/summary/family_summary_bloc.dart';
+import '../../features/family_monitoring/presentation/navigation/family_monitoring_navigation.dart';
+import '../../features/identity_subscription/application/ports/remembered_adult_store.dart';
+import '../../features/identity_subscription/application/readmodels/remembered_adult.dart';
+import '../../features/identity_subscription/application/usecases/apply_chosen_plan.dart';
+import '../../features/identity_subscription/application/usecases/change_subscription_plan.dart';
+import '../../features/identity_subscription/application/usecases/complete_password_recovery.dart';
+import '../../features/identity_subscription/application/usecases/get_public_plans.dart';
+import '../../features/identity_subscription/application/usecases/get_subscription_overview.dart';
+import '../../features/identity_subscription/application/usecases/register_caregiver.dart';
+import '../../features/identity_subscription/application/usecases/register_pin.dart';
+import '../../features/identity_subscription/application/usecases/request_password_recovery.dart';
+import '../../features/identity_subscription/application/usecases/request_verification.dart';
+import '../../features/identity_subscription/application/usecases/restore_session.dart';
+import '../../features/identity_subscription/application/usecases/sign_in.dart';
+import '../../features/identity_subscription/application/usecases/sign_in_with_pin.dart';
+import '../../features/identity_subscription/application/usecases/sign_in_with_social.dart';
+import '../../features/identity_subscription/application/usecases/sign_out.dart';
+import '../../features/identity_subscription/application/usecases/verify_email.dart';
+import '../../features/identity_subscription/infrastructure/launcher/url_destination_launcher.dart';
+import '../../features/identity_subscription/infrastructure/local/secure_remembered_adult_store.dart';
+import '../../features/identity_subscription/infrastructure/remote/password_recovery_api.dart';
+import '../../features/identity_subscription/infrastructure/remote/pin_api.dart';
+import '../../features/identity_subscription/infrastructure/remote/registration_api.dart';
+import '../../features/identity_subscription/infrastructure/remote/session_api.dart';
+import '../../features/identity_subscription/infrastructure/remote/subscription_api.dart';
+import '../../features/identity_subscription/infrastructure/repositories/remote_account_registration.dart';
+import '../../features/identity_subscription/infrastructure/repositories/remote_password_recovery.dart';
+import '../../features/identity_subscription/infrastructure/repositories/remote_pin_access.dart';
+import '../../features/identity_subscription/infrastructure/repositories/remote_public_plan_catalog.dart';
+import '../../features/identity_subscription/infrastructure/repositories/remote_session_repository.dart';
+import '../../features/identity_subscription/infrastructure/repositories/remote_social_session_repository.dart';
+import '../../features/identity_subscription/infrastructure/repositories/remote_subscription_repository.dart';
+import '../../features/identity_subscription/infrastructure/social/firebase_social_credentials.dart';
+import '../../features/identity_subscription/presentation/bloc/access/access_bloc.dart';
+import '../../features/identity_subscription/presentation/bloc/pin/pin_bloc.dart';
+import '../../features/identity_subscription/presentation/bloc/plan_choice/plan_choice_cubit.dart';
+import '../../features/identity_subscription/presentation/bloc/recovery/recovery_bloc.dart';
+import '../../features/identity_subscription/presentation/bloc/registration/registration_bloc.dart';
+import '../../features/identity_subscription/presentation/bloc/subscription/subscription_bloc.dart';
+import '../../features/intake_execution/application/ports/intake_confirmation.dart';
+import '../../features/intake_execution/application/ports/intake_local_store.dart';
+import '../../features/intake_execution/application/ports/intake_reader.dart';
+import '../../features/intake_execution/application/ports/intake_sync.dart';
+import '../../features/intake_execution/application/ports/phrase_speaker.dart';
+import '../../features/intake_execution/application/services/intake_reminder_sync.dart';
+import '../../features/intake_execution/application/usecases/confirm_intake.dart';
+import '../../features/intake_execution/application/usecases/confirm_intake_by_voice.dart';
+import '../../features/intake_execution/application/usecases/get_daily_progress.dart';
+import '../../features/intake_execution/application/usecases/get_intake_detail.dart';
+import '../../features/intake_execution/application/usecases/get_next_intake.dart';
+import '../../features/intake_execution/application/usecases/get_week_agenda.dart';
+import '../../features/intake_execution/application/usecases/replay_pending_confirmations.dart';
+import '../../features/intake_execution/infrastructure/audio/device_phrase_speaker.dart';
+import '../../features/intake_execution/infrastructure/audio/microphone_voice_recorder.dart';
+import '../../features/intake_execution/infrastructure/local/dao/intake_dao.dart';
+import '../../features/intake_execution/infrastructure/local/intake_database.dart';
+import '../../features/intake_execution/infrastructure/notifications/local_reminder_scheduler.dart';
+import '../../features/intake_execution/infrastructure/remote/intake_api.dart';
+import '../../features/intake_execution/infrastructure/repositories/offline_intake_repository.dart';
+import '../../features/intake_execution/infrastructure/repositories/remote_intake_confirmation.dart';
+import '../../features/intake_execution/infrastructure/repositories/remote_intake_reader.dart';
+import '../../features/intake_execution/infrastructure/repositories/remote_voice_confirmation.dart';
+import '../../features/intake_execution/infrastructure/sync/intake_sync_coordinator.dart';
+import '../../features/intake_execution/presentation/bloc/agenda/agenda_bloc.dart';
+import '../../features/intake_execution/presentation/bloc/dose/dose_bloc.dart';
+import '../../features/intake_execution/presentation/bloc/home/home_bloc.dart';
+import '../../features/intake_execution/presentation/bloc/voice/voice_bloc.dart';
+import '../../features/inventory_replenishment/application/usecases/get_inventory.dart';
+import '../../features/inventory_replenishment/application/usecases/register_initial_inventory.dart';
+import '../../features/inventory_replenishment/application/usecases/register_replenishment.dart';
+import '../../features/inventory_replenishment/infrastructure/remote/inventory_api.dart';
+import '../../features/inventory_replenishment/infrastructure/repositories/remote_inventory_repository.dart';
+import '../../features/inventory_replenishment/presentation/bloc/inventory_bloc.dart';
+import '../../features/omission_escalation/application/policies/omission_push_access_policy.dart';
+import '../../features/omission_escalation/application/services/omission_notification_session_cleanup.dart';
+import '../../features/omission_escalation/application/services/omission_push_facade.dart';
+import '../../features/omission_escalation/application/services/push_device_registration_coordinator.dart';
+import '../../features/omission_escalation/application/usecases/follow_caregiver_alerts.dart';
+import '../../features/omission_escalation/application/usecases/follow_dose_reminders.dart';
+import '../../features/omission_escalation/application/usecases/handle_incoming_omission_push.dart';
+import '../../features/omission_escalation/application/usecases/resolve_push_destination.dart';
+import '../../features/omission_escalation/infrastructure/local/push_local_stores.dart';
+import '../../features/omission_escalation/infrastructure/push/not_configured_push_token_source.dart';
+import '../../features/omission_escalation/infrastructure/remote/push_device_api.dart';
+import '../../features/omission_escalation/infrastructure/repositories/remote_device_token_registry.dart';
+import '../../features/treatment_management/application/readmodels/my_medications_overview.dart';
+import '../../features/treatment_management/application/usecases/change_treatment_status.dart';
+import '../../features/treatment_management/application/usecases/configure_treatment.dart';
+import '../../features/treatment_management/application/usecases/create_treatment.dart';
+import '../../features/treatment_management/application/usecases/deactivate_medication.dart';
+import '../../features/treatment_management/application/usecases/get_my_medications_overview.dart';
+import '../../features/treatment_management/application/usecases/get_treatment_detail.dart';
+import '../../features/treatment_management/application/usecases/list_medications.dart';
+import '../../features/treatment_management/application/usecases/list_treatments.dart';
+import '../../features/treatment_management/application/usecases/reactivate_medication.dart';
+import '../../features/treatment_management/application/usecases/register_medication.dart';
+import '../../features/treatment_management/application/usecases/set_dose_frequency.dart';
+import '../../features/treatment_management/application/usecases/set_reminder_policy.dart';
+import '../../features/treatment_management/application/usecases/set_schedule_instructions.dart';
+import '../../features/treatment_management/application/usecases/update_medication.dart';
+import '../../features/treatment_management/infrastructure/remote/treatment_api.dart';
+import '../../features/treatment_management/infrastructure/repositories/remote_medication_management_repository.dart';
+import '../../features/treatment_management/infrastructure/repositories/remote_treatment_lifecycle_repository.dart';
+import '../../features/treatment_management/infrastructure/repositories/remote_treatment_readers.dart';
+import '../../features/treatment_management/infrastructure/repositories/remote_treatment_repository.dart';
+import '../../features/treatment_management/presentation/bloc/medication_management/medication_management_bloc.dart';
+import '../../features/treatment_management/presentation/bloc/medication_registration/medication_registration_bloc.dart';
+import '../../features/treatment_management/presentation/bloc/my_medications/my_medications_bloc.dart';
+import '../../features/treatment_management/presentation/bloc/treatment_list/treatment_list_bloc.dart';
+import '../../features/treatment_management/presentation/bloc/treatment_management/treatment_management_bloc.dart';
+import '../../features/treatment_management/presentation/bloc/treatment_setup/treatment_setup_bloc.dart';
+import '../../features/treatment_management/presentation/navigation/treatment_navigation.dart';
+import '../../l10n/generated/app_localizations.dart';
+import '../../shared/application/session/session_store.dart';
+import '../../shared/common/result/app_result.dart';
+import '../../shared/infrastructure/network/api_client.dart';
+import '../../shared/infrastructure/notifications/local_notification_platform.dart';
+import '../../shared/infrastructure/security/secure_session_store.dart';
+import '../config/app_config.dart';
+
+/// Owns process-wide adapters. Routes own and close the blocs they create.
+final class AppDependencies {
+  AppDependencies._(
+    this._client,
+    this._sessions,
+    this._registration,
+    this._careLinks,
+    this._consent,
+    this._pins,
+    this._rememberedAdults,
+    this._intakes,
+    this._adultProfiles,
+    this._confirmations,
+    this._localIntakes,
+    this._intakeRepository,
+    this._intakeSync,
+    this._intakeDatabase,
+    this._adherence,
+    this._treatmentApi,
+    this._preferencesApi,
+    this._sessionStore,
+    this._accessibilityStore,
+    this._languageStore,
+    this._contactUri,
+  );
+
+  /// Composes real HTTP and secure storage using environment configuration.
+  factory AppDependencies.production() {
+    final config = AppConfig.fromEnvironment();
+    final client = ApiClient(baseUrl: config.apiBaseUrl, client: http.Client());
+    final store = SecureSessionStore(
+      storage: const FlutterSecureStorage(),
+      clock: DateTime.now,
+    );
+    final database = IntakeDatabase.onDevice();
+    final localIntakes = IntakeDao(database);
+    final remoteConfirmations = RemoteIntakeConfirmation(
+      api: IntakeApi(client),
+      store: store,
+    );
+    final intakes = OfflineIntakeRepository(
+      remoteReader: RemoteIntakeReader(api: IntakeApi(client), store: store),
+      remoteConfirmation: remoteConfirmations,
+      local: localIntakes,
+      store: store,
+      clock: DateTime.now,
+    );
+    final sync = IntakeSyncCoordinator(
+      store: store,
+      repository: intakes,
+      replay: ReplayPendingConfirmations(
+        remoteConfirmations,
+        localIntakes,
+        (owner) => store.current?.owner == owner,
+      ),
+      clock: DateTime.now,
+    );
+    return AppDependencies._(
+      client,
+      RemoteSessionRepository(
+        api: SessionApi(client),
+        store: store,
+        clock: DateTime.now,
+      ),
+      RemoteAccountRegistration(
+        api: RegistrationApi(client),
+        store: store,
+        clock: DateTime.now,
+      ),
+      RemoteCareLinkRepository(
+        api: CareLinkApi(client),
+        store: store,
+        clock: DateTime.now,
+      ),
+      RemoteCareLinkConsent(
+        api: CareLinkApi(client),
+        store: store,
+        clock: DateTime.now,
+      ),
+      RemotePinAccess(api: PinApi(client), store: store, clock: DateTime.now),
+      const SecureRememberedAdultStore(FlutterSecureStorage()),
+      intakes,
+      RemoteAdultProfileReader(api: CareLinkApi(client), store: store),
+      intakes,
+      localIntakes,
+      intakes,
+      sync,
+      database,
+      RemoteAdherenceRepository(
+        api: AnalyticsApi(client),
+        store: store,
+        zoneId: config.calendarZone,
+      ),
+      TreatmentApi(client),
+      PreferencesApi(client),
+      store,
+      SharedPreferencesAccessibilityStore(),
+      SharedPreferencesLanguageStore(),
+      config.contactUri,
+    );
+  }
+
+  final ApiClient _client;
+  final RemoteSessionRepository _sessions;
+  final RemoteAccountRegistration _registration;
+  final RemoteCareLinkRepository _careLinks;
+  final RemoteCareLinkConsent _consent;
+  final RemotePinAccess _pins;
+  final RememberedAdultStore _rememberedAdults;
+  final IntakeReader _intakes;
+  final RemoteAdultProfileReader _adultProfiles;
+  final IntakeConfirmation _confirmations;
+  final IntakeLocalStore _localIntakes;
+  final OfflineIntakeRepository _intakeRepository;
+  final IntakeSyncCoordinator _intakeSync;
+  final IntakeDatabase _intakeDatabase;
+  final RemoteAdherenceRepository _adherence;
+
+  /// Delivers confirmations saved while the device had no connection.
+  IntakeSync get intakeSync => _intakeSync;
+
+  final TreatmentApi _treatmentApi;
+  final PreferencesApi _preferencesApi;
+  final SessionStore _sessionStore;
+  final AccessibilityLocalStore _accessibilityStore;
+  final ApplicationLanguageStore _languageStore;
+
+  final Uri? _contactUri;
+
+  /// Where a visitor reaches the team; null shows the contact as unavailable.
+  Uri? get contactUri => _contactUri;
+
+  /// Opens the contact destination outside the app.
+  Future<bool> openContact(Uri uri) => openExternalDestination(uri);
+
+  /// Public plans a visitor compares before registering (US-48, US-49).
+  PlanChoiceCubit createPlanChoiceCubit() => PlanChoiceCubit(
+    GetPublicPlans(RemotePublicPlanCatalog(SubscriptionApi(_client))),
+  );
+
+  /// Activates the plan chosen before registration for the new account.
+  Future<bool> applyChosenPlan(String planCode) async {
+    final result = await ApplyChosenPlan(
+      RemoteSubscriptionRepository(
+        api: SubscriptionApi(_client),
+        store: _sessionStore,
+      ),
+    ).call(planCode);
+    return result is AppSuccess;
+  }
+
+  /// Plan and subscription of the signed-in caregiver's account (US-44, US-45).
+  SubscriptionBloc createSubscriptionBloc() {
+    final repository = RemoteSubscriptionRepository(
+      api: SubscriptionApi(_client),
+      store: _sessionStore,
+    );
+    return SubscriptionBloc(
+      overview: GetSubscriptionOverview(repository),
+      change: ChangeSubscriptionPlan(repository),
+    );
+  }
+
+  /// Stock of one medication for the caregiver (Inventory & Replenishment).
+  InventoryBloc createInventoryBloc(String medicationId) {
+    final repository = RemoteInventoryRepository(
+      api: InventoryApi(_client),
+      store: _sessionStore,
+    );
+    return InventoryBloc(
+      medicationId: medicationId,
+      read: GetInventory(repository),
+      registerInitial: RegisterInitialInventory(repository),
+      replenish: RegisterReplenishment(repository),
+    );
+  }
+
+  /// Treatment Management blocs; each factory shares the captured session store.
+  TreatmentFactories get treatmentFactories {
+    final medications = RemoteMedicationManagementRepository(
+      api: _treatmentApi,
+      store: _sessionStore,
+    );
+    final lifecycle = RemoteTreatmentLifecycleRepository(
+      api: _treatmentApi,
+      store: _sessionStore,
+    );
+    final treatmentReader = RemoteTreatmentReader(
+      api: _treatmentApi,
+      store: _sessionStore,
+    );
+    final detail = GetTreatmentDetail(treatmentReader);
+    final list = ListMedications(medications);
+    final configure = ConfigureTreatment(lifecycle);
+    final changeStatus = ChangeTreatmentStatus(lifecycle);
+    return TreatmentFactories(
+      createListBloc: (olderAdultId) => TreatmentListBloc(
+        list: ListTreatments(treatmentReader),
+        olderAdultId: olderAdultId,
+      ),
+      createRegistrationBloc: (olderAdultId) => MedicationRegistrationBloc(
+        register: RegisterMedication(
+          RemoteTreatmentRepository(api: _treatmentApi, store: _sessionStore),
+        ),
+        olderAdultId: olderAdultId,
+      ),
+      createMedicationsBloc: (olderAdultId) => MedicationManagementBloc(
+        list: list,
+        update: UpdateMedication(medications),
+        deactivate: DeactivateMedication(medications),
+        reactivate: ReactivateMedication(medications),
+        olderAdultId: olderAdultId,
+      ),
+      createSetupBloc: (olderAdultId, medicationId) => TreatmentSetupBloc(
+        create: CreateTreatment(
+          RemoteTreatmentRepository(api: _treatmentApi, store: _sessionStore),
+        ),
+        basics: const SetDoseFrequency(),
+        schedule: const SetScheduleInstructions(),
+        reminder: const SetReminderPolicy(),
+        read: detail,
+        configure: configure,
+        changeStatus: changeStatus,
+        olderAdultId: olderAdultId,
+        medicationId: medicationId,
+      ),
+      createManagementBloc: (treatmentId, olderAdultId) =>
+          TreatmentManagementBloc(
+            detail: detail,
+            medications: list,
+            configure: configure,
+            changeStatus: changeStatus,
+            reactivate: ReactivateMedication(medications),
+            deactivate: DeactivateMedication(medications),
+            treatmentId: treatmentId,
+            olderAdultId: olderAdultId,
+          ),
+      createMyMedicationsBloc: () => MyMedicationsBloc(
+        overview: GetMyMedicationsOverview(
+          RemoteMyMedicationsReader(api: _treatmentApi, store: _sessionStore),
+          // The next dose belongs to the intake context; the app layer composes it.
+          () async => switch (await GetNextIntake(_intakes).call()) {
+            AppSuccess(:final value) => AppSuccess(
+              value == null
+                  ? null
+                  : MedicationNextDose(
+                      intakeId: value.id,
+                      medicationId: value.medicationId,
+                      medicationName: value.medicationName,
+                      scheduledAt: value.scheduledAt,
+                    ),
+            ),
+            AppFailure(:final code) => AppFailure(code),
+          },
+        ),
+      ),
+    );
+  }
+
+  /// One shared instance: it serializes every preference write of the process, and the
+  /// app-wide appearance observes the same device copy that the screens edit.
+  late final UserPreferencesRepository _preferences =
+      OfflineFirstUserPreferences(
+        remote: RemoteUserPreferences(
+          api: _preferencesApi,
+          store: _sessionStore,
+        ),
+        local: _accessibilityStore,
+      );
+
+  /// Accessibility & Preferences blocs.
+  PreferencesFactories get preferencesFactories {
+    final preferences = _preferences;
+    final notifications = RemoteNotificationPreferencesRepository(
+      api: _preferencesApi,
+      store: _sessionStore,
+    );
+    return PreferencesFactories(
+      createAccessibilityBloc: (userId) => AccessibilityBloc(
+        observe: ObserveAccessibility(preferences),
+        observeLanguage: ObserveApplicationLanguage(_languageStore),
+        update: UpdateAccessibility(preferences),
+        changeLanguage: ChangeApplicationLanguage(_languageStore),
+        sync: SyncUserPreferences(preferences),
+        userId: userId,
+      ),
+      createNotificationsBloc: (userId) => NotificationPreferencesBloc(
+        get: GetNotificationPreferences(notifications),
+        update: UpdateNotificationPreferences(notifications),
+        updatePolicy: UpdateNotificationPolicy(notifications),
+        userId: userId,
+      ),
+    );
+  }
+
+  /// App-wide appearance of the signed-in owner.
+  AppearanceCubit createAppearanceCubit() => AppearanceCubit(
+    observeAccessibility: ObserveAccessibility(_preferences),
+    observeLanguage: ObserveApplicationLanguage(_languageStore),
+    sync: SyncUserPreferences(_preferences),
+  );
+
+  /// Adult remembered on this device after PIN enrollment, if any.
+  Future<RememberedAdult?> readRememberedAdult() => _rememberedAdults.read();
+
+  /// Device reminders of the signed-in adult's doses (US-05 and US-22), in the
+  /// adult's app language; they keep working while the app is closed.
+  final _notifications = LocalNotificationPlatform();
+
+  late final IntakeReminderSync intakeReminders = IntakeReminderSync(
+    local: _localIntakes,
+    sessions: _sessionStore,
+    scheduler: LocalReminderScheduler(
+      texts: _reminderTexts,
+      notifications: _notifications,
+    ),
+  );
+
+  /// Spanish unless the adult chose another language, like the app itself.
+  Future<AppLocalizations> _reminderTexts() async {
+    var language = AppLanguage.spanish;
+    final owner = _sessionStore.current?.owner.id;
+    if (owner != null) {
+      try {
+        language = await _languageStore
+            .watch(owner)
+            .first
+            .timeout(const Duration(seconds: 2));
+      } on Object {
+        // Unreadable preference: keep the default language.
+      }
+    }
+    return lookupAppLocalizations(Appearance.localeFor(language));
+  }
+
+  /// Stores the PIN shortcut after the server acknowledged enrollment.
+  Future<void> rememberAdult(RememberedAdult adult) =>
+      _rememberedAdults.remember(adult);
+
+  /// Removes the PIN shortcut and the adult's clinical data from this device,
+  /// for example after consent withdrawal.
+  Future<void> forgetRememberedAdult() async {
+    final adult = await _rememberedAdults.read();
+    await _rememberedAdults.forget();
+    if (adult != null) await _localIntakes.clearAdult(adult.id);
+  }
+
+  /// Display name of the adult in the current session, or null if unreadable.
+  Future<String?> readAdultName() async =>
+      switch (await _adultProfiles.readOwn()) {
+        AppSuccess(:final value) => value.fullName,
+        AppFailure() => null,
+      };
+
+  /// Creates PIN enrollment state for the current full adult session.
+  PinBloc createPinSetupBloc() => PinBloc.setup(register: RegisterPin(_pins));
+
+  /// Creates PIN access state for the remembered adult [olderAdultId].
+  PinBloc createPinAccessBloc(String olderAdultId) =>
+      PinBloc.access(signIn: SignInWithPin(_pins), olderAdultId: olderAdultId);
+
+  /// Creates the weekly agenda state for the current adult session.
+  AgendaBloc createAgendaBloc() =>
+      AgendaBloc(agenda: GetWeekAgenda(_intakes), clock: DateTime.now);
+
+  /// Creates the detail and touch-confirmation state of one dose.
+  DoseBloc createDoseBloc(String intakeId) => DoseBloc(
+    intakeId: intakeId,
+    detail: GetIntakeDetail(_intakes),
+    confirm: ConfirmIntake(_confirmations),
+    next: GetNextIntake(_intakes),
+  );
+
+  /// Creates the spoken confirmation of one dose with its own microphone.
+  VoiceBloc createVoiceBloc(String intakeId) => VoiceBloc(
+    intakeId: intakeId,
+    detail: GetIntakeDetail(_intakes),
+    recorder: MicrophoneVoiceRecorder(),
+    confirm: ConfirmIntakeByVoice(
+      RemoteVoiceConfirmation(api: IntakeApi(_client), store: _sessionStore),
+    ),
+    next: GetNextIntake(_intakes),
+  );
+
+  /// Reads the suggested voice phrase with the device speech engine.
+  PhraseSpeaker createPhraseSpeaker() => DevicePhraseSpeaker();
+
+  /// Creates the adult home state; day boundaries follow the device clock.
+  HomeBloc createHomeBloc() => HomeBloc(
+    next: GetNextIntake(_intakes),
+    progress: GetDailyProgress(_intakes, DateTime.now),
+  );
+
+  /// Creates the adherence history state of [olderAdultId], read with the
+  /// session of the caregiver of that link or of the adult themselves.
+  HistoryBloc createAdherenceHistoryBloc(String olderAdultId) => HistoryBloc(
+    olderAdultId: olderAdultId,
+    summary: GetAdherenceSummary(_adherence),
+  );
+
+  /// Creates the adherence level of [olderAdultId] for a screen that shows it
+  /// as a card, such as the person profile.
+  LevelBloc createAdherenceLevelBloc(String olderAdultId) => LevelBloc(
+    olderAdultId: olderAdultId,
+    summary: GetAdherenceSummary(_adherence),
+  );
+
+  /// Creates the weekly adherence of [olderAdultId] for a screen that shows it
+  /// as a card, such as the family summary.
+  LevelBloc createAdherenceWeekBloc(String olderAdultId) => LevelBloc(
+    olderAdultId: olderAdultId,
+    summary: GetAdherenceSummary(_adherence),
+    periodDays: adherenceWeekPeriodDays,
+  );
+
+  /// Seven-day evidence filtered by the selected treatment, never the adult aggregate.
+  LevelBloc createTreatmentAdherenceBloc(
+    String olderAdultId,
+    String treatmentId,
+  ) => LevelBloc(
+    olderAdultId: olderAdultId,
+    summary: GetAdherenceSummary(_adherence),
+    periodDays: adherenceWeekPeriodDays,
+    treatmentId: treatmentId,
+  );
+
+  /// Creates the recommendations state of [olderAdultId]; the server insight is
+  /// shown as received and never derived locally.
+  RecommendationsBloc createAdherenceRecommendationsBloc(String olderAdultId) =>
+      RecommendationsBloc(
+        olderAdultId: olderAdultId,
+        recommendations: GetRecommendations(_adherence),
+      );
+
+  /// Creates consent state without granting any caregiver or clinical capability.
+  ConsentBloc createConsentBloc() => ConsentBloc(
+    consent: _consent,
+    accept: AcceptCareLink(_consent),
+    decide: RegisterConsent(_consent),
+    withdraw: WithdrawConsent(_consent),
+  );
+
+  /// Creates caregiver setup state sharing the application's captured session store.
+  ProfilesBloc createProfilesBloc() => ProfilesBloc(
+    reader: _careLinks,
+    register: RegisterOlderAdult(_careLinks, DateTime.now),
+    generate: GenerateLinkingCode(_careLinks),
+  );
+
+  /// Care Link owns the basic profile form and its server-validated update.
+  ProfileEditorCubit createProfileEditorCubit(String olderAdultId) =>
+      ProfileEditorCubit(
+        editor: _careLinks,
+        update: UpdateCaregiverProfile(_careLinks, DateTime.now),
+        olderAdultId: olderAdultId,
+      );
+
+  /// Creates route-owned recovery state without session persistence capabilities.
+  RecoveryBloc createRecoveryBloc() {
+    final recovery = RemotePasswordRecovery(PasswordRecoveryApi(_client));
+    return RecoveryBloc(
+      request: RequestPasswordRecovery(recovery),
+      complete: CompletePasswordRecovery(recovery),
+    );
+  }
+
+  /// Creates registration state sharing the application session store.
+  RegistrationBloc createRegistrationBloc() => RegistrationBloc(
+    register: RegisterCaregiver(_registration),
+    verify: VerifyEmail(_registration),
+    resend: RequestVerification(_registration),
+  );
+
+  /// Creates the access authority; its provider is responsible for closing it.
+  AccessBloc createAccessBloc() => AccessBloc(
+    signInWithSocial: SignInWithSocial(
+      RemoteSocialSessionRepository(
+        credentials: FirebaseSocialCredentials(),
+        api: SessionApi(_client),
+        store: _sessionStore,
+        clock: DateTime.now,
+      ),
+    ),
+    signIn: SignIn(_sessions),
+    restore: RestoreSession(_sessions),
+    signOut: SignOut(_sessions),
+  );
+
+  /// Family Monitoring blocs; every repository shares the captured session store, and the
+  /// caregiver is always the owner of that session.
+  FamilyMonitoringFactories get familyMonitoringFactories {
+    final api = FamilyMonitoringApi(_client);
+    final monitoring = RemoteFamilyMonitoringRepository(
+      api: api,
+      store: _sessionStore,
+    );
+    final alerts = RemoteAlertsRepository(api: api, store: _sessionStore);
+    final contact = RemoteContactRepository(api: api, store: _sessionStore);
+    final notes = RemoteNotesRepository(api: api, store: _sessionStore);
+    final personalNotes = RemotePersonalNotesRepository(
+      api: api,
+      store: _sessionStore,
+    );
+    final timeline = RemoteAlertTimelineReader(api: api, store: _sessionStore);
+    final history = RemoteAlertHistoryReader(api: api, store: _sessionStore);
+    final doses = RemoteMonitoredDoseReader(api: api, store: _sessionStore);
+    final people = RemoteMonitoredPersonReader(api: api, store: _sessionStore);
+    return FamilyMonitoringFactories(
+      launcher: const UrlContactLauncher(),
+      createSummaryBloc: (olderAdultId, olderAdultName) => FamilySummaryBloc(
+        summary: GetFamilySummary(monitoring),
+        contact: GetContactOption(contact),
+        olderAdultId: olderAdultId,
+        olderAdultName: olderAdultName,
+      ),
+      createAlertsBloc: (olderAdultId) => AlertsBloc(
+        timeline: GetAlertTimeline(timeline),
+        olderAdultId: olderAdultId,
+      ),
+      createAlertDetailBloc: (olderAdultId, alertId) => AlertDetailBloc(
+        detail: GetAlertDetail(alerts),
+        update: UpdateAlertStatus(alerts),
+        contact: GetContactOption(contact),
+        people: people,
+        doses: doses,
+        history: history,
+        olderAdultId: olderAdultId,
+        alertId: alertId,
+      ),
+      createNotesBloc: (olderAdultId) => NotesBloc(
+        notes: GetFollowUpNotes(notes),
+        people: people,
+        olderAdultId: olderAdultId,
+      ),
+      createComposerCubit: (olderAdultId) => NoteComposerCubit(
+        register: RegisterFollowUpNote(notes),
+        olderAdultId: olderAdultId,
+      ),
+      createPersonalNotesBloc: () => PersonalNotesBloc(
+        list: GetPersonalNotes(personalNotes),
+        create: CreatePersonalNote(personalNotes),
+      ),
+    );
+  }
+
+  /// Omission & Escalation facade. The Firebase and local-notification adapters are not
+  /// configured in this build, so the device is never registered and nothing is displayed;
+  /// the follow-up targets and the session cleanup still run. Call it once: the facade holds
+  /// the state of its coordinator.
+  OmissionPushFacade omissionPush({required String installationId}) {
+    final targets = SharedPreferencesPushTargetStore();
+    const notifier = NotConfiguredOmissionNotifier();
+    final policy = OmissionPushAccessPolicy(
+      sessions: _sessionStore,
+      targets: targets,
+    );
+    return OmissionPushFacade(
+      policy: policy,
+      followCaregiver: FollowCaregiverAlerts(targets),
+      followReminders: FollowDoseReminders(targets),
+      resolve: ResolvePushDestination(targets),
+      handle: HandleIncomingOmissionPush(policy, notifier),
+      registration: PushDeviceRegistrationCoordinator(
+        sessions: _sessionStore,
+        tokens: const NotConfiguredPushTokenSource(),
+        registry: RemoteDeviceTokenRegistry(
+          api: PushDeviceApi(_client),
+          store: _sessionStore,
+          installationId: installationId,
+        ),
+      ),
+      cleanup: OmissionNotificationSessionCleanup(notifier: notifier),
+      registrationEnabled: false,
+    );
+  }
+
+  /// Opaque identity of this installation for the push registry.
+  Future<String> readPushInstallationId() =>
+      SharedPreferencesPushInstallationStore().getOrCreate();
+
+  Future<void> dispose() async {
+    await _intakeSync.dispose();
+    await _intakeRepository.dispose();
+    await _intakeDatabase.close();
+    _client.close();
+  }
+}

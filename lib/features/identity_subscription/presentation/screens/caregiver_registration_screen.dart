@@ -1,0 +1,304 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import '../../../../l10n/generated/app_localizations.dart';
+import '../../../../shared/presentation/theme/tata_colors.dart';
+import '../../../../shared/presentation/theme/tata_typography.dart';
+import '../../../../shared/presentation/widgets/status_notice.dart';
+import '../widgets/registration_form.dart';
+
+/// Editable caregiver account and verification form matching Figma 563:1398.
+/// Owns transient controllers and clears the password after account creation.
+class CaregiverRegistrationScreen extends StatefulWidget {
+  const CaregiverRegistrationScreen({
+    super.key,
+    required this.onRegister,
+    required this.onVerify,
+    required this.onResend,
+    this.busy = false,
+    this.hasAccount = false,
+    this.errorText,
+    this.errorTitle,
+    this.codeExpired = false,
+    this.resent = false,
+  });
+  final void Function(String name, String email, String password) onRegister;
+  final ValueChanged<String> onVerify;
+  final VoidCallback onResend;
+  final bool busy;
+  final bool hasAccount;
+  final bool resent;
+  final String? errorText;
+
+  /// Names the problem above [errorText] (Figma 563:2162 and 563:2208).
+  final String? errorTitle;
+
+  /// The code can no longer be used: the main action asks for a new one.
+  final bool codeExpired;
+
+  @override
+  State<CaregiverRegistrationScreen> createState() =>
+      _CaregiverRegistrationScreenState();
+}
+
+class _CaregiverRegistrationScreenState
+    extends State<CaregiverRegistrationScreen> {
+  final _form = GlobalKey<FormState>();
+  final _name = TextEditingController();
+  final _email = TextEditingController();
+  final _password = TextEditingController();
+  final _code = TextEditingController();
+
+  @override
+  void didUpdateWidget(CaregiverRegistrationScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.hasAccount && !oldWidget.hasAccount) _password.clear();
+    if (widget.resent && !oldWidget.resent) _code.clear();
+  }
+
+  @override
+  void dispose() {
+    for (final controller in [_name, _email, _password, _code]) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  void _register() {
+    if (!widget.busy && _form.currentState!.validate()) {
+      FocusScope.of(context).unfocus();
+      widget.onRegister(_name.text, _email.text, _password.text);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final text = AppLocalizations.of(context);
+    return PopScope(
+      canPop: !widget.busy,
+      child: Scaffold(
+        body: SafeArea(
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 440),
+              child: SingleChildScrollView(
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: const EdgeInsets.fromLTRB(22, 28, 22, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(text.registrationTitle, style: TataTypography.heading),
+                    const SizedBox(height: 4),
+                    Text(
+                      text.registrationSubtitle,
+                      style: TataTypography.subtitle,
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFF1ECFF), Color(0xFFECF4FB)],
+                        ),
+                      ),
+                      child: Wrap(
+                        spacing: 16,
+                        runSpacing: 10,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Text(
+                            text.accountStep,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          SizedBox(
+                            width: 72,
+                            child: LinearProgressIndicator(
+                              value: 1,
+                              minHeight: 4,
+                              color: TataColors.primary,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                          Text(
+                            text.verificationStep,
+                            style: const TextStyle(fontSize: 11),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Form(
+                      key: _form,
+                      child: AutofillGroup(
+                        child: RegistrationForm(
+                          name: _name,
+                          email: _email,
+                          password: _password,
+                          enabled: !widget.busy && !widget.hasAccount,
+                          onSubmit: _register,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        elevation: 3,
+                        shadowColor: const Color(0x291A2138),
+                      ),
+                      onPressed: widget.busy || widget.hasAccount
+                          ? null
+                          : _register,
+                      child: widget.busy && !widget.hasAccount
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(text.createAccount),
+                    ),
+                    if (widget.hasAccount) ...[
+                      const SizedBox(height: 20),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF4E2),
+                          borderRadius: BorderRadius.circular(18),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x141A2138),
+                              blurRadius: 18,
+                              offset: Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              text.verifyTitle,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              text.verifyExplanation,
+                              style: TataTypography.subtitle,
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
+                              key: const Key('registration-code'),
+                              controller: _code,
+                              enabled: !widget.busy && !widget.codeExpired,
+                              keyboardType: TextInputType.number,
+                              autofillHints: const [AutofillHints.oneTimeCode],
+                              maxLength: 6,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 8,
+                                color: TataColors.primary,
+                              ),
+                              decoration: InputDecoration(
+                                labelText: text.verificationCode,
+                                floatingLabelBehavior:
+                                    FloatingLabelBehavior.never,
+                                counterText: '',
+                                filled: false,
+                                contentPadding: EdgeInsets.zero,
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                disabledBorder: InputBorder.none,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 22),
+                      OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size(double.infinity, 56),
+                          backgroundColor: const Color(0xFFF1ECFF),
+                          foregroundColor: TataColors.primary,
+                          side: const BorderSide(color: Color(0xFFC2B5E5)),
+                          elevation: 2,
+                          shadowColor: const Color(0x141A2138),
+                          textStyle: const TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(28),
+                          ),
+                        ),
+                        onPressed: widget.busy
+                            ? null
+                            : widget.codeExpired
+                            ? widget.onResend
+                            : () => widget.onVerify(_code.text),
+                        child: Text(
+                          widget.codeExpired
+                              ? text.regRequestNewCode
+                              : text.verifyEmail,
+                        ),
+                      ),
+                      if (!widget.codeExpired)
+                        TextButton(
+                          onPressed: widget.busy ? null : widget.onResend,
+                          child: Text(text.resendCode),
+                        ),
+                    ],
+                    if (widget.errorText case final error?) ...[
+                      const SizedBox(height: 16),
+                      StatusNotice(
+                        title: widget.errorTitle,
+                        body: error,
+                        tone: widget.codeExpired
+                            ? NoticeTone.warning
+                            : NoticeTone.error,
+                      ),
+                    ] else if (widget.resent) ...[
+                      const SizedBox(height: 12),
+                      Semantics(
+                        liveRegion: true,
+                        child: Text(
+                          text.codeResent,
+                          style: const TextStyle(color: TataColors.primary),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 16),
+                    TextButton(
+                      onPressed: widget.busy
+                          ? null
+                          : () => Navigator.of(context).pop(false),
+                      child: Text(text.backToSignIn),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

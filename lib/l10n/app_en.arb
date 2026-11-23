@@ -1,0 +1,1515 @@
+{
+  "@@locale": "en",
+  "appName": "Tata",
+  "loginTitle": "Sign in",
+  "loginSubtitle": "Access your account to continue.",
+  "emailLabel": "Email address",
+  "emailHint": "you@example.com",
+  "passwordLabel": "Password",
+  "passwordHint": "Enter your password",
+  "forgotPassword": "Forgot your password?",
+  "signIn": "Sign in",
+  "continueWith": "or continue with",
+  "continueGoogle": "Continue with Google",
+  "continueFacebook": "Continue with Facebook",
+  "noAccount": "Don't have an account?",
+  "createAccount": "Create account",
+  "invalidEmail": "Enter a valid email address.",
+  "invalidPassword": "Enter a valid password.",
+  "invalidCredentials": "We couldn't sign you in. Check your email and password.",
+  "networkUnavailable": "No connection. Please try again.",
+  "accessDenied": "You don't have permission to perform this action.",
+  "rateLimited": "Wait a moment before trying again.",
+  "genericAccessError": "We couldn't complete sign-in. Please try again.",
+  "accessMethodUnavailable": "This sign-in method is unavailable.",
+  "sessionConfirmed": "Signed in",
+  "signOut": "Sign out",
+  "registrationTitle": "Create your account",
+  "registrationSubtitle": "Support and follow up with your family.",
+  "nameLabel": "Name",
+  "nameHint": "Your full name",
+  "accountStep": "1  Account",
+  "verificationStep": "2  Verification",
+  "verifyTitle": "Verify your email",
+  "verifyExplanation": "We sent you a 6-digit code. Enter it to enable your account.",
+  "verifyEmail": "Verify email",
+  "verificationCode": "Verification code",
+  "resendCode": "Resend code",
+  "codeResent": "We sent a new code to your email.",
+  "invalidName": "Enter your name, up to 120 characters.",
+  "registrationPasswordHint": "At least 8 characters",
+  "registrationPasswordError": "Use at least 8 characters and no more than 72 bytes.",
+  "invalidVerification": "Enter a valid 6-digit code.",
+  "backToSignIn": "Back to sign in",
+  "recoveryTitle": "Recover your access",
+  "recoveryExplanation": "Enter your email to request a recovery code.",
+  "recoveryAccepted": "If an account exists for that email, you will receive a recovery code.",
+  "recoverySuccess": "Your password was updated. Sign in with your new password.",
+  "invalidRecoveryCode": "The code is invalid or has expired.",
+  "newPassword": "New password",
+  "sendRecoveryCode": "Request code",
+  "changePassword": "Change password",
+  "processing": "Processing...",
+  "genericRecoveryError": "We could not complete recovery. Please try again.",
+  "onboardingHeadlineStart": "Care for your",
+  "onboardingHeadlineAccent": "medication",
+  "onboardingHeadlineEnd": "without the hassle.",
+  "onboardingDescription": "Gentle reminders, simple confirmations and peace of mind for you and your family.",
+  "getStarted": "Get started",
+  "alreadyHaveAccount": "Already have an account?",
+  "sampleMorning": "8:00 a.m.",
+  "sampleEvening": "7:30 p.m.",
+  "sampleNight": "10:00 p.m.",
+  "sampleTablet": "1 tablet",
+  "sampleCapsule": "1 capsule",
+  "sampleVitamin": "Vitamin D3",
+  "sampleToday": "Today",
+  "linkTitle": "Link your family member",
+  "linkSubtitle": "A care relationship requires consent.",
+  "linkCodeStep": "Code",
+  "linkRequestStep": "Request",
+  "linkConsentStep": "Consent",
+  "temporaryCode": "Temporary code",
+  "codeNotIssued": "Generate a code to continue",
+  "linkConfirmed": "Link confirmed",
+  "linkPending": "Awaiting consent",
+  "generateCode": "Generate code",
+  "renewCode": "Renew code",
+  "adultConsentTitle": "Older adult consent",
+  "caregiverConsentExplanation": "The adult enters the code and decides whether to share their follow-up information.",
+  "consentConfirmed": "The adult has authorized this care relationship.",
+  "checkConsent": "Check consent",
+  "safeLinkTitle": "A secure and reversible link",
+  "safeLinkExplanation": "The adult can withdraw their consent at any time.",
+  "familyProfiles": "Your family members",
+  "confirmedProfilesExplanation": "Family members who have authorized the care relationship.",
+  "noConfirmedProfiles": "You have no confirmed links.",
+  "refreshProfiles": "Refresh family members",
+  "registerFamilyMember": "Register family member",
+  "invalidAdultName": "Enter a name of up to 160 characters.",
+  "birthDateLabel": "Date of birth",
+  "invalidBirthDate": "Select a valid birth date.",
+  "linkAlreadyExists": "A link already exists for this family member. Refresh its status.",
+  "genericLinkError": "We could not complete the link. Please try again.",
+  "adultNameAndAge": "{name}, {age, plural, one{1 year} other{{age} years}}",
+  "@adultNameAndAge": {
+    "description": "Profile name and calendar age; neither value is fixture text.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "haveInvitation": "I have an invitation",
+  "invitationExplanation": "Paste the complete invitation shared by your family member. You will review consent before authorizing access.",
+  "invitationLabel": "Care invitation",
+  "reviewInvitation": "Review invitation",
+  "invalidInvitation": "This invitation is invalid. Ask your family member to copy it again.",
+  "expiredInvitation": "This invitation expired or was already used. Request a new one.",
+  "adultConsentExplanation": "By accepting, you authorize the person who shared this invitation to view your adherence, alerts and information needed for follow-up.",
+  "acceptLink": "Accept link",
+  "rejectLink": "Reject",
+  "copyInvitation": "Copy invitation",
+  "invitationCopied": "Invitation copied. Share it with your family member.",
+  "consentManagementTitle": "Your care relationship",
+  "manageConsentExplanation": "You decide whether your family member can view your follow-up information. You can withdraw that permission at any time.",
+  "withdrawConsent": "Withdraw consent",
+  "withdrawConsentExplanation": "Your family member will no longer view your follow-up information and this access will close. You can establish a new link when you choose.",
+  "keepConsent": "Keep relationship",
+  "signInWithPin": "Sign in with PIN",
+  "pinAccessTitle": "Sign in to Tata",
+  "pinExistingTitle": "Your PIN is still active",
+  "pinExistingBody": "The digits you entered were not saved. Your previous PIN remains active.",
+  "pinUseExisting": "Continue with my current PIN",
+  "adultTabMedications": "Medications",
+  "adultTabNotes": "Notes",
+  "homeVoiceUnavailable": "Voice confirmation is unavailable.",
+  "outcomeLateSubtitle": "Dose confirmed late",
+  "outcomeLateNoticeTitle": "Classified as late",
+  "outcomeReplayNoticeTitle": "No duplicates",
+  "pinSetupTitle": "Create your PIN",
+  "pinAccessSubtitle": "Simple access for the older adult.",
+  "pinSetupSubtitle": "Choose 4 digits for future sign-ins.",
+  "pinAccessHint": "Use your 4-digit PIN.",
+  "pinSetupHint": "Create a 4-digit PIN.",
+  "olderAdultBadge": "Older adult",
+  "pinLabel": "PIN",
+  "pinDeleteDigit": "Delete last digit",
+  "pinDigitsEntered": "{count} of 4 digits entered",
+  "@pinDigitsEntered": {
+    "description": "Screen reader summary of PIN progress; digits are never read aloud.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pinSubmitAccess": "Sign in",
+  "pinSubmitSetup": "Save PIN",
+  "pinProcessing": "Processing…",
+  "pinTryLater": "Try again later",
+  "pinSetupInfoTitle": "Set up your access",
+  "pinSetupInfoBody": "Choose four digits to sign in without email or password.",
+  "pinIncorrectTitle": "Incorrect PIN",
+  "pinIncorrectBody": "Check the four digits and try again.",
+  "pinLockedTitle": "Access temporarily locked",
+  "pinLockedBody": "Too many incorrect attempts. Try again in 15 minutes.",
+  "pinErrorTitle": "We couldn't complete access",
+  "pinLinkErrorBody": "Check your care link and try again.",
+  "pinForgot": "Forgot your PIN? Ask your family member for help.",
+  "back": "Back",
+  "homeToday": "Today",
+  "homeLoading": "Checking your schedule…",
+  "homeNextDose": "Next dose",
+  "homeInHours": "In {hours} h",
+  "@homeInHours": {
+    "description": "Time remaining before the next intake, in whole hours.",
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "homeInMinutes": "In {minutes} min",
+  "@homeInMinutes": {
+    "description": "Time remaining before the next intake, in whole minutes.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "homeDueNow": "It's time for your dose",
+  "homeEmptyTitle": "No upcoming dose",
+  "homeEmptyDescription": "There are no pending doses scheduled.",
+  "homeErrorTitle": "We couldn't load your next dose",
+  "homeErrorBody": "Try again in a few minutes.",
+  "homeRetry": "Retry",
+  "homeProgressTitle": "Today's progress",
+  "homeProgressValue": "{completed}/{total}",
+  "@homeProgressValue": {
+    "description": "Confirmed intakes over scheduled intakes for today.",
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "homeCompleted": "Doses completed",
+  "homeProgressUnavailable": "Check your schedule",
+  "homeProgressEmpty": "No doses scheduled",
+  "homeProgressDone": "Well done, you completed your doses!",
+  "homeProgressInProgress": "You're doing great!",
+  "homeProgressEncouragement": "Every dose counts",
+  "homeVoiceTitle": "Confirm by voice",
+  "homeVoiceSubtitle": "Quick and easy",
+  "homeVoiceNoIntake": "No dose to confirm right now.",
+  "homeAgendaTitle": "See all my doses",
+  "homeAgendaSubtitle": "Full schedule",
+  "homeTipTitle": "Tip of the day",
+  "homeTipDescription": "Take your medication with water and at the same time every day.",
+  "homeDismissTip": "Dismiss tip of the day",
+  "homeTabStart": "Home",
+  "homeTabMore": "More",
+  "homeCareLink": "My care link",
+  "homeSwitchAccount": "Switch account",
+  "homeTabAgenda": "Schedule",
+  "agendaTitle": "Weekly schedule",
+  "agendaWeekRange": "{start} – {end}",
+  "@agendaWeekRange": {
+    "description": "First and last day of the visible week, already formatted.",
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
+  "agendaChooseDate": "Choose date",
+  "agendaLoading": "Loading your doses…",
+  "agendaEmptyDay": "No doses this day",
+  "agendaEmptyDayBody": "You have no doses scheduled for this day.",
+  "agendaErrorTitle": "We couldn't load your schedule",
+  "agendaTipBody": "Taking it at the same time makes the routine easier.",
+  "agendaDoseSemantics": "{time}, {medication}, {status}",
+  "@agendaDoseSemantics": {
+    "description": "Screen reader summary of one agenda dose.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "medication": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "intakeStatusPending": "Pending",
+  "intakeStatusConfirmed": "Confirmed",
+  "intakeStatusLate": "Late",
+  "intakeStatusOmitted": "Missed",
+  "doseTitle": "Dose detail",
+  "doseLoading": "Loading dose detail…",
+  "doseErrorTitle": "We couldn't load this dose",
+  "doseScheduleLabel": "Dose schedule",
+  "doseToday": "Today",
+  "doseTomorrow": "Tomorrow",
+  "doseYesterday": "Yesterday",
+  "doseDayTime": "{day}, {time}",
+  "@doseDayTime": {
+    "description": "Relative or calendar day followed by the local time.",
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "doseInformation": "Information",
+  "doseDoseLabel": "Dose",
+  "doseWhenLabel": "When",
+  "doseInstructionsLabel": "Instructions",
+  "doseNoInstructions": "No additional instructions",
+  "doseBeforeTitle": "Before your dose",
+  "dosePrepareMedication": "Have your medication at hand",
+  "dosePrepareWater": "A glass of water",
+  "dosePrepareSeat": "Sit comfortably",
+  "doseState": "Status: {status}",
+  "@doseState": {
+    "description": "Current server status of the dose.",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "doseMessagePending": "You can still confirm this dose.",
+  "doseMessageConfirmed": "The dose was recorded successfully.",
+  "doseMessageLate": "The dose was recorded after its scheduled time.",
+  "doseMessageOmitted": "The allowed period ended without a confirmation.",
+  "doseConfirm": "Confirm dose",
+  "doseConfirming": "Confirming…",
+  "doseNotConfirmable": "This dose can no longer be confirmed.",
+  "outcomeWellDone": "Well done!",
+  "outcomeConfirmed": "Dose confirmed ♡",
+  "outcomeLateTitle": "Dose recorded",
+  "outcomeLateBody": "We recorded it after its scheduled time.",
+  "outcomeAlreadyTitle": "Dose already confirmed",
+  "outcomeAlreadyBody": "The dose was already confirmed and no other record was created.",
+  "outcomeOmittedTitle": "Dose omitted",
+  "outcomeOmittedBody": "Confirmation period ended",
+  "outcomeProgressTitle": "Your progress was updated",
+  "outcomeProgressBody": "The dose stays recorded in your history.",
+  "outcomeBackHome": "Back to home",
+  "intakeStatusQueued": "To be sent",
+  "doseMessageQueued": "We saved your confirmation. We will send it when the connection returns.",
+  "doseMessageRejected": "Your confirmation was sent when this dose could no longer be recorded.",
+  "outcomeQueuedTitle": "Dose saved",
+  "outcomeQueuedBody": "It will be recorded when the connection returns.",
+  "homeOfflineBanner": "No connection. You are seeing the last saved information.",
+  "homeQueuedBanner": "{count, plural, =1{1 dose to be sent.} other{{count} doses to be sent.}}",
+  "caregiverTabBarSemantics": "Main navigation",
+  "caregiverTabHome": "Home",
+  "caregiverTabAlerts": "Alerts",
+  "caregiverTabNotes": "Notes",
+  "caregiverTabPerson": "Person",
+  "caregiverTabMore": "More",
+  "adherenceHistoryTitle": "History & insights",
+  "adherencePeriodLabel": "Last {days} days",
+  "@adherencePeriodLabel": {
+    "description": "Rolling period selected in the adherence history.",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "adherencePeriodSelectorHint": "Change period",
+  "adherenceMetricAdherence": "Adherence",
+  "adherenceMetricOnTime": "On-time intakes",
+  "adherenceMetricLateOmitted": "Late, omitted",
+  "adherenceChangeVsPrevious": "{change} vs. previous {days} days",
+  "@adherenceChangeVsPrevious": {
+    "description": "Change against the previous period; [change] is an arrow with its percentage.",
+    "placeholders": {
+      "change": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "adherenceLateOmittedCaption": "last {days} days",
+  "@adherenceLateOmittedCaption": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "adherenceTrendTitle": "Adherence trend",
+  "adherenceTrendInfo": "Share of confirmed intakes on each date.",
+  "adherenceTrendSemantics": "Adherence trend: {percent}% on {date}.",
+  "@adherenceTrendSemantics": {
+    "description": "Screen reader summary of the trend chart: its latest point.",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "adherencePatternTitle": "Detected pattern",
+  "adherencePatternExcellent": "Excellent progress",
+  "adherencePatternAttention": "Pay attention to schedules",
+  "adherenceBandMorning": "morning",
+  "adherenceBandAfternoon": "afternoon",
+  "adherenceBandNight": "night",
+  "adherencePatternSummary": "{omitted, plural, one{1 omission} other{{omitted} omissions}} and {late, plural, one{1 late intake} other{{late} late intakes}} concentrate in the {band}.",
+  "@adherencePatternSummary": {
+    "placeholders": {
+      "omitted": {
+        "type": "int"
+      },
+      "late": {
+        "type": "int"
+      },
+      "band": {
+        "type": "String"
+      }
+    }
+  },
+  "adherenceSeeRecommendations": "See recommendations",
+  "adherenceRecentTitle": "Recent intakes",
+  "adherenceOutcomeOnTime": "on time",
+  "adherenceOutcomeLate": "late",
+  "adherenceOutcomeLateMinutes": "{minutes} min late",
+  "@adherenceOutcomeLateMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "adherenceOutcomeOmitted": "omitted",
+  "adherenceDayToday": "Today",
+  "adherenceDayYesterday": "Yesterday",
+  "adherenceRecentWhen": "{day}, {time}",
+  "@adherenceRecentWhen": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "adherenceRecentSemantics": "{when}, {medication}, {outcome}",
+  "@adherenceRecentSemantics": {
+    "description": "Screen reader summary of one recent intake.",
+    "placeholders": {
+      "when": {
+        "type": "String"
+      },
+      "medication": {
+        "type": "String"
+      },
+      "outcome": {
+        "type": "String"
+      }
+    }
+  },
+  "adherenceInsufficientDataTitle": "Not enough data",
+  "adherenceInsufficientDataBody": "There are no intakes in this period to calculate adherence.",
+  "adherenceNoResultsTitle": "No results",
+  "adherenceNoResultsBody": "There are no intakes recorded in the selected period.",
+  "adherencePeriodUpdatedTitle": "Period updated",
+  "adherencePeriodUpdatedBody": "The indicators only use the intakes of the selected period.",
+  "adherenceLoading": "Loading your history…",
+  "adherenceErrorTitle": "We couldn't load the history",
+  "adherenceErrorBody": "Please try again in a few minutes.",
+  "adherenceRetry": "Retry",
+  "recommendationsTitle": "Recommendations",
+  "recommendationsSubtitle": "Based on patterns from the last {days} days.",
+  "@recommendationsSubtitle": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "recommendationsPatternOmission": "Omission pattern in the {band}",
+  "@recommendationsPatternOmission": {
+    "placeholders": {
+      "band": {
+        "type": "String"
+      }
+    }
+  },
+  "recommendationsPatternLateness": "Lateness pattern in the {band}",
+  "@recommendationsPatternLateness": {
+    "placeholders": {
+      "band": {
+        "type": "String"
+      }
+    }
+  },
+  "recommendationsPatternSummary": "{omitted, plural, one{1 omission} other{{omitted} omissions}} and {late, plural, one{1 late intake} other{{late} late intakes}} concentrate between {range}",
+  "@recommendationsPatternSummary": {
+    "description": "Sentence without its final period: the hour range may already end with one.",
+    "placeholders": {
+      "omitted": {
+        "type": "int"
+      },
+      "late": {
+        "type": "int"
+      },
+      "range": {
+        "type": "String"
+      }
+    }
+  },
+  "adherenceAm": "AM",
+  "adherencePm": "PM",
+  "recommendationsHourRangeShared": "{from} and {to} {suffix}",
+  "@recommendationsHourRangeShared": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      },
+      "suffix": {
+        "type": "String"
+      }
+    }
+  },
+  "recommendationsHourRangeSplit": "{from} {fromSuffix} and {to} {toSuffix}",
+  "@recommendationsHourRangeSplit": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "fromSuffix": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      },
+      "toSuffix": {
+        "type": "String"
+      }
+    }
+  },
+  "recommendationsConcentration": "Concentration by time",
+  "recommendationsHeatmapSemantics": "Concentration of late or omitted intakes by time band and day of the week.",
+  "recommendationAdjustTitle": "Adjust the reminder",
+  "recommendationAdjustBody": "Try a notice 15 minutes before the intake.",
+  "recommendationReviewTitle": "Review the schedule",
+  "recommendationReviewBody": "Choose a time tied to a steady routine.",
+  "recommendationFollowUpTitle": "Follow up for a week",
+  "recommendationFollowUpBody": "Check whether the new schedule reduces delays.",
+  "recommendationItemTitle": "{index}. {title}",
+  "@recommendationItemTitle": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "recommendationsInsufficientTitle": "Insufficient evidence",
+  "recommendationsInsufficientBody": "There is not enough data for a conclusive recommendation yet.",
+  "recommendationsBack": "Back to history",
+  "recommendationsApply": "Apply adjustments",
+  "recommendationsLoading": "Loading your recommendations…",
+  "recommendationsErrorTitle": "We couldn't load the recommendations",
+  "adherenceOpenFromProfile": "View adherence history",
+  "adherenceLevelTitle": "Adherence level",
+  "adherenceLevelInfo": "Share of confirmed intakes, on time or late, in the period.",
+  "adherenceLevelExcellent": "Excellent",
+  "adherenceLevelFollowUp": "Under follow-up",
+  "adherenceLevelVsMonth": "{change} vs. previous month",
+  "@adherenceLevelVsMonth": {
+    "placeholders": {
+      "change": {
+        "type": "String"
+      }
+    }
+  },
+  "adherenceLevelVsWeek": "{change} vs. previous week",
+  "@adherenceLevelVsWeek": {
+    "placeholders": {
+      "change": {
+        "type": "String"
+      }
+    }
+  },
+  "adherenceLevelSemantics": "Adherence level: {level}, {percent}%.",
+  "@adherenceLevelSemantics": {
+    "description": "Screen reader summary of the adherence level card.",
+    "placeholders": {
+      "level": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "weeklyAdherenceTitle": "Adherence this week",
+  "weeklyAdherenceGood": "Well done, {name}",
+  "@weeklyAdherenceGood": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "weeklyAdherenceFollowUp": "Let's keep supporting {name}",
+  "@weeklyAdherenceFollowUp": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "weeklyAdherenceSemantics": "{name}'s adherence this week: {percent}%. {message}",
+  "@weeklyAdherenceSemantics": {
+    "description": "Screen reader summary of the weekly adherence card.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      },
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "tmTreatmentsTitle": "Treatments",
+  "tmNoTreatments": "There are no treatments for this person yet.",
+  "tmNewTreatment": "New treatment",
+  "tmPickMedicationHint": "Choose the medication for the new treatment.",
+  "tmStatusDraft": "Draft",
+  "tmStatusActive": "Active",
+  "tmStatusPaused": "Paused",
+  "tmMedicationsTitle": "Medications",
+  "tmNoMedications": "No medications registered yet.",
+  "tmRegisterMedication": "Register medication",
+  "tmAddMedication": "Add medication",
+  "tmAddMedicationFor": "Add medication: {name}",
+  "@tmAddMedicationFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tmMedicationDataStep": "Caregiver, Step 1 of 4",
+  "tmMedicationBasicInfo": "Basic information",
+  "tmMedicationNameHint": "E.g. Losartan",
+  "tmMedicationDosePresentation": "Strength and presentation",
+  "tmMedicationPresentationHint": "E.g. 50 mg, tablet",
+  "tmMedicationFrequencyHint": "How often do you take it?",
+  "tmMedicationWhen": "When do you take it?",
+  "tmMedicationWhenHint": "E.g. With breakfast",
+  "tmMedicationNotes": "Optional notes",
+  "tmMedicationNotesHint": "Something important to remember",
+  "tmFrequencyDaily": "Once a day",
+  "tmFrequencyTwelveHours": "Every 12 hours",
+  "tmFrequencyEightHours": "Every 8 hours",
+  "tmRegistrationNext": "Next",
+  "tmMedicationLength": "The name and presentation allow up to 160 characters each.",
+  "tmMedicationName": "Medication name",
+  "tmMedicationPresentation": "Presentation (for example, 500 mg tablets)",
+  "tmMedicationRegistered": "Medication registered.",
+  "tmMedicationUpdated": "Medication updated.",
+  "tmMedicationDeactivated": "Medication deactivated.",
+  "tmMedicationReactivated": "Medication reactivated.",
+  "tmEdit": "Edit",
+  "tmDeactivate": "Deactivate",
+  "tmReactivate": "Reactivate",
+  "tmInactive": "Inactive",
+  "tmCancel": "Cancel",
+  "tmSave": "Save",
+  "tmRetry": "Retry",
+  "tmCreateTreatment": "Create treatment",
+  "tmDeactivateTitle": "Deactivate this medication?",
+  "tmDeactivateBody": "It will stop producing new intakes, but its history is kept.",
+  "tmRequiredField": "Fill in this field.",
+  "tmSetupTitle": "Create treatment",
+  "tmStepDetails": "Details",
+  "tmStepRegimen": "Regimen",
+  "tmStepSchedule": "Schedule",
+  "tmStepReminders": "Reminders",
+  "tmStepReview": "Review",
+  "tmTreatmentName": "Treatment name",
+  "tmDose": "Dose (for example, 1 tablet)",
+  "tmFrequency": "Frequency (for example, every 12 hours)",
+  "tmScheduleTimes": "Times (HH:mm separated by commas)",
+  "tmInstructions": "Administration instructions (optional)",
+  "tmFollowUpDelay": "Minutes to wait before alerting if not taken (0 to 1440, empty = default)",
+  "tmNext": "Continue",
+  "tmBack": "Back",
+  "tmActivate": "Activate treatment",
+  "tmActivated": "Treatment activated.",
+  "tmReviewTitle": "Review before activating",
+  "tmDefaultFollowUp": "System default",
+  "tmDetailTitle": "Treatment",
+  "tmPause": "Pause",
+  "tmResume": "Resume",
+  "tmEditRegimen": "Edit regimen",
+  "tmRegimenSaved": "Regimen saved.",
+  "tmDraftIncomplete": "This treatment is not configured yet.",
+  "tmMedicationInactiveNotice": "Its medication is inactive. Reactivate it to manage the treatment.",
+  "tmMedicationLabel": "Medication",
+  "tmDoseShort": "Dose",
+  "tmFrequencyShort": "Frequency",
+  "tmTimesShort": "Times",
+  "tmInstructionsShort": "Instructions",
+  "tmFollowUpShort": "Alert if not taken",
+  "tmMyMedicationsTitle": "My medications",
+  "tmNextDose": "Next dose",
+  "tmNoNextDose": "No upcoming doses.",
+  "tmActiveTab": "Active",
+  "tmHistoryTab": "History",
+  "tmNoActiveMedications": "You have no active medications.",
+  "tmNoHistory": "No medications in history.",
+  "tmErrInvalidDosage": "Enter a valid dose (up to 100 characters).",
+  "tmErrInvalidFrequency": "Enter a valid frequency (up to 100 characters).",
+  "tmErrEmptySchedule": "Add at least one time.",
+  "tmErrInvalidTime": "Use times in HH:mm format, for example 08:00.",
+  "tmErrInstructionsLong": "The instructions exceed 500 characters.",
+  "tmErrReminderDelay": "Enter a number of minutes between 0 and 1440.",
+  "tmErrRequired": "Fill in the required fields.",
+  "tmErrIncomplete": "The server rejected the configuration. Review the treatment data.",
+  "tmErrNotFound": "We could not find this item.",
+  "tmErrConflict": "This change is not possible in the current state.",
+  "tmErrInvalidResponse": "We received an unexpected response. Please try again.",
+  "tmErrGeneric": "We could not complete the operation. Please try again.",
+  "pfAccessibilityTitle": "Accessibility",
+  "pfTextSize": "Text size",
+  "pfTextSmall": "Small",
+  "pfTextMedium": "Medium",
+  "pfTextLarge": "Large",
+  "pfTextExtraLarge": "Extra large",
+  "pfHighContrast": "Enhanced contrast",
+  "pfDarkTheme": "Dark theme",
+  "pfReducedMotion": "Reduce motion",
+  "pfReadingAssistance": "Reading assistance",
+  "pfReadingAssistanceHint": "More space between lines and letters.",
+  "pfVoiceConfirmation": "Voice confirmation",
+  "pfLanguage": "Language",
+  "pfSyncSynced": "Saved to your account.",
+  "pfSyncPending": "Saved on this device; it will be sent when you are online.",
+  "pfHelp": "Help",
+  "pfHelpBody": "These settings change how the app looks and works on this device. They are saved to your account when you are online.",
+  "pfClose": "Close",
+  "pfNotificationsTitle": "Notifications",
+  "pfNotificationsOnlineNote": "These settings are saved to your account and need a connection.",
+  "pfChannels": "Channels",
+  "pfChannelPush": "Push notification",
+  "pfChannelSms": "SMS",
+  "pfChannelEmail": "Email",
+  "pfChannelCall": "Phone call",
+  "pfQuietHours": "Quiet hours",
+  "pfQuietStart": "Start",
+  "pfQuietEnd": "End",
+  "pfPolicyTitle": "Intake alerts",
+  "pfReminderMinutes": "Reminder (minutes from the intake time)",
+  "pfPendingMinutes": "Pending intake alert (minutes)",
+  "pfOmittedMinutes": "Missed intake alert (minutes)",
+  "pfEscalationMinutes": "Escalation (minutes, maximum 1440)",
+  "pfDailySummary": "Daily summary (HH:mm, optional)",
+  "pfContactsTitle": "Emergency contacts",
+  "pfContactName": "Name",
+  "pfContactPhone": "Phone",
+  "pfAddContact": "Add contact",
+  "pfRemoveContact": "Remove contact",
+  "pfSavePolicy": "Save alerts",
+  "pfPolicySaved": "Alerts saved.",
+  "pfErrInvalidPolicy": "Times must increase in order (reminder < pending < missed < escalation, maximum 1440) and the summary must use HH:mm.",
+  "pfErrInvalidContact": "Check the name and phone (7 to 15 digits) of each contact.",
+  "pfErrGeneric": "We could not save your preferences. Please try again.",
+  "pfSettings": "Settings",
+  "catalogTitle": "My medications",
+  "catalogSubtitle": "Your active medications",
+  "catalogManagedByCaregiver": "Your caregiver manages medications.",
+  "catalogFeatured": "Featured",
+  "catalogActiveCount": "Active {count}",
+  "catalogHistory": "History",
+  "catalogEmptyTitle": "No medications",
+  "catalogHistoryEmpty": "No paused treatments or inactive medications.",
+  "catalogActiveEmpty": "No medications have active treatments.",
+  "catalogError": "Could not load your medications",
+  "catalogScheduleUnavailable": "Schedule unavailable",
+  "catalogNoNext": "No next dose",
+  "catalogDetailTitle": "Medication details",
+  "catalogNoRegimen": "This medication has no configured regimen.",
+  "catalogTreatmentActive": "Active treatment",
+  "catalogTreatmentPaused": "Paused treatment",
+  "catalogTreatmentDraft": "Draft treatment",
+  "catalogSchedule": "Regimen schedule",
+  "@catalogActiveCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tmSetupCaregiver": "Caregiver",
+  "tmSetupDraftHint": "The treatment is activated after reviewing the regimen and reminders.",
+  "tmSchedulePreview": "Schedule preview",
+  "tmFollowUpSummary": "Notify after {minutes} min without confirmation.",
+  "@tmFollowUpSummary": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "tmFollowUpHelp": "Wait from 0 to 1440 minutes. Leave empty to use the default delay.",
+  "tmTreatmentAdherence": "Adherence for this treatment",
+  "tmTreatmentFor": "Treatment for {name}",
+  "tmManagementSubtitle": "Manage the regimen while preserving history.",
+  "tmActiveMedicationCount": "{count, plural, =1{1 active medication} other{{count} active medications}}",
+  "tmHistoryProtected": "History preserved",
+  "tmHistoryProtectedBody": "Regimen changes preserve recorded intakes.",
+  "tmDeactivateMedication": "Deactivate medication",
+  "@tmTreatmentFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@tmActiveMedicationCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tmAccessRestricted": "Restricted access",
+  "tmAccessRestrictedBody": "This treatment does not belong to a person linked to your account.",
+  "tmReturnToPerson": "Return to linked person",
+  "tmPausedNotice": "Treatment paused",
+  "tmPausedNoticeBody": "New intakes will not be generated while the treatment is paused.",
+  "tmConfigurationIncomplete": "Incomplete configuration",
+  "tmCompleteConfiguration": "Complete configuration",
+  "tmCompleteConfigurationBody": "Review the dose, frequency, times and reminders before activating.",
+  "tmFollowUpCompact": "follow-up +{minutes} min",
+  "@tmFollowUpCompact": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "adherencePercentBadge": "{percent}% adherence",
+  "@adherencePercentBadge": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "oeChannelReminders": "Medication reminders",
+  "oeChannelRemindersDescription": "Second reminder while a dose is still pending.",
+  "oeChannelAlerts": "Caregiver alerts",
+  "oeChannelAlertsDescription": "Doses that were not confirmed in time.",
+  "oeReminderTitle": "Second reminder",
+  "oeReminderText": "The dose is still pending. Confirm it when you take it.",
+  "oeReminderTextNamed": "{medication} is still pending. Confirm it when you take it.",
+  "@oeReminderTextNamed": {
+    "placeholders": {
+      "medication": {
+        "type": "String"
+      }
+    }
+  },
+  "oeAlertTitle": "Dose not confirmed",
+  "oeAlertText": "A dose was not confirmed in time. Check the alert and how they are doing.",
+  "oeAlertTextNamed": "{medication} was not confirmed in time. Check the alert and how they are doing.",
+  "@oeAlertTextNamed": {
+    "placeholders": {
+      "medication": {
+        "type": "String"
+      }
+    }
+  },
+  "fmAlertsTitle": "Alerts",
+  "fmAlertsSubtitle": "Missed doses that need your follow-up.",
+  "fmFilterAll": "All",
+  "fmFilterPending": "Pending",
+  "fmFilterUpcoming": "Upcoming",
+  "fmFilterCompleted": "Completed",
+  "fmPendingSummary": "{count, plural, =1{1 pending alert} other{{count} pending alerts}}",
+  "@fmPendingSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fmAlertsEmptyTitle": "No alerts",
+  "fmAlertsEmptyMessage": "There are no follow-up alerts or doses to show for this day.",
+  "fmAlertsFilterEmpty": "There are no alerts in this filter.",
+  "fmAlertScheduled": "Scheduled for {time}",
+  "@fmAlertScheduled": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "fmOpenDetail": "Open alert detail",
+  "fmAlertsLoading": "Loading alerts…",
+  "fmRetry": "Try again",
+  "fmNoPending": "No pending alerts",
+  "fmStatusOpen": "Pending",
+  "fmStatusAttended": "Attended",
+  "fmStatusClosed": "Closed",
+  "fmTitleOpen": "Pending alert",
+  "fmTitleAttended": "Attended alert",
+  "fmTitleClosed": "Closed alert",
+  "fmDetailTitle": "Alert detail",
+  "fmReminderTimeline": "Reminder timeline",
+  "fmPersonProfile": "View profile",
+  "fmDetailSection": "Alert information",
+  "fmDetailScheduled": "Scheduled dose",
+  "fmDetailReason": "Reason",
+  "fmDetailReasonMissing": "Not reported",
+  "fmDetailStatus": "Status",
+  "fmDetailOpened": "Opened",
+  "fmDetailClosed": "Closed",
+  "fmDetailLoading": "Loading the alert…",
+  "fmActionsTitle": "Follow-up actions",
+  "fmActionsSubtitle": "Update the alert according to the follow-up result.",
+  "fmActionsSubtitleNamed": "Contact {name} and update the alert according to the result.",
+  "@fmActionsSubtitleNamed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fmActionAttend": "Mark as attended",
+  "fmActionAttended": "Attended",
+  "fmActionClose": "Close alert",
+  "fmActionSaving": "Saving…",
+  "fmClosedNote": "This alert is closed and stays in the history.",
+  "fmCloseConfirmTitle": "Close this alert?",
+  "fmCloseConfirmMessage": "It will leave the pending list and stay in the history. It cannot be reopened.",
+  "fmCancel": "Cancel",
+  "fmFeedbackAttended": "Alert marked as attended.",
+  "fmFeedbackClosed": "Alert closed.",
+  "fmFeedbackConflict": "The alert had already changed. This is its current status.",
+  "fmFeedbackFailed": "We could not update the alert. Try again.",
+  "fmErrorAccess": "The care link is not active or consent is missing, so the follow-up cannot be shown.",
+  "fmErrorListNotFound": "This person has no active follow-up.",
+  "fmErrorDetailNotFound": "This alert does not exist or is no longer available.",
+  "fmErrorUnknown": "We could not load the follow-up. Try again.",
+  "fmDoseUpcoming": "Upcoming reminder",
+  "fmDoseConfirmed": "Dose confirmed",
+  "fmDoseLate": "Dose confirmed late",
+  "fmDosePending": "Pending dose",
+  "fmViewDose": "View dose in summary",
+  "fmConfirmedBadge": "Confirmed",
+  "fmTimelinePerson": "{time}, {name}",
+  "@fmTimelinePerson": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fmDueMinutes": "In {minutes} min",
+  "@fmDueMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "fmDueHoursMinutes": "In {hours} h {minutes} min",
+  "@fmDueHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "fmPersonSummary": "View summary",
+  "fmPersonAge": "{age} years old",
+  "@fmPersonAge": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "fmEventsTitle": "Alert timeline",
+  "fmEventScheduled": "Scheduled dose",
+  "fmEventReinforced": "Reinforced reminder sent",
+  "fmEventOpened": "Alert generated",
+  "fmEventClosed": "Alert closed",
+  "fmContactAction": "Contact",
+  "fmContactActionNamed": "Contact {name}",
+  "@fmContactActionNamed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fmContactUnavailable": "Contact unavailable",
+  "fmContactLoading": "Checking contact…",
+  "fmContactPhone": "Phone: {value}",
+  "@fmContactPhone": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "fmContactWhatsapp": "WhatsApp: {value}",
+  "@fmContactWhatsapp": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "fmContactRetry": "Check contact again",
+  "fmContactNoApp": "No app on this device can open this contact.",
+  "fmContactNone": "No contact channel is registered.",
+  "fmOpenPhone": "Open phone",
+  "fmOpenWhatsapp": "Open WhatsApp",
+  "fmClose": "Close",
+  "fmNotesTitle": "Notes",
+  "fmNotesSubtitle": "Follow-up and observations about the person you care for.",
+  "fmNotesSubtitlePerson": "Follow-up and observations about {name}.",
+  "@fmNotesSubtitlePerson": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fmNotesSection": "Caregiver notes",
+  "fmNotesAdd": "Add note",
+  "fmNotesEmptyTitle": "No notes yet",
+  "fmNotesEmptyMessage": "Write what you did or noticed so the follow-up has a history.",
+  "fmNotesLoading": "Loading notes…",
+  "fmNotesAuthorYou": "You",
+  "fmNotesAuthorOther": "Another caregiver",
+  "fmNotesMeta": "{author} · {date}",
+  "@fmNotesMeta": {
+    "placeholders": {
+      "author": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "fmNotesSharedHistory": "Shared history",
+  "fmNotesSharedHistoryBody": "Notes are linked to the person and the caregiver who records them.",
+  "fmPersonActive": "Active",
+  "fmPersonLinkActive": "Active link",
+  "fmPersonAgeActive": "{age} years old · active link",
+  "@fmPersonAgeActive": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "fmNoteSaved": "Note saved",
+  "fmNoteAddFollowUp": "Add follow-up note",
+  "fmNoteDialogTitle": "New follow-up note",
+  "fmNoteDialogLabel": "What did you do or notice?",
+  "fmNoteDialogCounter": "{count}/{max} characters",
+  "@fmNoteDialogCounter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "fmNoteDialogSave": "Save note",
+  "fmNoteErrorBlank": "Write the note before saving it.",
+  "fmNoteErrorTooLong": "The note can have up to {max} characters.",
+  "@fmNoteErrorTooLong": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "fmNoteErrorRejected": "The server did not accept the note. Review it and try again.",
+  "fmNoteErrorSave": "We could not save the note. Try again.",
+  "fmSummaryTitle": "Family summary",
+  "fmSummaryLoading": "Loading the summary…",
+  "fmRestrictedTitle": "Restricted follow-up",
+  "fmRestrictedBody": "An active link and the consent of {name} are required to share this information.",
+  "@fmRestrictedBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fmWeeklyAdherence": "Adherence this week",
+  "fmNoData": "No data",
+  "fmNoResolved": "No resolved doses yet",
+  "fmWeeklyConfirmed": "{confirmed} of {total} doses confirmed",
+  "@fmWeeklyConfirmed": {
+    "placeholders": {
+      "confirmed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "fmToday": "Today",
+  "fmDosesCompleted": "doses completed",
+  "fmTodayProgress": "{confirmed} / {total}",
+  "@fmTodayProgress": {
+    "placeholders": {
+      "confirmed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "fmNextDose": "Next dose",
+  "fmNoNextDose": "No upcoming doses",
+  "fmAttention": "Attention",
+  "fmLowStock": "{remaining} units of {name} left.",
+  "@fmLowStock": {
+    "placeholders": {
+      "remaining": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fmNoRestock": "No restock alerts.",
+  "fmInventoryUnavailable": "We could not check the inventory.",
+  "fmCheckMedications": "Review the medications and their quantities.",
+  "fmConsiderRestock": "Consider requesting a restock.",
+  "fmQuickMonitoring": "Quick monitoring",
+  "fmQuickHistory": "History",
+  "fmQuickContact": "Contact",
+  "fmAddMedication": "Add medication",
+  "fmSeeAlerts": "View alerts",
+  "fmMoreTitle": "More options",
+  "fmMoreLinkPerson": "Link another person",
+  "fmMoreRefresh": "Refresh summary",
+  "pnTitle": "Notes",
+  "pnSubtitle": "Notes to support your routine.",
+  "pnToday": "Today",
+  "pnYesterday": "Yesterday",
+  "pnRecordedAt": "{day} - {time}",
+  "@pnRecordedAt": {
+    "placeholders": {
+      "day": {"type": "String"},
+      "time": {"type": "String"}
+    }
+  },
+  "pnAll": "All",
+  "pnMedications": "Medications",
+  "pnRoutine": "Routine",
+  "pnRecent": "Recent notes",
+  "pnTip": "Tip",
+  "pnTipText": "Notes can help you remember instructions beyond your dose.",
+  "pnAdd": "Add note",
+  "pnEmpty": "No notes in this category.",
+  "pnLoadError": "Could not load your notes.",
+  "pnRetry": "Retry",
+  "pnSignIn": "Sign in with PIN",
+  "pnSaveError": "Your note was not saved. Retry without losing your text.",
+  "pnSubject": "Title",
+  "pnBody": "Note",
+  "pnSave": "Save",
+  "pnCancel": "Cancel",
+  "voiceTitle": "Confirm by voice",
+  "voiceSubtitle": "Say the phrase out loud",
+  "voiceReady": "Ready to listen",
+  "voiceListening": "Listening...",
+  "voiceProcessing": "Checking...",
+  "voiceNotRecognized": "Not recognized",
+  "voiceUnavailable": "Unavailable",
+  "voicePermissionOff": "Microphone off",
+  "voiceSuggested": "Suggested phrase",
+  "voicePhrase": "“I took my {medication}.”",
+  "voiceNotSaved": "Confirmation not recorded",
+  "voiceRetryHint": "Try again or confirm by touch from Home.",
+  "voicePermissionHint": "Allow the microphone to confirm by voice, or go back and confirm by touch.",
+  "voiceUnavailableHint": "Voice recognition is not available right now. Confirm by touch from Home.",
+  "voiceDisabledHint": "Voice confirmation is turned off in your preferences.",
+  "voiceOfflineHint": "Voice needs a connection. Offline, confirm by touch and we will send it later.",
+  "voiceRetry": "Try again",
+  "voiceStart": "Start",
+  "voiceCancel": "Cancel",
+  "voiceListen": "Listen to the phrase",
+  "voiceStopSemantics": "Finish and send",
+  "invTitle": "Inventory",
+  "invSubtitle": "Initial stock, availability and restocks for {name}.",
+  "invSubtitleGeneric": "Initial stock, availability and restocks.",
+  "invStatusLow": "Low stock",
+  "invStatusAvailable": "Stock available",
+  "invUnitsRemaining": "{count, plural, =1{1 unit left} other{{count} units left}}",
+  "invDaysEstimate": "≈ {days, plural, =1{1 day} other{{days} days}} of treatment",
+  "invNoEstimate": "No days estimate",
+  "invDaysShort": "{days, plural, =1{day} other{days}}",
+  "invDaysSemantics": "{days, plural, =1{Lasts 1 day} other{Lasts {days} days}}",
+  "invDefineInitial": "Set initial stock",
+  "invInitialInfo": "The initial stock is already registered. Use a restock to add units.",
+  "invUnderstood": "Got it",
+  "invRegisterReplenishment": "Register restock",
+  "invQuantityReceived": "Quantity received",
+  "invQuantityHint": "e.g. 30",
+  "invLot": "Lot / note",
+  "invLotHint": "e.g. Lot 2026-09",
+  "invInvalidQuantity": "Invalid quantity",
+  "invInvalidQuantityHint": "Enter a quantity greater than zero before saving.",
+  "invInvalidThreshold": "Enter a threshold of zero or more.",
+  "invInvalidLot": "The lot or note allows up to 200 characters.",
+  "invSaveReplenishment": "Save restock",
+  "invSaving": "Saving…",
+  "invReplenished": "Restock registered.",
+  "invLastReplenishment": "Last restock",
+  "invRegistered": "Registered",
+  "invBatchUnits": "{count, plural, =1{1 unit} other{{count} units}}",
+  "invBatchWithLot": "{units}, {lot}",
+  "invNotInitialized": "This medication has no stock yet. Set how many units there are and when to warn.",
+  "invInitialQuantity": "Initial quantity",
+  "invThreshold": "Restock threshold",
+  "invThresholdHint": "e.g. 5",
+  "invThresholdHelp": "Stock is marked low when it reaches this amount.",
+  "invSaveInitial": "Save initial stock",
+  "invRetry": "Retry",
+  "invErrMedicationNotFound": "This medication no longer exists. Refresh the medication list.",
+  "invErrMedicationInactive": "This medication is inactive. Reactivate it to register its stock.",
+  "invErrConcurrent": "The inventory changed while you were saving. Try again.",
+  "invErrInvalidResponse": "The service returned unexpected data.",
+  "invErrGeneric": "We couldn't complete the request. Try again.",
+  "homeAgendaClearTitle": "Schedule up to date",
+  "homeAgendaClearBody": "There are no upcoming doses pending.",
+  "subTitle": "Plan and subscription",
+  "subSubtitle": "Manage what your account can do.",
+  "subCurrentPlan": "{name} plan",
+  "subPerMonth": "{price} / month",
+  "subActiveRenews": "Active, renews {date}",
+  "subActive": "Active",
+  "subInactive": "Inactive",
+  "subCurrentBadge": "Current plan",
+  "subSelectedBadge": "Selected",
+  "subChange": "Change plan",
+  "subChanging": "Changing…",
+  "subSelectHint": "Choose another plan to switch to it.",
+  "subNextRenewal": "Next renewal",
+  "subKeepsHistory": "Changing plan keeps your history and links.",
+  "subUpdatedTitle": "Subscription updated",
+  "subUpdatedBody": "The new plan's features are now available.",
+  "subConfirmTitle": "Switch to the {name} plan?",
+  "subConfirmBody": "Your plan will cost {price} a month. The change keeps your history and links.",
+  "subCancel": "Cancel",
+  "subConfirm": "Switch",
+  "subRetry": "Retry",
+  "subCapReminders": "Reminders",
+  "subCapAgenda": "Agenda",
+  "subCapConfirmation": "Confirmation",
+  "subCapAlerts": "Alerts",
+  "subCapMonitoring": "Follow-up",
+  "subCapInsights": "Insights",
+  "subDescEssential": "Reminders, agenda and confirmation.",
+  "subDescFamily": "Alerts, follow-up and insights for the family.",
+  "subErrPlan": "That plan is no longer available. Refresh the list.",
+  "subErrInvalidResponse": "The service returned unexpected data.",
+  "subErrGeneric": "We couldn't complete the request. Try again.",
+  "regDuplicateEmailTitle": "Email already registered",
+  "regDuplicateEmailBody": "Use another email or sign in with the existing account.",
+  "regVerificationExpiredTitle": "Verification expired",
+  "regVerificationExpiredBody": "Request a new code to enable the account.",
+  "regRequestNewCode": "Request a new code",
+  "linkFailedTitle": "Could not link",
+  "pfAccessibilitySubtitle": "Adjust the experience to your needs",
+  "pfViewGroup": "Display",
+  "pfInteractionGroup": "Interaction",
+  "pfLargeTextTitle": "Large text",
+  "pfLargeTextHint": "Increase text size",
+  "pfContrastHint": "Improve readability",
+  "pfDarkThemeHint": "Reduce screen brightness",
+  "pfReducedMotionHint": "Reduce animations",
+  "pfVoiceHint": "Listen for confirmations",
+  "pfNeedHelp": "Need help?",
+  "pfHelpSummary": "We help you set up your app.",
+  "homeDueTitle": "Time for your dose",
+  "homeDueBody": "{medication} · Confirm it once you have taken it.",
+  "homeReinforcedTitle": "Second reminder",
+  "homeReinforcedBody": "The dose is still pending. Confirm it when you take it.",
+  "planChoiceTitle": "Choose how to start",
+  "planChoiceSubtitle": "Clear plans and a direct way to reach us.",
+  "planChoiceLoading": "Loading plans…",
+  "planChoiceLoadError": "We could not load the plans",
+  "planChoiceLoadErrorBody": "Try again or continue with your registration.",
+  "planChoiceContinue": "Continue to registration",
+  "planChoiceChoose": "Choose {name}",
+  "planChoiceRecommended": "Recommended",
+  "planChoiceDescEssential": "Reminders, schedule and accessible confirmation.",
+  "planChoiceDescFamily": "Includes follow-up, alerts and insights for caregivers.",
+  "planChoiceContactTitle": "Any questions?",
+  "planChoiceContactBody": "Write to us and we will help you get started with Tata.",
+  "planChoiceContact": "Contact",
+  "planChoiceContactUnavailable": "Not available",
+  "planChoiceContactUnavailableHint": "Contact is not available right now.",
+  "planChoiceCompareTitle": "What each plan includes",
+  "planChoiceRowReminders": "Reminders",
+  "planChoiceRowMonitoring": "Family follow-up",
+  "planChoiceRowInsights": "Adherence insights",
+  "planChoiceIncluded": "Included in {name}",
+  "planChoiceNotIncluded": "Not included in {name}",
+  "planChoiceApplyFailed": "Your account is ready. We could not activate the chosen plan; you can change it in Settings.",
+  "reminderChannelName": "Dose reminders",
+  "reminderChannelDescription": "Alerts at the time of each dose and if it is still pending.",
+  "reminderDueBody": "{medication} · {dose}. Confirm it once you have taken it.",
+  "reminderReinforcedBody": "{medication} is still pending. Confirm it when you take it.",
+  "lpAge": "{years} years old",
+  "lpBirthday": "Birthday: {date}",
+  "lpLinked": "Linked",
+  "lpLinkedSince": "Since {date}",
+  "lpTreatmentTitle": "Current treatment",
+  "lpMedicationsActive": "{count, plural, =1{1 active medication} other{{count} active medications}}",
+  "lpMedicationsNone": "No active medications",
+  "lpMedicationsLoading": "Checking medication…",
+  "lpMedicationsError": "We could not load the medication.",
+  "lpCall": "Call",
+  "lpMessages": "Messages",
+  "lpMedications": "View medication",
+  "lpHistory": "History",
+  "lpNotesTitle": "Caregiver notes",
+  "lpNoteEmpty": "No notes yet. Tap to write the first one.",
+  "lpNoteLoading": "Checking notes…",
+  "lpNoteError": "We could not load the notes.",
+  "lpOpenNotes": "Open notes",
+  "clEditProfileTitle": "Edit profile",
+  "clSaveProfile": "Save changes",
+  "fmViewAgenda": "View schedule",
+  "fmTodayAgenda": "Today's schedule",
+  "fmAgendaEmpty": "No doses are scheduled for this day.",
+  "fmDoseOmitted": "Missed dose",
+  "fmRestockHint": "Consider recording a replenishment.",
+  "fmAlertsTodayDate": "Today, {date}",
+  "fmAlertsClearBody": "There are no follow-up alerts to attend to.",
+  "fmAlertsPendingBody": "Review the details and record the follow-up.",
+  "fmElapsedMinutes": "{minutes} min ago",
+  "fmElapsedHoursMinutes": "{hours} h {minutes} min ago",
+  "@fmAlertsTodayDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "@fmElapsedMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "@fmElapsedHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "fmNoCriticalAlerts": "No critical alerts",
+  "fmCriticalAlerts": "{count, plural, one{1 critical alert} other{{count} critical alerts}}",
+  "fmSeverityUnknownTitle": "Priority not yet verified",
+  "fmSeverityUnknownBody": "Priority is not yet available for these alerts.",
+  "fmSeverityLabel": "Follow-up priority",
+  "fmSeverityStandard": "Standard",
+  "fmSeverityHigh": "High",
+  "fmSeverityCritical": "Critical",
+  "@fmCriticalAlerts": {
+    "description": "Open or attended critical follow-ups not yet closed.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fmElapsedDaysHours": "{days} d {hours} h ago",
+  "fmConfirmationRecorded": "Confirmed at {time}",
+  "@fmElapsedDaysHours": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "@fmConfirmationRecorded": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "pfEdit": "Edit",
+  "pfNotificationPreferences": "Notification preferences",
+  "pfMedicationReminders": "Medication reminders",
+  "pfCadence": "Cadence",
+  "pfCaregiverAlerts": "Caregiver alerts",
+  "pfPendingDoses": "Pending doses",
+  "pfOmittedDoses": "Missed doses",
+  "pfSummaryLabel": "Daily summary",
+  "pfEmergencyEscalation": "Emergency escalation",
+  "pfEscalateNoResponse": "Escalate if no response",
+  "pfNotificationChannels": "Notification channels",
+  "pfNotConfigured": "Not configured",
+  "pfDisabled": "Disabled",
+  "pfAfterMinutes": "After {count} min",
+  "@pfAfterMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pfAfterHours": "After {count} h",
+  "@pfAfterHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pfReminderAfter": "{count} min after the scheduled time",
+  "@pfReminderAfter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pfConfiguredContacts": "{count} configured",
+  "@pfConfiguredContacts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pfPreferencesSaved": "Preferences saved",
+  "pfPolicyReceipt": "Alerts and emergency contacts were updated.",
+  "pfChannelsReceipt": "Notification channels were updated.",
+  "pfQuietReceipt": "Quiet hours were updated.",
+  "tmMissingMedicationTitle": "Required details are missing",
+  "tmMissingMedicationBody": "Complete the medication, strength and frequency before continuing.",
+  "tmChangesSaved": "Changes saved",
+  "tmFutureRegimenReceipt": "The new regimen will apply only to future doses.",
+  "tmDeactivationReceipt": "No new doses will be generated. History is preserved.",
+  "tmReactivationReceipt": "The medication is available again.",
+  "fmFollowUpNoteTitle": "Observation",
+  "tmReminderLead": "Reminder lead time (minutes)",
+  "tmReminderLeadHelp": "Minutes before the dose, from 0 to 1440.",
+  "tmErrReminderLead": "Enter a lead time between 0 and 1440 minutes.",
+  "tmReminderLeadCompact": "reminder {minutes} min before",
+  "@tmReminderLeadCompact": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "pfAccessibilitySaved": "Preference saved",
+  "pfAccessibilityReceipt": "{preference}: your choice is kept for future sign-ins.",
+  "@pfAccessibilityReceipt": {
+    "placeholders": {
+      "preference": { "type": "String" }
+    }
+  },
+  "pfContrastActive": "High contrast enabled",
+  "pfContrastApplied": "Text, borders and controls use high contrast.",
+  "pfMotionReduced": "Reduced motion",
+  "pfMotionApplied": "Non-essential transitions use a reduced alternative.",
+  "pfReadingActive": "Reading assistance enabled",
+  "pfReadingApplied": "More space between lines and letters in supported content.",
+  "linkPendingBadge": "Pending",
+  "linkConfirmedBadge": "Confirmed",
+  "pfLanguageHint": "Application language",
+  "landingTagline": "Managing medication without complications.",
+  "landingHeadline": "More peace of mind for you and your family.",
+  "landingDescription": "Clear reminders and family follow-up when it is truly needed.",
+  "landingFeatures": "Key features",
+  "landingReminders": "Reminders",
+  "landingReminderBody": "Accessible schedules and alerts.",
+  "landingFamily": "Family",
+  "landingFamilyBody": "Alerts and remote follow-up.",
+  "landingInsights": "Insights",
+  "landingInsightsBody": "Patterns and recommendations.",
+  "landingAudience": "For older adults and family members/caregivers.",
+  "landingQuote": "“Now I can know if my mother took her medication without calling her all the time.”",
+  "landingQuoteAuthor": "Diego, family member/caregiver",
+  "landingSteps": "3 steps",
+  "landingStepsBody": "to confirm an intake",
+  "landingRoles": "2 roles",
+  "landingRolesBody": "older adult + family",
+  "landingPreviewLabel": "Example preview of Tata with illustrative data.",
+  "landingToday": "Today",
+  "landingMedication": "Losartan",
+  "landingExampleTime": "8:00 p.m.",
+  "landingExampleAdherence": "92% adherence",
+  "socialLinkRequired": "This email already has an account. Sign in with your password to explicitly link the provider.",
+  "socialEmailRequired": "The provider must share a verified email to create the account."
+}
