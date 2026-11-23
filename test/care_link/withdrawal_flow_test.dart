@@ -40,6 +40,7 @@ void main() {
       );
       var requests = 0;
       var changes = 0;
+      var withdrawals = 0;
       final client = ApiClient(
         baseUrl: Uri.parse('https://example.com/'),
         client: MockClient((request) async {
@@ -77,6 +78,7 @@ void main() {
                 withdraw: WithdrawConsent(consent),
               ),
               onSessionChanged: () => changes++,
+              onWithdrawn: () => withdrawals++,
               onSignOut: () {},
             ),
           ),
@@ -104,6 +106,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(requests, 1);
       expect(changes, 0);
+      expect(withdrawals, 0, reason: 'an outage is not a withdrawal');
       expect(store.current, isNotNull);
       expect(
         find.text('No pudimos completar el vínculo. Inténtalo nuevamente.'),
@@ -117,6 +120,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(requests, 2);
       expect(changes, 1);
+      expect(withdrawals, 1);
       expect(store.current, isNull);
       expect(tester.takeException(), isNull);
     },

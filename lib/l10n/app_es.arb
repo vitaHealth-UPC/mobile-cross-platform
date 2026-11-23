@@ -120,5 +120,95 @@
   "manageConsentExplanation": "Tú decides si tu familiar puede consultar tu información de seguimiento. Puedes retirar ese permiso en cualquier momento.",
   "withdrawConsent": "Retirar consentimiento",
   "withdrawConsentExplanation": "Tu familiar dejará de consultar tu seguimiento y se cerrará este acceso. Podrás establecer un nuevo vínculo cuando lo decidas.",
-  "keepConsent": "Conservar vínculo"
+  "keepConsent": "Conservar vínculo",
+  "signInWithPin": "Ingresar con PIN",
+  "pinAccessTitle": "Ingresa a Tata",
+  "pinSetupTitle": "Crea tu PIN",
+  "pinAccessSubtitle": "Acceso simple para el adulto mayor.",
+  "pinSetupSubtitle": "Elige 4 dígitos para futuros ingresos.",
+  "pinAccessHint": "Usa tu PIN de 4 dígitos.",
+  "pinSetupHint": "Crea un PIN de 4 dígitos.",
+  "olderAdultBadge": "Adulto mayor",
+  "pinLabel": "PIN",
+  "pinDeleteDigit": "Borrar último dígito",
+  "pinDigitsEntered": "{count} de 4 dígitos ingresados",
+  "@pinDigitsEntered": {
+    "description": "Screen reader summary of PIN progress; digits are never read aloud.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pinSubmitAccess": "Ingresar",
+  "pinSubmitSetup": "Guardar PIN",
+  "pinProcessing": "Procesando…",
+  "pinTryLater": "Intenta más tarde",
+  "pinSetupInfoTitle": "Configura tu acceso",
+  "pinSetupInfoBody": "Registra cuatro dígitos para ingresar sin correo ni contraseña.",
+  "pinIncorrectTitle": "PIN incorrecto",
+  "pinIncorrectBody": "Revisa los cuatro dígitos e intenta nuevamente.",
+  "pinLockedTitle": "Acceso temporalmente bloqueado",
+  "pinLockedBody": "Se alcanzó el límite de intentos incorrectos. Intenta en 15 minutos.",
+  "pinErrorTitle": "No pudimos completar el acceso",
+  "pinLinkErrorBody": "Verifica tu vinculación e intenta nuevamente.",
+  "pinForgot": "¿Olvidaste tu PIN? Pide ayuda a tu familiar.",
+  "back": "Volver",
+  "homeToday": "Hoy",
+  "homeLoading": "Consultando tu programación…",
+  "homeNextDose": "Próxima toma",
+  "homeInHours": "En {hours} h",
+  "@homeInHours": {
+    "description": "Time remaining before the next intake, in whole hours.",
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "homeInMinutes": "En {minutes} min",
+  "@homeInMinutes": {
+    "description": "Time remaining before the next intake, in whole minutes.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "homeDueNow": "Es hora de tu toma",
+  "homeEmptyTitle": "Sin próxima toma",
+  "homeEmptyDescription": "No hay tomas pendientes programadas.",
+  "homeErrorTitle": "No pudimos cargar tu próxima toma",
+  "homeErrorBody": "Inténtalo nuevamente en unos minutos.",
+  "homeRetry": "Reintentar",
+  "homeProgressTitle": "Progreso de hoy",
+  "homeProgressValue": "{completed}/{total}",
+  "@homeProgressValue": {
+    "description": "Confirmed intakes over scheduled intakes for today.",
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "homeCompleted": "Tomas completadas",
+  "homeProgressUnavailable": "Consulta tu agenda",
+  "homeProgressEmpty": "Sin tomas programadas",
+  "homeProgressDone": "¡Muy bien, completaste tus tomas!",
+  "homeProgressInProgress": "¡Vas muy bien!",
+  "homeProgressEncouragement": "Cada toma cuenta",
+  "homeVoiceTitle": "Confirmar con voz",
+  "homeVoiceSubtitle": "Es rápido y fácil",
+  "homeAgendaTitle": "Ver todas mis tomas",
+  "homeAgendaSubtitle": "Horario completo",
+  "homeTipTitle": "Consejo del día",
+  "homeTipDescription": "Toma tus medicamentos con agua y a la misma hora cada día.",
+  "homeDismissTip": "Cerrar consejo del día",
+  "homeTabStart": "Inicio",
+  "homeTabMore": "Más",
+  "homeCareLink": "Mi vínculo de cuidado",
+  "homeSwitchAccount": "Cambiar cuenta"
 }

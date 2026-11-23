@@ -1111,6 +1111,7 @@ Actualizar esta sección al cerrar cada recorrido o checkpoint, junto con el est
 | Fecha | Alcance | Referencia | Verificación | Continuación |
 | --- | --- | --- | --- | --- |
 | 02-11-2026 | Identity y Care Link: onboarding, acceso, alta, recovery, vínculo y consentimiento con retirada | 58cb71b (código compartido); 4d5d7a9 (plan) | 69 tests aprobados; análisis limpio; evidencia Spring local de los cortes descritos | Persistencia del setup cuidador, PIN con alcance, inicio clínico y restantes contextos |
+| 03-11-2026 | PIN (alta tras consentimiento y acceso con alcance de current), Home adulto (próxima toma y progreso diario) y olvido del atajo PIN al retirar consentimiento | Sobre ce70f0d; commit pendiente | 102 tests; análisis y formato limpios; build apk debug; tool/verify_local_pin_home.dart contra Spring local en Docker (seed demo); recorrido instalado en emulador Pixel_10 (API 37): invitación, consentimiento, alta de PIN, Home vacío y con toma real, refresco, cambio de cuenta, PIN incorrecto, PIN correcto, reinicio con sesión restaurada y retiro de consentimiento sin atajo; bloqueo 401x3/403 PIN_LOCKED comprobado en Spring; mismo recorrido instalado en teléfono físico POCO X6 Pro (Android 16) vía adb reverse, con conversión UTC a hora de Perú | Agenda, detalle y confirmación de tomas para activar atajos |
 
 ### Plantilla de siguiente registro
 
@@ -1131,7 +1132,7 @@ No registrar porcentajes estimados como validación. Separar implementación, co
 
 ## Registro de variantes Flutter
 
-Inventario de referencia:70 variantes. Estado inicial compartido:1 completa aceptada,3 parciales comparadas,66 sin implementación específica. La funcionalidad se registra por recorrido y actor, sin equiparar aprobación visual con cierre funcional. Las extensiones INV-01 (invitación), REC-01 (recuperación) y WDR-01 (retirada) tienen comportamiento implementado y pruebas propias; no amplían este denominador.
+Inventario de referencia:70 variantes. Estado inicial compartido:1 completa aceptada,3 parciales comparadas,66 sin implementación específica. Tras el corte PIN + Home (03-11-2026): 1 completa, 8 parciales, 61 sin implementación específica. La funcionalidad se registra por recorrido y actor, sin equiparar aprobación visual con cierre funcional. Las extensiones INV-01 (invitación), REC-01 (recuperación) y WDR-01 (retirada) tienen comportamiento implementado y pruebas propias; no amplían este denominador.
 
 | # | Variante | Nodo Figma | Implementación | Fidelidad visual | Funcionalidad y evidencia |
 | --- | --- | --- | --- | --- | --- |
@@ -1140,9 +1141,9 @@ Inventario de referencia:70 variantes. Estado inicial compartido:1 completa acep
 | 3 | Onboarding | 563:5 | Completa | Aceptada proporcionalmente | Acciones y navegación comprobadas en widgets; onboarding_screen_test.dart; falta dispositivo |
 | 4 | Caregiver Registration | 563:1398 | Parcial | Comparada, ajustes abiertos | Alta, verificación y reenvío; tests y probe Spring local; falta validación instalada |
 | 5 | Link & Consent | 563:1440 | Parcial | Comparada, ajustes abiertos | Cuidador y adulto con decisiones y retirada; tests y Spring local; falta persistencia del setup cuidador y core adulto |
-| 6 | PIN Access | 563:1338 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
+| 6 | PIN Access | 563:1338 | Parcial | Comparada, ajustes abiertos (iniciales en lugar de foto) | PinRoute/PinBloc.access con pin-sessions + current; tests, sonda Spring local y emulador (incorrecto y correcto); teléfono físico POCO X6 Pro comprobado |
 | 7 | Login | 641:16 | Parcial | Comparada, ajustes abiertos | Password, restore y logout; social sin integrar; tests y Spring local |
-| 8 | Home | 563:58 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
+| 8 | Home | 563:58 | Parcial | Comparada, ajustes abiertos (iniciales en lugar de foto; atajos voz/agenda y pestañas Medicamentos/Agenda/Notas ocultos hasta existir sus flujos) | AdultHomeRoute/HomeBloc con intakes/next y agenda del día; tests, sonda Spring local y emulador (vacío, toma real, refresco, reinicio); teléfono físico POCO X6 Pro comprobado |
 | 9 | My Medications | 563:361 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 10 | Medication Detail | 563:142 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 11 | Weekly Schedule | 563:500 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
@@ -1163,9 +1164,9 @@ Inventario de referencia:70 variantes. Estado inicial compartido:1 completa acep
 | 26 | Notification Preferences | 563:1219 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 27 | Notes - Caregiver | 576:2859 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 28 | Plan & Subscription | 563:1701 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
-| 29 | PIN Setup | 563:1970 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
-| 30 | PIN Incorrect | 563:2034 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
-| 31 | PIN Temporarily Blocked | 563:2098 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
+| 29 | PIN Setup | 563:1970 | Parcial | Comparada, ajustes abiertos | Alta tras consentimiento real en emulador con pin-credentials; PIN_ALREADY_REGISTERED comprobado en Spring; teléfono físico POCO X6 Pro comprobado |
+| 30 | PIN Incorrect | 563:2034 | Parcial | Comparada, ajustes abiertos | INVALID_PIN 401 de Spring mostrado en emulador; dígitos limpiados; también en teléfono físico |
+| 31 | PIN Temporarily Blocked | 563:2098 | Parcial | Sin comparar contra el nodo | Spring devuelve 401x3 y 403 PIN_LOCKED; mapeo y bloqueo de teclado en pin_flow_test.dart; sin captura en emulador |
 | 32 | Duplicate Email | 563:2162 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 33 | Verification Expired | 563:2208 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 34 | Invalid Link Code | 563:2254 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
@@ -1332,6 +1333,8 @@ dart format --output=none --set-exit-if-changed lib test tool
 flutter analyze
 flutter test
 ```
+
+Contra Spring local (Docker con TATA_DEMO_SEED=true) el emulador usa `--dart-define=TATA_API_BASE_URL=http://10.0.2.2:<puerto>/ --dart-define=TATA_ALLOW_LOCAL_HTTP=true`; solo el build debug admite HTTP y únicamente hacia hosts locales. `dart run tool/verify_local_pin_home.dart <fixture>` comprueba PIN y Home por TCP real con un fixture privado fuera del repositorio.
 
 Ejecutar los tests pertinentes durante el cambio y la suite apropiada al cerrar el corte. Construir flutter build apk --debug cuando cambie integración/host/plugins o se entregue un APK; iOS se verifica con macOS/Xcode. Ejecutar probes Spring solo contra un host aislado con su fixture privado y limpieza; no crear cuentas de prueba ni enviar correos en producción para simular cobertura. No repetir verificaciones amplias sin cambios o riesgos nuevos que lo justifiquen. Un cambio exclusivo de documentación no requiere recompilar la aplicación.
 

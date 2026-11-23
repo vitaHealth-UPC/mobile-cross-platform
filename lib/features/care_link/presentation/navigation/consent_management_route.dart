@@ -14,16 +14,21 @@ class ConsentManagementRoute extends StatelessWidget {
     required this.createBloc,
     required this.onSessionChanged,
     required this.onSignOut,
+    this.onWithdrawn,
   });
   final ConsentBloc Function() createBloc;
   final VoidCallback onSessionChanged;
   final VoidCallback onSignOut;
+
+  /// Runs before [onSessionChanged] only after the server confirmed withdrawal.
+  final VoidCallback? onWithdrawn;
 
   @override
   Widget build(BuildContext context) => BlocProvider(
     create: (_) => createBloc(),
     child: BlocConsumer<ConsentBloc, ConsentState>(
       listener: (context, state) {
+        if (state.withdrawn) onWithdrawn?.call();
         if (state.withdrawn ||
             state.errorCode == 'AUTHENTICATION_REQUIRED' ||
             state.errorCode == 'SESSION_CHANGED') {

@@ -18,6 +18,7 @@ class LoginScreen extends StatefulWidget {
     this.busy = false,
     this.errorText,
     this.onInvitation,
+    this.onPinAccess,
   });
   final void Function(String email, String password) onSignIn;
   final VoidCallback onRecover;
@@ -27,6 +28,9 @@ class LoginScreen extends StatefulWidget {
   final bool busy;
   final String? errorText;
   final VoidCallback? onInvitation;
+
+  /// Shown only when this device remembers an adult who enrolled a PIN.
+  final VoidCallback? onPinAccess;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -174,6 +178,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: TextButton(
                             onPressed: widget.busy ? null : widget.onInvitation,
                             child: Text(text.haveInvitation),
+                          ),
+                        ),
+                      if (widget.onPinAccess != null)
+                        Center(
+                          child: TextButton.icon(
+                            onPressed: widget.busy ? null : widget.onPinAccess,
+                            icon: const Icon(Icons.dialpad, size: 18),
+                            label: Text(text.signInWithPin),
                           ),
                         ),
                     ],

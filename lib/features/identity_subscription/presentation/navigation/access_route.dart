@@ -3,14 +3,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/application/session/session_owner.dart';
+import '../../application/readmodels/remembered_adult.dart';
 import '../bloc/access/access_bloc.dart';
 import '../bloc/access/access_event.dart';
 import '../bloc/access/access_state.dart';
+import '../bloc/pin/pin_bloc.dart';
 import '../bloc/recovery/recovery_bloc.dart';
 import '../bloc/registration/registration_bloc.dart';
 import '../screens/login_screen.dart';
 import '../screens/onboarding_screen.dart';
 import '../screens/password_recovery_screen.dart';
+import 'pin_route.dart';
 import 'registration_route.dart';
 
 /// Adapts public session state to widgets without exposing credentials to the UI.
@@ -23,6 +26,8 @@ class AccessRoute extends StatefulWidget {
     this.consentBuilder,
     this.invitationBuilder,
     this.adultBuilder,
+    this.loadRememberedAdult,
+    this.createPinAccessBloc,
   });
   final RegistrationBloc Function()? createRegistrationBloc;
   final RecoveryBloc Function()? createRecoveryBloc;
@@ -33,6 +38,12 @@ class AccessRoute extends StatefulWidget {
   final WidgetBuilder? invitationBuilder;
   final Widget Function(BuildContext, VoidCallback, VoidCallback)? adultBuilder;
 
+  /// Reads the adult remembered after PIN enrollment on this device, if any.
+  final Future<RememberedAdult?> Function()? loadRememberedAdult;
+
+  /// Creates PIN access state for the remembered adult identifier.
+  final PinBloc Function(String olderAdultId)? createPinAccessBloc;
+
   @override
   State<AccessRoute> createState() => _AccessRouteState();
 }
@@ -40,6 +51,47 @@ class AccessRoute extends StatefulWidget {
 /// Keeps onboarding navigation local while the bloc remains the session authority.
 class _AccessRouteState extends State<AccessRoute> {
   bool _showOnboarding = true;
+  RememberedAdult? _remembered;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRemembered();
+  }
+
+  /// A storage failure only hides the shortcut; email access stays available.
+  Future<void> _loadRemembered() async {
+    final load = widget.loadRememberedAdult;
+    if (load == null) return;
+    RememberedAdult? adult;
+    try {
+      adult = await load();
+    } on Exception {
+      adult = null;
+    }
+    if (!mounted) return;
+    setState(() {
+      _remembered = adult;
+      if (adult != null) _showOnboarding = false;
+    });
+  }
+
+  Future<void> _pinAccess(BuildContext context, RememberedAdult adult) async {
+    final factory = widget.createPinAccessBloc!;
+    final signedIn = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (routeContext) => PinRoute(
+          createBloc: () => factory(adult.id),
+          adultName: adult.name,
+          onCompleted: () => Navigator.of(routeContext).pop(true),
+          onBack: () => Navigator.of(routeContext).pop(false),
+        ),
+      ),
+    );
+    if (signedIn == true && context.mounted) {
+      context.read<AccessBloc>().add(const AccessRestoreRequested());
+    }
+  }
 
   Future<void> _register(BuildContext context) async {
     setState(() => _showOnboarding = false);
@@ -61,7 +113,12 @@ class _AccessRouteState extends State<AccessRoute> {
   @override
   Widget build(BuildContext context) {
     final text = AppLocalizations.of(context);
-    return BlocBuilder<AccessBloc, AccessState>(
+    return BlocConsumer<AccessBloc, AccessState>(
+      // Sign-out or consent withdrawal may change which adult this device remembers.
+      listenWhen: (previous, current) =>
+          previous.status != current.status &&
+          current.status == AccessStatus.anonymous,
+      listener: (_, _) => _loadRemembered(),
       builder: (context, state) {
         if (state.status == AccessStatus.initial) {
           return const Scaffold(
@@ -167,6 +224,9 @@ class _AccessRouteState extends State<AccessRoute> {
               : () => _register(context),
           onGoogle: unavailable,
           onFacebook: unavailable,
+          onPinAccess: _remembered == null || widget.createPinAccessBloc == null
+              ? null
+              : () => _pinAccess(context, _remembered!),
         );
       },
     );

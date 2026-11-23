@@ -7,27 +7,42 @@ import '../../features/care_link/application/usecases/register_consent.dart';
 import '../../features/care_link/application/usecases/register_older_adult.dart';
 import '../../features/care_link/application/usecases/withdraw_consent.dart';
 import '../../features/care_link/infrastructure/remote/care_link_api.dart';
+import '../../features/care_link/infrastructure/repositories/remote_adult_profile_reader.dart';
 import '../../features/care_link/infrastructure/repositories/remote_care_link_consent.dart';
 import '../../features/care_link/infrastructure/repositories/remote_care_link_repository.dart';
 import '../../features/care_link/presentation/bloc/consent/consent_bloc.dart';
 import '../../features/care_link/presentation/bloc/profiles/profiles_bloc.dart';
+import '../../features/identity_subscription/application/ports/remembered_adult_store.dart';
+import '../../features/identity_subscription/application/readmodels/remembered_adult.dart';
 import '../../features/identity_subscription/application/usecases/complete_password_recovery.dart';
 import '../../features/identity_subscription/application/usecases/register_caregiver.dart';
+import '../../features/identity_subscription/application/usecases/register_pin.dart';
 import '../../features/identity_subscription/application/usecases/request_password_recovery.dart';
 import '../../features/identity_subscription/application/usecases/request_verification.dart';
 import '../../features/identity_subscription/application/usecases/restore_session.dart';
 import '../../features/identity_subscription/application/usecases/sign_in.dart';
+import '../../features/identity_subscription/application/usecases/sign_in_with_pin.dart';
 import '../../features/identity_subscription/application/usecases/sign_out.dart';
 import '../../features/identity_subscription/application/usecases/verify_email.dart';
+import '../../features/identity_subscription/infrastructure/local/secure_remembered_adult_store.dart';
 import '../../features/identity_subscription/infrastructure/remote/password_recovery_api.dart';
+import '../../features/identity_subscription/infrastructure/remote/pin_api.dart';
 import '../../features/identity_subscription/infrastructure/remote/registration_api.dart';
 import '../../features/identity_subscription/infrastructure/remote/session_api.dart';
 import '../../features/identity_subscription/infrastructure/repositories/remote_account_registration.dart';
 import '../../features/identity_subscription/infrastructure/repositories/remote_password_recovery.dart';
+import '../../features/identity_subscription/infrastructure/repositories/remote_pin_access.dart';
 import '../../features/identity_subscription/infrastructure/repositories/remote_session_repository.dart';
 import '../../features/identity_subscription/presentation/bloc/access/access_bloc.dart';
+import '../../features/identity_subscription/presentation/bloc/pin/pin_bloc.dart';
 import '../../features/identity_subscription/presentation/bloc/recovery/recovery_bloc.dart';
 import '../../features/identity_subscription/presentation/bloc/registration/registration_bloc.dart';
+import '../../features/intake_execution/application/usecases/get_daily_progress.dart';
+import '../../features/intake_execution/application/usecases/get_next_intake.dart';
+import '../../features/intake_execution/infrastructure/remote/intake_api.dart';
+import '../../features/intake_execution/infrastructure/repositories/remote_intake_reader.dart';
+import '../../features/intake_execution/presentation/bloc/home/home_bloc.dart';
+import '../../shared/common/result/app_result.dart';
 import '../../shared/infrastructure/network/api_client.dart';
 import '../../shared/infrastructure/security/secure_session_store.dart';
 import '../config/app_config.dart';
@@ -40,6 +55,10 @@ final class AppDependencies {
     this._registration,
     this._careLinks,
     this._consent,
+    this._pins,
+    this._rememberedAdults,
+    this._intakes,
+    this._adultProfiles,
   );
 
   /// Composes real HTTP and secure storage using environment configuration.
@@ -74,6 +93,10 @@ final class AppDependencies {
         store: store,
         clock: DateTime.now,
       ),
+      RemotePinAccess(api: PinApi(client), store: store, clock: DateTime.now),
+      const SecureRememberedAdultStore(FlutterSecureStorage()),
+      RemoteIntakeReader(api: IntakeApi(client), store: store),
+      RemoteAdultProfileReader(api: CareLinkApi(client), store: store),
     );
   }
 
@@ -82,6 +105,40 @@ final class AppDependencies {
   final RemoteAccountRegistration _registration;
   final RemoteCareLinkRepository _careLinks;
   final RemoteCareLinkConsent _consent;
+  final RemotePinAccess _pins;
+  final RememberedAdultStore _rememberedAdults;
+  final RemoteIntakeReader _intakes;
+  final RemoteAdultProfileReader _adultProfiles;
+
+  /// Adult remembered on this device after PIN enrollment, if any.
+  Future<RememberedAdult?> readRememberedAdult() => _rememberedAdults.read();
+
+  /// Stores the PIN shortcut after the server acknowledged enrollment.
+  Future<void> rememberAdult(RememberedAdult adult) =>
+      _rememberedAdults.remember(adult);
+
+  /// Removes the PIN shortcut, for example after consent withdrawal.
+  Future<void> forgetRememberedAdult() => _rememberedAdults.forget();
+
+  /// Display name of the adult in the current session, or null if unreadable.
+  Future<String?> readAdultName() async =>
+      switch (await _adultProfiles.readOwn()) {
+        AppSuccess(:final value) => value.fullName,
+        AppFailure() => null,
+      };
+
+  /// Creates PIN enrollment state for the current full adult session.
+  PinBloc createPinSetupBloc() => PinBloc.setup(register: RegisterPin(_pins));
+
+  /// Creates PIN access state for the remembered adult [olderAdultId].
+  PinBloc createPinAccessBloc(String olderAdultId) =>
+      PinBloc.access(signIn: SignInWithPin(_pins), olderAdultId: olderAdultId);
+
+  /// Creates the adult home state; day boundaries follow the device clock.
+  HomeBloc createHomeBloc() => HomeBloc(
+    next: GetNextIntake(_intakes),
+    progress: GetDailyProgress(_intakes, DateTime.now),
+  );
 
   /// Creates consent state without granting any caregiver or clinical capability.
   ConsentBloc createConsentBloc() => ConsentBloc(
