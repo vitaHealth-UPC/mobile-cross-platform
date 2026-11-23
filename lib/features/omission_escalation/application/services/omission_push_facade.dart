@@ -91,5 +91,8 @@ final class OmissionPushFacade {
   Future<void> observeSession(StoredSession? session) =>
       _cleanup.observe(session);
 
-  void dispose() => _cleanup.dispose();
+  void dispose() {
+    _registration.cancelPending();
+    _cleanup.dispose();
+  }
 }

@@ -30,3 +30,7 @@ La revisión de notificaciones añade pruebas de aislamiento de canales, callbac
 ## TS-06: avisos nativos
 
 Siete pruebas acotadas aprueban inicialización compartida, aislamiento de canales, textos ES/EN y retirada del aviso ante cambio de sesión. El análisis estático del adaptador y su composición no presenta incidencias. El APK debug compila con el recurso nativo de notificación. El registro push permanece desactivado hasta completar recepción y apertura. Este resultado complementa la suite de 849 pruebas del corte publicado; no declara una nueva suite completa.
+
+## TS-06: transporte y coordinación
+
+Once pruebas acotadas aprueban el mapeo FCM y los permisos del token. Seis pruebas del coordinador aprueban restauración, autorización, cambio de actor y salida. El análisis del corte no presenta incidencias. El coordinador está compuesto mediante `AppDependencies`; el arranque y las rutas de pantalla aún requieren conexión antes de activar registro.

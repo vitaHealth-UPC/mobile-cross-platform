@@ -36,6 +36,19 @@ class _Messaging implements FirebaseMessaging {
 }
 
 void main() {
+  test(
+    'rotation after permission withdrawal does not expose a new address',
+    () async {
+      final sdk = _Messaging()..status = AuthorizationStatus.denied;
+      final source = FirebasePushTokenSource(
+        supported: true,
+        messaging: () async => sdk,
+      );
+      expect(await source.refreshedTokens.toList(), isEmpty);
+      expect(sdk.tokenReads, 0);
+    },
+  );
+
   test('unsupported platforms do not initialize Firebase', () async {
     final source = FirebasePushTokenSource(
       supported: false,
