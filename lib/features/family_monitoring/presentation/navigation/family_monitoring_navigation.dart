@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../shared/presentation/widgets/caregiver_tab_bar.dart';
 import '../../application/ports/contact_launcher.dart';
+import '../../application/readmodels/monitoring_readmodels.dart';
 import '../bloc/alert_detail/alert_detail_bloc.dart';
 import '../bloc/alerts/alerts_bloc.dart';
 import '../bloc/notes/note_composer_cubit.dart';
@@ -46,14 +49,17 @@ final class FamilyMonitoringNavigation {
 
   /// Caregiver home of one followed person. The shell owns the Home/Alerts/Notes tabs; the
   /// Person and More tabs are decided by the host through [onPerson] and [onMore].
+  /// The summary is read again when [onAddMedication] or [onOpenStock] completes,
+  /// because medications or stock may have changed there.
   Widget caregiverHome({
     required String olderAdultId,
     required String olderAdultName,
     required VoidCallback onHistory,
-    required VoidCallback onAddMedication,
+    required FutureOr<void> Function() onAddMedication,
     required VoidCallback onPerson,
     required VoidCallback onMore,
     required VoidCallback onSessionInvalidated,
+    FutureOr<void> Function(StockAttention stock)? onOpenStock,
   }) => _CaregiverShell(
     factories: _factories,
     olderAdultId: olderAdultId,
@@ -63,6 +69,7 @@ final class FamilyMonitoringNavigation {
     onPerson: onPerson,
     onMore: onMore,
     onSessionInvalidated: onSessionInvalidated,
+    onOpenStock: onOpenStock,
   );
 
   /// The older adult's own notes, loaded when the screen appears.
@@ -96,16 +103,18 @@ class _CaregiverShell extends StatefulWidget {
     required this.onPerson,
     required this.onMore,
     required this.onSessionInvalidated,
+    this.onOpenStock,
   });
 
   final FamilyMonitoringFactories factories;
   final String olderAdultId;
   final String olderAdultName;
   final VoidCallback onHistory;
-  final VoidCallback onAddMedication;
+  final FutureOr<void> Function() onAddMedication;
   final VoidCallback onPerson;
   final VoidCallback onMore;
   final VoidCallback onSessionInvalidated;
+  final FutureOr<void> Function(StockAttention stock)? onOpenStock;
 
   @override
   State<_CaregiverShell> createState() => _CaregiverShellState();
@@ -160,6 +169,12 @@ class _CaregiverShellState extends State<_CaregiverShell> {
           setState(() => _tab = tab);
         }
     }
+  }
+
+  /// Runs a host flow that may change medications or stock, then reads the summary again.
+  Future<void> _thenRefresh(FutureOr<void> Function() open) async {
+    await open();
+    if (mounted) _summary.add(const FamilySummaryRequested());
   }
 
   void _openDetail(int alertId) {
@@ -256,8 +271,12 @@ class _CaregiverShellState extends State<_CaregiverShell> {
           launcher: widget.factories.launcher,
           onTab: _select,
           onHistory: widget.onHistory,
-          onAddMedication: widget.onAddMedication,
+          onAddMedication: () => _thenRefresh(widget.onAddMedication),
           onOpenAlerts: () => _select(CaregiverTab.alerts),
+          onOpenStock: switch (widget.onOpenStock) {
+            final open? => (stock) => _thenRefresh(() => open(stock)),
+            null => null,
+          },
         ),
       },
     ),
