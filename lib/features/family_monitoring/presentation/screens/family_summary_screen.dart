@@ -100,17 +100,25 @@ class FamilySummaryScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _showContact(BuildContext context) async {
-    final bloc = context.read<FamilySummaryBloc>();
-    await showDialog<void>(
-      context: context,
-      builder: (_) => BlocProvider.value(
-        value: bloc,
-        child: _ContactDialog(launcher: launcher),
-      ),
-    );
-    bloc.add(const FamilyContactDismissed());
-  }
+  Future<void> _showContact(BuildContext context) =>
+      showFamilyContact(context, launcher);
+}
+
+/// Contact dialog of the followed person (Figma 563:727 and 563:4145), shared
+/// by the summary and the person profile; the [FamilySummaryBloc] resolves it.
+Future<void> showFamilyContact(
+  BuildContext context,
+  ContactLauncher launcher,
+) async {
+  final bloc = context.read<FamilySummaryBloc>();
+  await showDialog<void>(
+    context: context,
+    builder: (_) => BlocProvider.value(
+      value: bloc,
+      child: _ContactDialog(launcher: launcher),
+    ),
+  );
+  bloc.add(const FamilyContactDismissed());
 }
 
 class _Failure extends StatelessWidget {
@@ -442,7 +450,13 @@ class _ContactDialog extends StatelessWidget {
     final text = AppLocalizations.of(context);
     return BlocConsumer<FamilySummaryBloc, FamilySummaryState>(
       listenWhen: (a, b) => a.contact != null && b.contact == null,
-      listener: (context, state) => Navigator.of(context).maybePop(),
+      // Closes this dialog only while it is still on top: after the back
+      // button already closed it, popping again would leave the screen too.
+      listener: (context, state) {
+        if (ModalRoute.of(context)?.isCurrent ?? false) {
+          Navigator.of(context).pop();
+        }
+      },
       builder: (context, state) {
         final dialog = state.contact;
         final bloc = context.read<FamilySummaryBloc>();

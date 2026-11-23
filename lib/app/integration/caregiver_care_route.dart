@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../features/accessibility_preferences/presentation/navigation/preferences_navigation.dart';
 import '../../features/adherence_analytics/presentation/bloc/level/level_bloc.dart';
 import '../../features/adherence_analytics/presentation/navigation/adherence_badge_view.dart';
+import '../../features/adherence_analytics/presentation/navigation/adherence_level_view.dart';
 import '../../features/adherence_analytics/presentation/navigation/treatment_adherence_view.dart';
 import '../../features/care_link/application/readmodels/caregiver_link_summary.dart';
 import '../../features/family_monitoring/application/readmodels/monitoring_readmodels.dart';
@@ -72,6 +73,20 @@ class CaregiverCareRoute extends StatelessWidget {
           onOpenInventory: _inventoryOpener(inner),
         ),
         onPerson: () => Navigator.of(inner).maybePop(),
+        person: LinkedPersonSlots(
+          linkedSince: profile.confirmedAt,
+          adherence: switch (createPersonAdherenceBloc) {
+            final create? => (_) => AdherenceLevelView(
+              createBloc: () => create(profile.olderAdultId),
+              onSessionInvalidated: onSessionInvalidated,
+            ),
+            null => null,
+          },
+          treatment: (_) => treatments.activeMedicationsCard(
+            profile.olderAdultId,
+            onSessionInvalidated,
+          ),
+        ),
         onMore: () => _openMore(inner),
         onSessionInvalidated: onSessionInvalidated,
         onOpenStock: inventory == null

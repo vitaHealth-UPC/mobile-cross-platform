@@ -17,6 +17,7 @@ import '../screens/my_medications_screen.dart';
 import '../screens/treatment_detail_screen.dart';
 import '../screens/treatment_list_screen.dart';
 import '../screens/treatment_setup_screen.dart';
+import '../widgets/active_medications_card.dart';
 
 /// Builders for the blocs of the Treatment Management flows; each route owns and closes
 /// the bloc it creates.
@@ -133,6 +134,15 @@ final class TreatmentNavigation {
 
   /// Medication catalog of [olderAdultId] with registration, edition and treatments.
   /// [onOpenInventory] lets the host open the stock of a medication.
+  /// Active medications of [olderAdultId] for a host screen (Figma 563:1121).
+  Widget activeMedicationsCard(
+    String olderAdultId,
+    VoidCallback onSessionInvalidated,
+  ) => ActiveMedicationsCard(
+    createBloc: () => _factories.createMedicationsBloc(olderAdultId),
+    onSessionInvalidated: onSessionInvalidated,
+  );
+
   Future<void> openMedications(
     BuildContext context,
     String olderAdultId,

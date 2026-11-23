@@ -8,6 +8,7 @@ import 'package:tata/features/family_monitoring/application/readmodels/monitorin
 import 'package:tata/features/family_monitoring/application/usecases/alert_usecases.dart';
 import 'package:tata/features/family_monitoring/application/usecases/note_usecases.dart';
 import 'package:tata/features/family_monitoring/application/usecases/summary_usecases.dart';
+import 'package:tata/features/family_monitoring/domain/entities/notes.dart';
 import 'package:tata/features/family_monitoring/domain/value_objects/adherence_counts.dart';
 import 'package:tata/features/family_monitoring/domain/value_objects/contact_channel.dart';
 import 'package:tata/features/family_monitoring/presentation/bloc/alert_detail/alert_detail_bloc.dart';
@@ -33,7 +34,8 @@ import 'monitoring_application_test.dart'
         FakePersonalNotes,
         FakeTimeline,
         anAlert,
-        dose;
+        dose,
+        note;
 
 final class _NoLauncher implements ContactLauncher {
   @override
@@ -78,7 +80,10 @@ void main() {
   late FakeAlerts alerts;
   late FakeTimeline timeline;
 
-  FamilyMonitoringNavigation navigation() {
+  FamilyMonitoringNavigation navigation({
+    DateTime? birthDate,
+    List<FollowUpNote> noteList = const [],
+  }) {
     summaries = _Summary(AppSuccess(summary()));
     alerts = FakeAlerts(alerts: [anAlert()]);
     timeline = FakeTimeline(
@@ -92,15 +97,15 @@ void main() {
       ),
     );
     final people = FakePersonReader(
-      const AppSuccess(
+      AppSuccess(
         MonitoredPerson(
           id: 'adult-1',
           fullName: 'Rosa Vargas',
-          birthDate: null,
+          birthDate: birthDate,
         ),
       ),
     );
-    final notes = FakeNotes();
+    final notes = FakeNotes(list: noteList);
     final personal = FakePersonalNotes();
     return FamilyMonitoringNavigation(
       FamilyMonitoringFactories(
@@ -157,6 +162,7 @@ void main() {
     VoidCallback? onHistory,
     FutureOr<void> Function()? onAddMedication,
     FutureOr<void> Function(StockAttention stock)? onOpenStock,
+    LinkedPersonSlots? person,
   }) async {
     tester.view.physicalSize = const Size(393, 883);
     tester.view.devicePixelRatio = 1;
@@ -177,6 +183,7 @@ void main() {
           onMore: onMore ?? () {},
           onSessionInvalidated: onInvalidated ?? () {},
           onOpenStock: onOpenStock,
+          person: person,
         ),
       ),
     );
@@ -339,5 +346,135 @@ void main() {
     summaries.result = const AppFailure('SESSION_CHANGED');
     await pumpHome(tester, nav, onInvalidated: () => invalidated++);
     expect(invalidated, 1);
+  });
+
+  group('Person tab (Figma 563:1121)', () {
+    LinkedPersonSlots slots() => LinkedPersonSlots(
+      linkedSince: DateTime(2025, 11, 2),
+      adherence: (_) => const Text('tarjeta de adherencia'),
+      treatment: (_) => const Text('tarjeta de tratamiento'),
+    );
+
+    testWidgets('shows who the person is, the link and the latest note', (
+      tester,
+    ) async {
+      var back = 0;
+      await pumpHome(
+        tester,
+        navigation(
+          birthDate: DateTime(1950, 5, 12),
+          noteList: [
+            note(1, DateTime.utc(2026, 11, 1)),
+            note(2, DateTime.utc(2026, 11, 12)),
+          ],
+        ),
+        person: slots(),
+        onPerson: () => back++,
+      );
+      await tester.tap(find.text('Persona'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Rosa Vargas'), findsOneWidget);
+      expect(find.textContaining(RegExp(r'^\d+ años$')), findsOneWidget);
+      expect(find.text('Cumpleaños: 12 may'), findsOneWidget);
+      expect(find.text('Vinculada'), findsOneWidget);
+      expect(find.text('Desde nov 2025'), findsOneWidget);
+      expect(find.text('tarjeta de adherencia'), findsOneWidget);
+      expect(find.text('tarjeta de tratamiento'), findsOneWidget);
+      expect(find.text('Notas del cuidador'), findsOneWidget);
+      // The most recent note, not the first in the list.
+      expect(find.text('nota 2'), findsOneWidget);
+      expect(find.text('Resumen familiar'), findsNothing);
+
+      await tester.tap(find.byTooltip('Volver'));
+      expect(back, 1);
+    });
+
+    testWidgets('quick actions reach contact, medication and history', (
+      tester,
+    ) async {
+      var medications = 0;
+      var history = 0;
+      await pumpHome(
+        tester,
+        navigation(),
+        person: slots(),
+        onAddMedication: () => medications++,
+        onHistory: () => history++,
+      );
+      await tester.tap(find.text('Persona'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('años'), findsNothing);
+      expect(
+        find.text('Aún no hay notas. Toca para escribir la primera.'),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.text('Ver medicación'));
+      await tester.tap(find.text('Historial'));
+      await tester.pumpAndSettle();
+      expect((medications, history), (1, 1));
+
+      await tester.tap(find.text('Llamar'));
+      await tester.pumpAndSettle();
+      expect(find.byType(Dialog), findsOneWidget);
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
+      expect(find.byType(Dialog), findsNothing);
+
+      await tester.tap(find.text('Notas del cuidador'));
+      await tester.pumpAndSettle();
+      expect(find.text('Aún no hay notas'), findsOneWidget);
+    });
+  });
+
+  testWidgets('closing the contact dialog with back keeps the screen', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(393, 883);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final home = navigation();
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: TataTheme.light,
+        locale: const Locale('es'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => Navigator.of(context).push<void>(
+              MaterialPageRoute(
+                builder: (_) => home.caregiverHome(
+                  olderAdultId: 'adult-1',
+                  olderAdultName: 'Rosa Vargas',
+                  onHistory: () {},
+                  onAddMedication: () {},
+                  onPerson: () {},
+                  onMore: () {},
+                  onSessionInvalidated: () {},
+                  person: LinkedPersonSlots(linkedSince: DateTime(2025, 11, 2)),
+                ),
+              ),
+            ),
+            child: const Text('Lista de familiares'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Lista de familiares'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Persona'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Llamar'));
+    await tester.pumpAndSettle();
+    expect(find.byType(Dialog), findsOneWidget);
+
+    // System back closes the dialog and nothing else (also on the summary).
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.byType(Dialog), findsNothing);
+    expect(find.text('Llamar'), findsOneWidget);
+    expect(find.text('Lista de familiares'), findsNothing);
   });
 }
