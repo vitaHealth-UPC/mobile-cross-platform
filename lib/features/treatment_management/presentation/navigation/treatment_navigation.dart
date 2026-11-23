@@ -200,8 +200,12 @@ final class TreatmentNavigation {
   /// Read-only medication catalog for the signed-in older adult.
   Future<void> openMyMedications(
     BuildContext context,
-    VoidCallback onSessionInvalidated,
-  ) => Navigator.of(context).push<void>(
+    VoidCallback onSessionInvalidated, {
+    VoidCallback? onHome,
+    VoidCallback? onAgenda,
+    VoidCallback? onMore,
+    Future<void> Function(String)? onDose,
+  }) => Navigator.of(context).push<void>(
     MaterialPageRoute(
       builder: (_) => BlocProvider(
         create: (_) =>
@@ -209,6 +213,10 @@ final class TreatmentNavigation {
               ..add(const MyMedicationsRequested()),
         child: Builder(
           builder: (innerContext) => MyMedicationsScreen(
+            onHome: onHome,
+            onAgenda: onAgenda,
+            onMore: onMore,
+            onDose: onDose,
             onSessionInvalidated: _invalidate(
               innerContext,
               onSessionInvalidated,

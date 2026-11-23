@@ -21,12 +21,18 @@ final class Intake {
     required this.dose,
     required this.scheduledAt,
     required this.status,
+    this.medicationId,
+    this.treatmentId,
     this.instructions,
     this.confirmedAt,
     this.localConfirmation = LocalConfirmation.none,
   });
 
   final String id;
+
+  /// Source references supplied by remote evidence; older local snapshots may lack them.
+  final String? medicationId;
+  final String? treatmentId;
   final String olderAdultId;
   final String medicationName;
   final String dose;
@@ -53,6 +59,8 @@ final class Intake {
 
   Intake withLocalConfirmation(LocalConfirmation value) => Intake(
     id: id,
+    medicationId: medicationId,
+    treatmentId: treatmentId,
     olderAdultId: olderAdultId,
     medicationName: medicationName,
     dose: dose,

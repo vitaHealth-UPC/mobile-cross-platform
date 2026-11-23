@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/presentation/theme/tata_colors.dart';
+import '../../../../shared/presentation/widgets/adult_navigation_bar.dart';
 import '../../domain/entities/intake.dart';
-import '../widgets/adult_navigation_bar.dart';
 import '../widgets/intake_labels.dart';
 
 /// Figma 563:3266 (pending), 563:3370 (confirmed), 563:3474 (late) and
@@ -21,6 +21,7 @@ class DoseDetailScreen extends StatelessWidget {
     this.errorText,
     this.onBackHome,
     this.onMore,
+    this.onMedications,
     this.onAgenda,
   });
 
@@ -33,6 +34,7 @@ class DoseDetailScreen extends StatelessWidget {
   final String? errorText;
   final VoidCallback? onBackHome;
   final VoidCallback? onMore;
+  final VoidCallback? onMedications;
   final VoidCallback? onAgenda;
 
   @override
@@ -63,6 +65,7 @@ class DoseDetailScreen extends StatelessWidget {
               onHome: confirming ? null : onBackHome ?? onBack,
               onAgenda: confirming ? null : onAgenda,
               onMore: confirming ? null : onMore,
+              onMedications: confirming ? null : onMedications,
             ),
           ],
         ),

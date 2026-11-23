@@ -24,6 +24,8 @@ abstract final class IntakeMapper {
     if (taken != (body['confirmedAt'] != null)) throw const FormatException();
     return Intake(
       id: _text(body, 'id'),
+      medicationId: _text(body, 'medicationId'),
+      treatmentId: _text(body, 'treatmentId'),
       olderAdultId: _text(body, 'olderAdultId'),
       medicationName: _text(body, 'medicationName'),
       dose: _text(body, 'dose'),

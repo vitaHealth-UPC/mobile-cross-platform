@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../features/accessibility_preferences/presentation/navigation/preferences_navigation.dart';
 import '../../features/care_link/presentation/bloc/consent/consent_bloc.dart';
 import '../../features/care_link/presentation/navigation/consent_management_route.dart';
 import '../../features/identity_subscription/application/readmodels/remembered_adult.dart';
@@ -12,6 +13,7 @@ import '../../features/intake_execution/presentation/bloc/home/home_bloc.dart';
 import '../../features/intake_execution/presentation/navigation/adult_home_route.dart';
 import '../../features/intake_execution/presentation/navigation/agenda_route.dart';
 import '../../features/intake_execution/presentation/navigation/dose_route.dart';
+import '../../features/treatment_management/presentation/navigation/treatment_navigation.dart';
 import '../../l10n/generated/app_localizations.dart';
 
 /// Entry for a validated full adult session, composing three contexts:
@@ -33,6 +35,8 @@ class AdultEntryRoute extends StatefulWidget {
     required this.onSignOut,
     required this.onSessionChanged,
     this.intakeSync,
+    this.treatments,
+    this.preferences,
   });
 
   final String olderAdultId;
@@ -54,6 +58,12 @@ class AdultEntryRoute extends StatefulWidget {
 
   /// Asks Identity to revalidate access after expiry, change or withdrawal.
   final VoidCallback onSessionChanged;
+
+  /// Optional Treatment Management entry: the read-only medication catalog.
+  final TreatmentNavigation? treatments;
+
+  /// Optional Accessibility & Preferences entry.
+  final PreferencesNavigation? preferences;
 
   @override
   State<AdultEntryRoute> createState() => _AdultEntryRouteState();
@@ -111,6 +121,27 @@ class _AdultEntryRouteState extends State<AdultEntryRoute> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (widget.treatments != null)
+              ListTile(
+                leading: const Icon(Icons.medication_outlined),
+                title: Text(text.tmMyMedicationsTitle),
+                onTap: () {
+                  Navigator.of(sheetContext).pop();
+                  _openMedications(this.context);
+                },
+              ),
+            if (widget.preferences != null)
+              ListTile(
+                leading: const Icon(Icons.accessibility_new),
+                title: Text(text.pfAccessibilityTitle),
+                onTap: () {
+                  Navigator.of(sheetContext).pop();
+                  widget.preferences!.openAccessibility(
+                    context,
+                    widget.olderAdultId,
+                  );
+                },
+              ),
             ListTile(
               leading: const Icon(Icons.favorite_border),
               title: Text(text.homeCareLink),
@@ -139,14 +170,42 @@ class _AdultEntryRouteState extends State<AdultEntryRoute> {
     widget.onSessionChanged();
   }
 
+  Future<void> _openMedications(BuildContext context) async {
+    final treatments = widget.treatments;
+    if (treatments == null) return;
+    final navigator = Navigator.of(context);
+    void home() => navigator.popUntil((route) => route.isFirst);
+    await treatments.openMyMedications(
+      context,
+      widget.onSessionChanged,
+      onHome: home,
+      onAgenda: () {
+        home();
+        _openAgenda(this.context);
+      },
+      onMore: () {
+        home();
+        _openMore(this.context);
+      },
+      onDose: (id) => _openDose(this.context, id),
+    );
+  }
+
   Future<void> _openDose(BuildContext context, String intakeId) =>
       Navigator.of(context).push<void>(
         MaterialPageRoute(
           builder: (routeContext) => DoseRoute(
             createBloc: () => widget.createDoseBloc(intakeId),
+            onMedications: widget.treatments == null
+                ? null
+                : () {
+                    Navigator.of(routeContext)
+                        .popUntil((route) => route.isFirst);
+                    _openMedications(this.context);
+                  },
             onAgenda: () {
               Navigator.of(routeContext).popUntil((route) => route.isFirst);
-              _openAgenda(context);
+              _openAgenda(this.context);
             },
             onBack: () => Navigator.of(routeContext).pop(),
             onBackHome: () =>
@@ -154,7 +213,7 @@ class _AdultEntryRouteState extends State<AdultEntryRoute> {
             onSessionInvalidated: () => _leaveForRevalidation(routeContext),
             onMore: () {
               Navigator.of(routeContext).popUntil((route) => route.isFirst);
-              _openMore(context);
+              _openMore(this.context);
             },
           ),
         ),
@@ -165,12 +224,19 @@ class _AdultEntryRouteState extends State<AdultEntryRoute> {
         MaterialPageRoute(
           builder: (routeContext) => AgendaRoute(
             createBloc: widget.createAgendaBloc,
+            onMedications: widget.treatments == null
+                ? null
+                : () {
+                    Navigator.of(routeContext)
+                        .popUntil((route) => route.isFirst);
+                    _openMedications(this.context);
+                  },
             onOpenDose: (intakeId) => _openDose(routeContext, intakeId),
             onBack: () => Navigator.of(routeContext).pop(),
             onSessionInvalidated: () => _leaveForRevalidation(routeContext),
             onMore: () {
               Navigator.of(routeContext).popUntil((route) => route.isFirst);
-              _openMore(context);
+              _openMore(this.context);
             },
           ),
         ),
@@ -225,6 +291,9 @@ class _AdultEntryRouteState extends State<AdultEntryRoute> {
       sync: widget.intakeSync,
       onOpenMore: () => _openMore(context),
       onOpenAgenda: () => _openAgenda(context),
+      onOpenMedications: widget.treatments == null
+          ? null
+          : () => _openMedications(context),
       onOpenDose: (intakeId) => _openDose(context, intakeId),
       onSessionInvalidated: widget.onSessionChanged,
     ),

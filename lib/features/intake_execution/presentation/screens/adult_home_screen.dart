@@ -5,11 +5,11 @@ import 'package:intl/intl.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/presentation/theme/tata_colors.dart';
+import '../../../../shared/presentation/widgets/adult_navigation_bar.dart';
 import '../../../../shared/presentation/widgets/initials_avatar.dart';
 import '../../application/readmodels/intake_sync_status.dart';
 import '../../domain/entities/intake.dart';
 import '../bloc/home/home_state.dart';
-import '../widgets/adult_navigation_bar.dart';
 import '../widgets/home_cards.dart';
 
 /// Figma 563:58 adult home. Unconnected actions retain their layout and are disabled explicitly.
@@ -24,6 +24,7 @@ class AdultHomeScreen extends StatefulWidget {
     this.errorText,
     this.onOpenVoice,
     this.onOpenAgenda,
+    this.onOpenMedications,
     this.onOpenDose,
     this.syncStatus,
   });
@@ -41,6 +42,7 @@ class AdultHomeScreen extends StatefulWidget {
   final IntakeSyncStatus? syncStatus;
   final ValueChanged<String>? onOpenVoice;
   final VoidCallback? onOpenAgenda;
+  final VoidCallback? onOpenMedications;
 
   /// Opens the detail of one dose, where it can be confirmed.
   final ValueChanged<String>? onOpenDose;
@@ -79,6 +81,7 @@ class _AdultHomeScreenState extends State<AdultHomeScreen> {
     return Scaffold(
       bottomNavigationBar: AdultNavigationBar(
         selected: AdultDestination.home,
+        onMedications: widget.onOpenMedications,
         onAgenda: widget.onOpenAgenda,
         onMore: widget.onOpenMore,
       ),

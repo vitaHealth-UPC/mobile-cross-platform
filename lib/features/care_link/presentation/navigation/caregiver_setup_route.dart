@@ -17,7 +17,11 @@ class CaregiverSetupRoute extends StatelessWidget {
     required this.onSignOut,
     required this.onSessionInvalidated,
     this.onOpenProfile,
+    this.onOpenSettings,
   });
+
+  /// Opens the caregiver's own settings; absent hides the entry.
+  final void Function(BuildContext context)? onOpenSettings;
   final ProfilesBloc Function() createBloc;
 
   /// Lets the host open its flows for a confirmed relationship, for example
@@ -67,6 +71,9 @@ class CaregiverSetupRoute extends StatelessWidget {
           loading: state.loading,
           errorText: error,
           onOpenProfile: onOpenProfile,
+          onOpenSettings: onOpenSettings == null
+              ? null
+              : () => onOpenSettings!(context),
           onRegister: (name, date) => bloc.add(OlderAdultSubmitted(name, date)),
           onRefresh: () => bloc.add(const ProfilesRequested()),
           onSignOut: onSignOut,
