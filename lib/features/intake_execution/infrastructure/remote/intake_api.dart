@@ -37,6 +37,23 @@ final class IntakeApi {
     },
   );
 
+  /// Spoken confirmation as a WAV upload in the `audio` part.
+  Future<ApiResponse> confirmByVoice(
+    String intakeId,
+    String token,
+    List<int> audio,
+    String contentType,
+    String language,
+  ) => _client.upload(
+    'api/v1/intakes/${Uri.encodeComponent(intakeId)}/voice-confirmation',
+    token: token,
+    field: 'audio',
+    bytes: audio,
+    filename: 'confirmation.wav',
+    contentType: contentType,
+    queryParameters: {'language': language},
+  );
+
   /// Ordered evidence scheduled between the UTC instants [from] and [to].
   Future<ApiResponse> agenda(
     String olderAdultId,

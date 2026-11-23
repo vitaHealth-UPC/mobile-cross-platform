@@ -119,6 +119,8 @@ Future<void> main() async {
           createHomeBloc: dependencies.createHomeBloc,
           createAgendaBloc: dependencies.createAgendaBloc,
           createDoseBloc: dependencies.createDoseBloc,
+          createVoiceBloc: dependencies.createVoiceBloc,
+          createPhraseSpeaker: dependencies.createPhraseSpeaker,
           createConsentBloc: dependencies.createConsentBloc,
           intakeSync: dependencies.intakeSync,
           onSignOut: signOut,

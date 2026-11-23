@@ -76,22 +76,28 @@ import '../../features/intake_execution/application/ports/intake_confirmation.da
 import '../../features/intake_execution/application/ports/intake_local_store.dart';
 import '../../features/intake_execution/application/ports/intake_reader.dart';
 import '../../features/intake_execution/application/ports/intake_sync.dart';
+import '../../features/intake_execution/application/ports/voice_confirmation.dart';
 import '../../features/intake_execution/application/usecases/confirm_intake.dart';
+import '../../features/intake_execution/application/usecases/confirm_intake_by_voice.dart';
 import '../../features/intake_execution/application/usecases/get_daily_progress.dart';
 import '../../features/intake_execution/application/usecases/get_intake_detail.dart';
 import '../../features/intake_execution/application/usecases/get_next_intake.dart';
 import '../../features/intake_execution/application/usecases/get_week_agenda.dart';
 import '../../features/intake_execution/application/usecases/replay_pending_confirmations.dart';
+import '../../features/intake_execution/infrastructure/audio/device_phrase_speaker.dart';
+import '../../features/intake_execution/infrastructure/audio/microphone_voice_recorder.dart';
 import '../../features/intake_execution/infrastructure/local/dao/intake_dao.dart';
 import '../../features/intake_execution/infrastructure/local/intake_database.dart';
 import '../../features/intake_execution/infrastructure/remote/intake_api.dart';
 import '../../features/intake_execution/infrastructure/repositories/offline_intake_repository.dart';
 import '../../features/intake_execution/infrastructure/repositories/remote_intake_confirmation.dart';
 import '../../features/intake_execution/infrastructure/repositories/remote_intake_reader.dart';
+import '../../features/intake_execution/infrastructure/repositories/remote_voice_confirmation.dart';
 import '../../features/intake_execution/infrastructure/sync/intake_sync_coordinator.dart';
 import '../../features/intake_execution/presentation/bloc/agenda/agenda_bloc.dart';
 import '../../features/intake_execution/presentation/bloc/dose/dose_bloc.dart';
 import '../../features/intake_execution/presentation/bloc/home/home_bloc.dart';
+import '../../features/intake_execution/presentation/bloc/voice/voice_bloc.dart';
 import '../../features/omission_escalation/application/policies/omission_push_access_policy.dart';
 import '../../features/omission_escalation/application/services/omission_notification_session_cleanup.dart';
 import '../../features/omission_escalation/application/services/omission_push_facade.dart';
@@ -413,6 +419,20 @@ final class AppDependencies {
     confirm: ConfirmIntake(_confirmations),
     next: GetNextIntake(_intakes),
   );
+
+  /// Creates the spoken confirmation of one dose with its own microphone.
+  VoiceBloc createVoiceBloc(String intakeId) => VoiceBloc(
+    intakeId: intakeId,
+    detail: GetIntakeDetail(_intakes),
+    recorder: MicrophoneVoiceRecorder(),
+    confirm: ConfirmIntakeByVoice(
+      RemoteVoiceConfirmation(api: IntakeApi(_client), store: _sessionStore),
+    ),
+    next: GetNextIntake(_intakes),
+  );
+
+  /// Reads the suggested voice phrase with the device speech engine.
+  PhraseSpeaker createPhraseSpeaker() => DevicePhraseSpeaker();
 
   /// Creates the adult home state; day boundaries follow the device clock.
   HomeBloc createHomeBloc() => HomeBloc(

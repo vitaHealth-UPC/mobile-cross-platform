@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 import 'api_response.dart';
 
@@ -27,7 +28,46 @@ final class ApiClient {
     Object? body,
     String? token,
     Map<String, String> queryParameters = const {},
-  }) async {
+  }) => _send(path, token, queryParameters, (uri) {
+    final request = http.Request(method, uri);
+    if (body != null) {
+      request.headers['Content-Type'] = 'application/json; charset=utf-8';
+      request.bodyBytes = utf8.encode(jsonEncode(body));
+    }
+    return request;
+  });
+
+  /// POSTs one file as multipart form data, with the same guarantees as
+  /// [request].
+  Future<ApiResponse> upload(
+    String path, {
+    required String token,
+    required String field,
+    required List<int> bytes,
+    required String filename,
+    required String contentType,
+    Map<String, String> queryParameters = const {},
+  }) => _send(
+    path,
+    token,
+    queryParameters,
+    (uri) => http.MultipartRequest('POST', uri)
+      ..files.add(
+        http.MultipartFile.fromBytes(
+          field,
+          bytes,
+          filename: filename,
+          contentType: MediaType.parse(contentType),
+        ),
+      ),
+  );
+
+  Future<ApiResponse> _send(
+    String path,
+    String? token,
+    Map<String, String> queryParameters,
+    http.BaseRequest Function(Uri uri) build,
+  ) async {
     if (!path.startsWith('api/v1/') ||
         path.contains('..') ||
         path.contains('?') ||
@@ -43,7 +83,10 @@ final class ApiClient {
           .replace(
             queryParameters: queryParameters.isEmpty ? null : queryParameters,
           );
-      return await _exchange(method, uri, body, token).timeout(timeout);
+      final request = build(uri)..followRedirects = false;
+      request.headers['Accept'] = 'application/json';
+      if (token != null) request.headers['Authorization'] = 'Bearer $token';
+      return await _exchange(request).timeout(timeout);
     } on TimeoutException {
       throw const ApiTransportException('NETWORK_UNAVAILABLE');
     } on http.ClientException {
@@ -53,19 +96,7 @@ final class ApiClient {
     }
   }
 
-  Future<ApiResponse> _exchange(
-    String method,
-    Uri uri,
-    Object? body,
-    String? token,
-  ) async {
-    final request = http.Request(method, uri)..followRedirects = false;
-    request.headers['Accept'] = 'application/json';
-    if (token != null) request.headers['Authorization'] = 'Bearer $token';
-    if (body != null) {
-      request.headers['Content-Type'] = 'application/json; charset=utf-8';
-      request.bodyBytes = utf8.encode(jsonEncode(body));
-    }
+  Future<ApiResponse> _exchange(http.BaseRequest request) async {
     final response = await _client.send(request);
     final bytes = <int>[];
     await for (final chunk in response.stream) {
