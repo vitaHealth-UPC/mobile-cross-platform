@@ -1,7 +1,9 @@
+import '../../application/readmodels/confirmation_receipt.dart';
 import '../../domain/entities/intake.dart';
 
 /// Converts untrusted intake JSON into domain intakes.
-/// Throws [FormatException] for missing fields, unknown statuses or local timestamps.
+/// Throws [FormatException] for missing fields, unknown statuses, local
+/// timestamps or confirmation evidence that contradicts the status.
 abstract final class IntakeMapper {
   static Intake intake(Object? body) {
     if (body is! Map<String, dynamic>) throw const FormatException();
@@ -9,6 +11,17 @@ abstract final class IntakeMapper {
     if (instructions != null && instructions is! String) {
       throw const FormatException();
     }
+    final status = switch (body['status']) {
+      'PENDING' => IntakeStatus.pending,
+      'CONFIRMED' => IntakeStatus.confirmed,
+      'LATE' => IntakeStatus.late,
+      'OMITTED' => IntakeStatus.omitted,
+      _ => throw const FormatException(),
+    };
+    final taken =
+        status == IntakeStatus.confirmed || status == IntakeStatus.late;
+    // Same invariant as the backend aggregate: only taken intakes carry evidence.
+    if (taken != (body['confirmedAt'] != null)) throw const FormatException();
     return Intake(
       id: _text(body, 'id'),
       olderAdultId: _text(body, 'olderAdultId'),
@@ -16,19 +29,21 @@ abstract final class IntakeMapper {
       dose: _text(body, 'dose'),
       instructions: instructions is String ? instructions : null,
       scheduledAt: _instant(body, 'scheduledAt'),
-      status: switch (body['status']) {
-        'PENDING' => IntakeStatus.pending,
-        'CONFIRMED' => IntakeStatus.confirmed,
-        'LATE' => IntakeStatus.late,
-        'OMITTED' => IntakeStatus.omitted,
-        _ => throw const FormatException(),
-      },
+      status: status,
+      confirmedAt: taken ? _instant(body, 'confirmedAt') : null,
     );
   }
 
   static List<Intake> agenda(Object? body) {
     if (body is! List<dynamic>) throw const FormatException();
     return [for (final item in body) intake(item)];
+  }
+
+  static ConfirmationReceipt receipt(Object? body) {
+    if (body is! Map<String, dynamic>) throw const FormatException();
+    final replay = body['alreadyConfirmed'];
+    if (replay is! bool) throw const FormatException();
+    return ConfirmationReceipt(intake: intake(body), alreadyConfirmed: replay);
   }
 
   static String _text(Map<String, dynamic> data, String key) {

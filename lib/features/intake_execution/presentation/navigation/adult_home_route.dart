@@ -19,6 +19,7 @@ class AdultHomeRoute extends StatefulWidget {
     this.clock = DateTime.now,
     this.onOpenVoice,
     this.onOpenAgenda,
+    this.onOpenDose,
   });
 
   final HomeBloc Function() createBloc;
@@ -29,7 +30,11 @@ class AdultHomeRoute extends StatefulWidget {
   /// Local wall-clock time used for the date header and time remaining.
   final DateTime Function() clock;
   final ValueChanged<String>? onOpenVoice;
-  final VoidCallback? onOpenAgenda;
+
+  /// Open the agenda or one dose; both complete when the user returns, and
+  /// the home reloads because a confirmation may have changed it.
+  final Future<void> Function()? onOpenAgenda;
+  final Future<void> Function(String intakeId)? onOpenDose;
 
   @override
   State<AdultHomeRoute> createState() => _AdultHomeRouteState();
@@ -62,6 +67,11 @@ class _AdultHomeRouteState extends State<AdultHomeRoute> {
     );
   }
 
+  Future<void> _returnFrom(Future<void> navigation) async {
+    await navigation;
+    if (mounted) _bloc.add(const HomeRequested());
+  }
+
   @override
   Widget build(BuildContext context) => BlocProvider.value(
     value: _bloc,
@@ -92,7 +102,14 @@ class _AdultHomeRouteState extends State<AdultHomeRoute> {
           onRefresh: _refresh,
           onOpenMore: widget.onOpenMore,
           onOpenVoice: widget.onOpenVoice,
-          onOpenAgenda: widget.onOpenAgenda,
+          onOpenAgenda: switch (widget.onOpenAgenda) {
+            final open? => () => _returnFrom(open()),
+            null => null,
+          },
+          onOpenDose: switch (widget.onOpenDose) {
+            final open? => (id) => _returnFrom(open(id)),
+            null => null,
+          },
         );
       },
     ),

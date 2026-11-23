@@ -37,10 +37,16 @@ import '../../features/identity_subscription/presentation/bloc/access/access_blo
 import '../../features/identity_subscription/presentation/bloc/pin/pin_bloc.dart';
 import '../../features/identity_subscription/presentation/bloc/recovery/recovery_bloc.dart';
 import '../../features/identity_subscription/presentation/bloc/registration/registration_bloc.dart';
+import '../../features/intake_execution/application/usecases/confirm_intake.dart';
 import '../../features/intake_execution/application/usecases/get_daily_progress.dart';
+import '../../features/intake_execution/application/usecases/get_intake_detail.dart';
 import '../../features/intake_execution/application/usecases/get_next_intake.dart';
+import '../../features/intake_execution/application/usecases/get_week_agenda.dart';
 import '../../features/intake_execution/infrastructure/remote/intake_api.dart';
+import '../../features/intake_execution/infrastructure/repositories/remote_intake_confirmation.dart';
 import '../../features/intake_execution/infrastructure/repositories/remote_intake_reader.dart';
+import '../../features/intake_execution/presentation/bloc/agenda/agenda_bloc.dart';
+import '../../features/intake_execution/presentation/bloc/dose/dose_bloc.dart';
 import '../../features/intake_execution/presentation/bloc/home/home_bloc.dart';
 import '../../shared/common/result/app_result.dart';
 import '../../shared/infrastructure/network/api_client.dart';
@@ -59,6 +65,7 @@ final class AppDependencies {
     this._rememberedAdults,
     this._intakes,
     this._adultProfiles,
+    this._confirmations,
   );
 
   /// Composes real HTTP and secure storage using environment configuration.
@@ -97,6 +104,7 @@ final class AppDependencies {
       const SecureRememberedAdultStore(FlutterSecureStorage()),
       RemoteIntakeReader(api: IntakeApi(client), store: store),
       RemoteAdultProfileReader(api: CareLinkApi(client), store: store),
+      RemoteIntakeConfirmation(api: IntakeApi(client), store: store),
     );
   }
 
@@ -109,6 +117,7 @@ final class AppDependencies {
   final RememberedAdultStore _rememberedAdults;
   final RemoteIntakeReader _intakes;
   final RemoteAdultProfileReader _adultProfiles;
+  final RemoteIntakeConfirmation _confirmations;
 
   /// Adult remembered on this device after PIN enrollment, if any.
   Future<RememberedAdult?> readRememberedAdult() => _rememberedAdults.read();
@@ -133,6 +142,18 @@ final class AppDependencies {
   /// Creates PIN access state for the remembered adult [olderAdultId].
   PinBloc createPinAccessBloc(String olderAdultId) =>
       PinBloc.access(signIn: SignInWithPin(_pins), olderAdultId: olderAdultId);
+
+  /// Creates the weekly agenda state for the current adult session.
+  AgendaBloc createAgendaBloc() =>
+      AgendaBloc(agenda: GetWeekAgenda(_intakes), clock: DateTime.now);
+
+  /// Creates the detail and touch-confirmation state of one dose.
+  DoseBloc createDoseBloc(String intakeId) => DoseBloc(
+    intakeId: intakeId,
+    detail: GetIntakeDetail(_intakes),
+    confirm: ConfirmIntake(_confirmations),
+    next: GetNextIntake(_intakes),
+  );
 
   /// Creates the adult home state; day boundaries follow the device clock.
   HomeBloc createHomeBloc() => HomeBloc(

@@ -32,7 +32,7 @@ Map<String, Object?> intakeJson({
   'instructions': null,
   'scheduledAt': scheduledAt,
   'status': status,
-  'confirmedAt': null,
+  'confirmedAt': status == 'CONFIRMED' || status == 'LATE' ? scheduledAt : null,
   'confirmationChannel': null,
   'alreadyConfirmed': false,
 };
@@ -172,5 +172,9 @@ final class _FailingReader implements IntakeReader {
 
   @override
   Future<AppResult<Intake?>> next() async =>
+      const AppFailure('NETWORK_UNAVAILABLE');
+
+  @override
+  Future<AppResult<Intake>> detail(String intakeId) async =>
       const AppFailure('NETWORK_UNAVAILABLE');
 }

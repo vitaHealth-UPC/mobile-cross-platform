@@ -5,8 +5,12 @@ import '../../features/care_link/presentation/navigation/consent_management_rout
 import '../../features/identity_subscription/application/readmodels/remembered_adult.dart';
 import '../../features/identity_subscription/presentation/bloc/pin/pin_bloc.dart';
 import '../../features/identity_subscription/presentation/navigation/pin_route.dart';
+import '../../features/intake_execution/presentation/bloc/agenda/agenda_bloc.dart';
+import '../../features/intake_execution/presentation/bloc/dose/dose_bloc.dart';
 import '../../features/intake_execution/presentation/bloc/home/home_bloc.dart';
 import '../../features/intake_execution/presentation/navigation/adult_home_route.dart';
+import '../../features/intake_execution/presentation/navigation/agenda_route.dart';
+import '../../features/intake_execution/presentation/navigation/dose_route.dart';
 import '../../l10n/generated/app_localizations.dart';
 
 /// Entry for a validated full adult session, composing three contexts:
@@ -22,6 +26,8 @@ class AdultEntryRoute extends StatefulWidget {
     required this.readAdultName,
     required this.createPinSetupBloc,
     required this.createHomeBloc,
+    required this.createAgendaBloc,
+    required this.createDoseBloc,
     required this.createConsentBloc,
     required this.onSignOut,
     required this.onSessionChanged,
@@ -38,6 +44,8 @@ class AdultEntryRoute extends StatefulWidget {
   final Future<String?> Function() readAdultName;
   final PinBloc Function() createPinSetupBloc;
   final HomeBloc Function() createHomeBloc;
+  final AgendaBloc Function() createAgendaBloc;
+  final DoseBloc Function(String intakeId) createDoseBloc;
   final ConsentBloc Function() createConsentBloc;
   final VoidCallback onSignOut;
 
@@ -122,6 +130,37 @@ class _AdultEntryRouteState extends State<AdultEntryRoute> {
     );
   }
 
+  /// Leaves any intake screen for the home before Identity revalidates access.
+  void _leaveForRevalidation(BuildContext routeContext) {
+    Navigator.of(routeContext).popUntil((route) => route.isFirst);
+    widget.onSessionChanged();
+  }
+
+  Future<void> _openDose(BuildContext context, String intakeId) =>
+      Navigator.of(context).push<void>(
+        MaterialPageRoute(
+          builder: (routeContext) => DoseRoute(
+            createBloc: () => widget.createDoseBloc(intakeId),
+            onBack: () => Navigator.of(routeContext).pop(),
+            onBackHome: () =>
+                Navigator.of(routeContext).popUntil((route) => route.isFirst),
+            onSessionInvalidated: () => _leaveForRevalidation(routeContext),
+          ),
+        ),
+      );
+
+  Future<void> _openAgenda(BuildContext context) =>
+      Navigator.of(context).push<void>(
+        MaterialPageRoute(
+          builder: (routeContext) => AgendaRoute(
+            createBloc: widget.createAgendaBloc,
+            onOpenDose: (intakeId) => _openDose(routeContext, intakeId),
+            onBack: () => Navigator.of(routeContext).pop(),
+            onSessionInvalidated: () => _leaveForRevalidation(routeContext),
+          ),
+        ),
+      );
+
   /// Forgets the shortcut only when it belongs to this adult.
   Future<void> _forgetShortcut() async {
     try {
@@ -169,6 +208,8 @@ class _AdultEntryRouteState extends State<AdultEntryRoute> {
       createBloc: widget.createHomeBloc,
       adultName: _name,
       onOpenMore: () => _openMore(context),
+      onOpenAgenda: () => _openAgenda(context),
+      onOpenDose: (intakeId) => _openDose(context, intakeId),
       onSessionInvalidated: widget.onSessionChanged,
     ),
   };

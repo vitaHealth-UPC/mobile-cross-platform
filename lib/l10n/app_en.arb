@@ -210,5 +210,100 @@
   "homeTabStart": "Home",
   "homeTabMore": "More",
   "homeCareLink": "My care link",
-  "homeSwitchAccount": "Switch account"
+  "homeSwitchAccount": "Switch account",
+  "homeTabAgenda": "Schedule",
+  "agendaTitle": "Weekly schedule",
+  "agendaWeekRange": "{start} – {end}",
+  "@agendaWeekRange": {
+    "description": "First and last day of the visible week, already formatted.",
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
+  "agendaPreviousWeek": "Previous week",
+  "agendaNextWeek": "Next week",
+  "agendaLoading": "Loading your doses…",
+  "agendaEmptyDay": "No doses this day",
+  "agendaEmptyDayBody": "You have no doses scheduled for this day.",
+  "agendaErrorTitle": "We couldn't load your schedule",
+  "agendaTipBody": "Taking it at the same time makes the routine easier.",
+  "agendaDoseSemantics": "{time}, {medication}, {status}",
+  "@agendaDoseSemantics": {
+    "description": "Screen reader summary of one agenda dose.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "medication": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "intakeStatusPending": "Pending",
+  "intakeStatusConfirmed": "Confirmed",
+  "intakeStatusLate": "Late",
+  "intakeStatusOmitted": "Missed",
+  "doseTitle": "Dose detail",
+  "doseLoading": "Loading dose detail…",
+  "doseErrorTitle": "We couldn't load this dose",
+  "doseScheduleLabel": "Dose schedule",
+  "doseToday": "Today",
+  "doseTomorrow": "Tomorrow",
+  "doseYesterday": "Yesterday",
+  "doseDayTime": "{day}, {time}",
+  "@doseDayTime": {
+    "description": "Relative or calendar day followed by the local time.",
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "doseInformation": "Information",
+  "doseDoseLabel": "Dose",
+  "doseWhenLabel": "When",
+  "doseInstructionsLabel": "Instructions",
+  "doseNoInstructions": "No additional instructions",
+  "doseBeforeTitle": "Before your dose",
+  "dosePrepareMedication": "Have your medication at hand",
+  "dosePrepareWater": "A glass of water",
+  "dosePrepareSeat": "Sit comfortably",
+  "doseState": "Status: {status}",
+  "@doseState": {
+    "description": "Current server status of the dose.",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "doseMessagePending": "You can still confirm this dose.",
+  "doseMessageConfirmed": "The dose was recorded successfully.",
+  "doseMessageLate": "The dose was recorded after its scheduled time.",
+  "doseMessageOmitted": "The allowed period ended without a confirmation.",
+  "doseConfirm": "Confirm dose",
+  "doseConfirming": "Confirming…",
+  "doseNotConfirmable": "This dose can no longer be confirmed.",
+  "outcomeWellDone": "Well done!",
+  "outcomeConfirmed": "Dose confirmed ♡",
+  "outcomeLateTitle": "Dose recorded",
+  "outcomeLateBody": "We recorded it after its scheduled time.",
+  "outcomeAlreadyTitle": "Dose already confirmed",
+  "outcomeAlreadyBody": "The dose was already confirmed and no other record was created.",
+  "outcomeOmittedTitle": "Your history keeps the missed dose",
+  "outcomeOmittedBody": "The allowed period ended without a confirmation.",
+  "outcomeProgressTitle": "Your progress was updated",
+  "outcomeProgressBody": "The dose stays recorded in your history.",
+  "outcomeBackHome": "Back to home"
 }

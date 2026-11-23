@@ -52,6 +52,8 @@ void main() {
             next: GetNextIntake(reader),
             progress: GetDailyProgress(reader, DateTime.now),
           ),
+          createAgendaBloc: () => throw UnimplementedError(),
+          createDoseBloc: (_) => throw UnimplementedError(),
           createConsentBloc: () => throw UnimplementedError(),
           onSignOut: () {},
           onSessionChanged: () {},

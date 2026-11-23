@@ -11,6 +11,7 @@ final class Intake {
     required this.scheduledAt,
     required this.status,
     this.instructions,
+    this.confirmedAt,
   });
 
   final String id;
@@ -23,9 +24,15 @@ final class Intake {
   final DateTime scheduledAt;
   final IntakeStatus status;
 
+  /// UTC instant of the recorded confirmation; null unless confirmed or late.
+  final DateTime? confirmedAt;
+
   /// Confirmed on time or late both count as taken; omitted does not.
   bool get taken =>
       status == IntakeStatus.confirmed || status == IntakeStatus.late;
+
+  /// Only pending evidence accepts a confirmation; the server still decides.
+  bool get confirmable => status == IntakeStatus.pending;
 
   @override
   String toString() => 'Intake[status=$status, clinicalData=REDACTED]';

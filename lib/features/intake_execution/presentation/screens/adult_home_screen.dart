@@ -23,6 +23,7 @@ class AdultHomeScreen extends StatefulWidget {
     this.errorText,
     this.onOpenVoice,
     this.onOpenAgenda,
+    this.onOpenDose,
   });
 
   final HomeState state;
@@ -35,6 +36,9 @@ class AdultHomeScreen extends StatefulWidget {
   final String? errorText;
   final ValueChanged<String>? onOpenVoice;
   final VoidCallback? onOpenAgenda;
+
+  /// Opens the detail of one dose, where it can be confirmed.
+  final ValueChanged<String>? onOpenDose;
 
   @override
   State<AdultHomeScreen> createState() => _AdultHomeScreenState();
@@ -70,7 +74,9 @@ class _AdultHomeScreenState extends State<AdultHomeScreen> {
     return Scaffold(
       bottomNavigationBar: _AdultTabBar(
         homeLabel: text.homeTabStart,
+        agendaLabel: text.homeTabAgenda,
         moreLabel: text.homeTabMore,
+        onAgenda: widget.onOpenAgenda,
         onMore: widget.onOpenMore,
       ),
       body: SafeArea(
@@ -128,6 +134,10 @@ class _AdultHomeScreenState extends State<AdultHomeScreen> {
                 (HomeStatus.ready, final Intake intake) => NextIntakeCard(
                   intake: intake,
                   now: now,
+                  onTap: switch (widget.onOpenDose) {
+                    final open? => () => open(intake.id),
+                    null => null,
+                  },
                 ),
               },
               const SizedBox(height: 18),
@@ -192,13 +202,17 @@ class _AdultHomeScreenState extends State<AdultHomeScreen> {
 class _AdultTabBar extends StatelessWidget {
   const _AdultTabBar({
     required this.homeLabel,
+    required this.agendaLabel,
     required this.moreLabel,
     required this.onMore,
+    this.onAgenda,
   });
 
   final String homeLabel;
+  final String agendaLabel;
   final String moreLabel;
   final VoidCallback onMore;
+  final VoidCallback? onAgenda;
 
   @override
   Widget build(BuildContext context) {
@@ -227,6 +241,15 @@ class _AdultTabBar extends StatelessWidget {
                 selected: true,
               ),
             ),
+            if (onAgenda case final open?)
+              Expanded(
+                child: _TabItem(
+                  label: agendaLabel,
+                  icon: 'assets/icons/adult_tab_agenda.svg',
+                  selected: false,
+                  onTap: open,
+                ),
+              ),
             Expanded(
               child: _TabItem(
                 label: moreLabel,
