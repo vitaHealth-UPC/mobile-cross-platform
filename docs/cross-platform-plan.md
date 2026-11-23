@@ -6,6 +6,7 @@ La documentación técnica se organiza por responsabilidad, con la misma separac
 | --- | --- |
 | [Arquitectura](architecture/mobile-architecture.md) | Cuatro capas, dependencias y responsabilidades |
 | [Contextos](architecture/bounded-contexts.md) | Límites de los nueve contextos |
+| [Integraciones técnicas](architecture/technical-stories.md) | TS, contratos móviles y ramas de integración |
 | [Historias](architecture/user-stories.md) | Aceptación y trazabilidad de producto |
 | [Inventario](architecture/implementation-inventory.md) | Archivos previstos, responsabilidades y pruebas |
 | [Figma](architecture/figma-frame-map.md) | Las 70 variantes y su evidencia |
