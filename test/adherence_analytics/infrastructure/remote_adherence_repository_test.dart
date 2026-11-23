@@ -53,6 +53,29 @@ void main() {
     );
   }
 
+  test('treatment summary uses a dedicated scoped route and never falls back to the adult summary', () async {
+    var calls = 0;
+    final repo = repository(
+      MemorySessionStore(session(SessionRole.caregiver, id: 'caregiver-1')),
+      (request) async {
+        calls++;
+        expect(
+          request.url.path,
+          '/api/v1/older-adults/adult-B/adherence/treatments/treatment-1/summary',
+        );
+        expect(request.url.queryParameters, {
+          'days': '7',
+          'zone': 'America/Lima',
+        });
+        expect(request.headers['Authorization'], 'Bearer token-1');
+        return _json({}, 404);
+      },
+    );
+    final result = await repo.summary('adult-B', 7, treatmentId: 'treatment-1');
+    expect(result, isA<AppFailure>());
+    expect(calls, 1);
+  });
+
   test(
     'a caregiver reads the summary of a linked adult with the zone',
     () async {

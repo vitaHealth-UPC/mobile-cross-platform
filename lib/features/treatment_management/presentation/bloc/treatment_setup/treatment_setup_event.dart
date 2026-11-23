@@ -35,3 +35,9 @@ final class TreatmentSetupBackRequested extends TreatmentSetupEvent {
 final class TreatmentActivationRequested extends TreatmentSetupEvent {
   const TreatmentActivationRequested();
 }
+
+/// Revisits the regimen after the server rejected its configuration, preserving the draft.
+final class TreatmentConfigurationCorrectionRequested
+    extends TreatmentSetupEvent {
+  const TreatmentConfigurationCorrectionRequested();
+}

@@ -1164,7 +1164,7 @@ Inventario de referencia:70 variantes. Estado inicial compartido:1 completa acep
 | 21 | Notes - Adult | 576:2785 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 22 | Add Medication - Caregiver | 563:453 | Parcial | Sin comparación visual certificada en este corte | Registro de medicamento del equipo, validación de campos y recibo real mediante repositorio; tests de contrato y flujo. Falta revisión Figma y prueba instalada. |
 | 23 | Create Treatment | 563:1490 | Parcial | Aceptada proporcionalmente en render ES (12-11-2026; revisión normal y layout 150 %) | Asistente con cuatro grupos visuales y validación separada de dosis/horarios; alta, configuración y activación conservan los contratos del equipo. Nombre guardado de solo lectura al regresar al borrador. Pruebas de flujo y capturas, sin nueva evidencia de Render/dispositivo. |
-| 24 | Treatment Management | 563:1554 | Parcial | Sin comparación visual certificada en este corte | Gestión del equipo con lectura, edición, pausa, reanudación y medicamento activo; tests de contrato y bloc. Falta contraste visual y Spring desplegado. |
+| 24 | Treatment Management | 563:1554 | Parcial | Aceptada proporcionalmente en render ES (13-11-2026; normal y layout 150 %) | Gestión con edición, pausa, reanudación y desactivación confirmada. Adherencia del tratamiento por ruta dedicada y porcentaje de la persona por consulta separada; widgets y contratos HTTP probados. Sin nueva prueba de Render/dispositivo. |
 | 25 | Inventory & Restock | 563:1632 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 26 | Notification Preferences | 563:1219 | Parcial | Sin comparación visual certificada en este corte | Preferencias de notificación del equipo con contratos, estado y pruebas; falta contraste Figma y verificar el efecto del sistema de notificaciones en dispositivo. |
 | 27 | Notes - Caregiver | 576:2859 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
@@ -1183,9 +1183,9 @@ Inventario de referencia:70 variantes. Estado inicial compartido:1 completa acep
 | 40 | Voice Not Recognized | 563:2707 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 41 | Dose Already Confirmed | 563:2760 | Parcial | Aceptada proporcionalmente en render ES (11-11-2026; normal y texto 150 %) | alreadyConfirmed del reintento y 409 releído como tomada; dose_flow_test.dart y sonda Spring Capturas de widgets revisadas contra Figma; no se agrega evidencia de Render ni dispositivo. |
 | 42 | No Adherence Data | 563:2834 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
-| 43 | Treatment Incomplete | 563:2942 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
-| 44 | Treatment Paused | 563:3010 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
-| 45 | Treatment Access Denied | 563:3092 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
+| 43 | Treatment Incomplete | 563:2942 | Parcial | Aceptada proporcionalmente en render ES (13-11-2026; normal y layout 150 %) | Configuración rechazada muestra aviso y permite volver a Pauta sin recrear el borrador ni perder los valores. Pruebas de estado y capturas normal y texto 150 %. |
+| 44 | Treatment Paused | 563:3010 | Parcial | Aceptada proporcionalmente en render ES (13-11-2026; normal y layout 150 %) | Pausa y reanudación usan recibos reconocidos; conservan zona horaria y muestran aviso de pausa. Capturas con gráfico de datos suministrados por el lector. |
+| 45 | Treatment Access Denied | 563:3092 | Parcial | Aceptada proporcionalmente en render ES (13-11-2026; normal y layout 150 %) | Respuesta ACCESS_DENIED elimina nombre y datos clínicos y ofrece retorno a la persona de origen; sin acciones de gestión ni gráfico conservado. |
 | 46 | No Next Dose | 563:3178 | Sin implementación específica | Sin comparar | Sin evidencia Flutter para esta variante |
 | 47 | Dose Detail - Pending | 563:3266 | Parcial | Aceptada proporcionalmente en render ES (11-11-2026; normal y texto 150 %) | DoseRoute/DoseBloc con intakes/{id} y confirmación TOUCH; tests, sonda Spring local, emulador y teléfono físico POCO X6 Pro Capturas de widgets revisadas contra Figma; no se agrega evidencia de Render ni dispositivo. |
 | 48 | Dose Detail - Confirmed | 563:3370 | Parcial | Aceptada proporcionalmente en render ES (11-11-2026; normal y texto 150 %) | Estado confirmado sin botón de confirmar; tests, sonda Spring local, emulador y teléfono físico POCO X6 Pro Capturas de widgets revisadas contra Figma; no se agrega evidencia de Render ni dispositivo. |
@@ -1270,6 +1270,33 @@ Sobre d8ee412 se contrasta Create Treatment con el contexto y captura del nodo 5
 Las tres primeras rutas son relativas a lib/features/treatment_management. No se agrega un quinto paso visual ni un segundo flujo de configuración. La revisión no afirma recordatorios activos antes de activar el tratamiento y no rellena nombre de paciente, finalidad clínica, horas ni minutos con ejemplos productivos.
 
 La variante 23 se acepta visualmente de forma proporcional; el registro pasa a 16 aceptadas de 70, con 28 variantes implementadas total o parcialmente. El módulo conserva estado funcional parcial hasta validar los recorridos contra Spring desplegado y dispositivo. La suite de Treatment Management mantiene sus 60 pruebas aprobadas; se revisan las capturas de los cinco estados y su versión de texto ampliado. El siguiente nodo es Treatment Management (563:1554), manteniendo los contratos y permisos existentes.
+
+## Gestión de tratamientos y cierre acotado (13-11-2026)
+
+La revisión remota parte de 7c4b3a6. Se contrastan los nodos 563:1554, 563:3010, 563:3092 y 563:2942, con capturas de activo, pausado, inactivo, acceso denegado y configuración rechazada en tamaño normal y texto 150 %. Los controles, tarjetas, avisos y barras del gráfico se componen con Flutter. La persona muestra sus iniciales porque el contrato del perfil no proporciona fotografía; no se asigna a otros usuarios la foto de ejemplo del mockup.
+
+| Archivos y ámbito | Responsabilidad |
+| --- | --- |
+| Treatment presentation/screens/treatment_detail_screen.dart | Orquesta el formulario, confirma desactivación, oculta evidencia al perder acceso y permite regresar a la persona de origen. |
+| Treatment presentation/widgets/treatment_management_card.dart y managed_person_card.dart | Pauta y estado reales, acciones autorizadas, identidad y cantidad de medicamentos activos. La insignia de adherencia se recibe del host. |
+| Treatment presentation/widgets/regimen_editor.dart | Diálogo nativo con controladores propios hasta terminar su transición de cierre; entrega una intención de edición al bloc. |
+| Treatment presentation/bloc/treatment_management/treatment_management_bloc.dart | Conserva recurrenceZone al cambiar de estado, además de los recibos y restricciones ya existentes. |
+| Treatment presentation/bloc/treatment_setup y screens/treatment_setup_screen.dart | Un tratamiento que otro usuario pausó no se anuncia como activado. El rechazo de configuración permite corregir la pauta sin duplicar el borrador. Los controladores se inicializan desde los valores validados disponibles. |
+| Adherence application/ports/adherence_reader.dart y usecases/get_adherence_summary.dart | Filtro de tratamiento opcional, sin cambiar el significado de las consultas generales; valida referencias vacías y períodos. |
+| Adherence infrastructure/remote/analytics_api.dart y repositories/remote_adherence_repository.dart | Para un tratamiento usa GET /api/v1/older-adults/{adult}/adherence/treatments/{treatment}/summary, con days y zone. No cae a la consulta global si un despliegue anterior devuelve 404. |
+| Adherence presentation/bloc/level y navigation/treatment_adherence_view.dart | Solicitan evidencia de siete días para la pauta elegida, distinguen carga, vacío y error y actualizan al regresar al primer plano. Las barras usan fechas y porcentajes recibidos. |
+| Adherence presentation/navigation/adherence_badge_view.dart | Consulta independiente de la persona completa. La ausencia de evidencia no produce una insignia de 0 %. |
+| app/di/app_dependencies.dart, app/integration/caregiver_care_route.dart y main.dart | Componen analítica general y filtrada con Treatment mediante widgets y callbacks; una invalidación retorna al host sin conservar la pantalla clínica. |
+| shared/presentation/widgets/caregiver_tab_bar.dart | Aplica color blanco al icono seleccionado y gris a los demás, y deshabilita destinos no conectados conservando semántica y geometría. |
+| test/treatment_management/treatment_management_visual_test.dart y treatment_setup_regressions_test.dart | Edición, ciclo de diálogo, confirmación/cancelación de desactivación, reactivación, conservación de zona y conflictos de activación. |
+| test/adherence_analytics/presentation/adherence_badge_test.dart y infrastructure/remote_adherence_repository_test.dart | Separación entre porcentaje global y filtro de tratamiento, revocación al volver y ausencia de fallback a datos globales. |
+| test/shared/presentation/caregiver_tab_bar_test.dart | Color seleccionado y ausencia de tap en destinos no conectados. |
+
+Treatment y Adherence en esta tabla corresponden a lib/features/treatment_management y lib/features/adherence_analytics. Se conserva una sola implementación por responsabilidad y los módulos no importan la infraestructura de otro contexto. El gráfico y la insignia muestran consultas distintas, aunque sus porcentajes puedan coincidir. Los botones secundarios conservan Inter explícitamente para evitar que el estilo sustituya la tipografía del tema.
+
+Verificación: 437 pruebas aprobadas en la suite integrada; análisis sin incidencias y formato limpio en 335 archivos. APK debug construido correctamente (assembleDebug: 40,5 s). Las nuevas capturas usan fuentes y recursos productivos. La evidencia funcional sigue separada de la prueba desplegada. El registro contiene 31 variantes con implementación total o parcial de 70 (44,3 %), y 20 aceptadas visualmente (28,6 %). Quedan 39 sin implementación específica y 50 sin aceptación visual registrada. Estas coberturas no equivalen a porcentaje de aplicación terminada: parte de los recorridos conserva validación desplegada o de dispositivo pendiente.
+
+Los contextos presentes son Identity, Care Link, Treatment, Intake, Adherence y Accessibility. Inventory, Family Monitoring y Omission/Escalation no tienen todavía implementación Flutter específica; voz, acceso social y suscripciones también conservan trabajo pendiente. El siguiente bloque es la fidelidad de preferencias y el alta/edición de medicamentos, seguido por los contextos restantes. El reporte académico no se modifica en este corte.
 
 ## Procedimiento de implementación y revisión
 

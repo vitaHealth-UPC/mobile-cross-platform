@@ -27,8 +27,9 @@ final class _Readers implements AdherenceReader, RecommendationsReader {
   @override
   Future<AppResult<AdherenceSummary?>> summary(
     String olderAdultId,
-    int periodDays,
-  ) async {
+    int periodDays, {
+    String? treatmentId,
+  }) async {
     summaryRequests.add((olderAdultId, periodDays));
     return summaryResult ?? AppSuccess(sampleSummary(periodDays: periodDays));
   }

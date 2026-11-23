@@ -23,6 +23,7 @@ final class FakeBackend
   };
   TreatmentDetail? stored;
   String? failure;
+  String? configureFailure;
   int configureCalls = 0;
   int createCalls = 0;
 
@@ -127,6 +128,7 @@ final class FakeBackend
       instructions: old.instructions,
       reminderLeadMinutes: old.reminderLeadMinutes,
       followUpDelayMinutes: old.followUpDelayMinutes,
+      recurrenceZone: old.recurrenceZone,
     );
     return Treatment(
       id: old.id,
@@ -143,6 +145,7 @@ final class FakeBackend
     TreatmentRegimen regimen,
   ) async {
     configureCalls++;
+    if (configureFailure != null) return AppFailure(configureFailure!);
     if (failure != null) return _fail();
     final old = stored!;
     stored = TreatmentDetail(
@@ -157,6 +160,7 @@ final class FakeBackend
       instructions: regimen.instructions.value,
       reminderLeadMinutes: regimen.reminderLeadMinutes,
       followUpDelayMinutes: regimen.followUpDelay?.value,
+      recurrenceZone: old.recurrenceZone,
     );
     return AppSuccess(_treatment(old.status));
   }

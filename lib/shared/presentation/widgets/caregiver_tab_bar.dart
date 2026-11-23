@@ -38,10 +38,20 @@ class CaregiverTabBar extends StatelessWidget {
     super.key,
     required this.selected,
     required this.onSelected,
+    this.enabledTabs = const {
+      CaregiverTab.home,
+      CaregiverTab.alerts,
+      CaregiverTab.notes,
+      CaregiverTab.person,
+      CaregiverTab.more,
+    },
   });
 
   final CaregiverTab selected;
   final ValueChanged<CaregiverTab> onSelected;
+
+  /// Unconnected destinations expose no tap action.
+  final Set<CaregiverTab> enabledTabs;
 
   @override
   Widget build(BuildContext context) {
@@ -87,7 +97,9 @@ class CaregiverTabBar extends StatelessWidget {
                   tab: tab,
                   label: labels[tab]!,
                   active: tab == selected,
-                  onTap: () => onSelected(tab),
+                  onTap: enabledTabs.contains(tab)
+                      ? () => onSelected(tab)
+                      : null,
                 ),
               ),
           ],
@@ -108,11 +120,12 @@ class _TabItem extends StatelessWidget {
   final CaregiverTab tab;
   final String label;
   final bool active;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) => Semantics(
     button: true,
+    enabled: onTap != null,
     selected: active,
     label: label,
     // The inner ink well is excluded, so the tap action is declared here.
@@ -132,7 +145,15 @@ class _TabItem extends StatelessWidget {
               color: active ? TataColors.primary : Colors.transparent,
               borderRadius: BorderRadius.circular(15),
             ),
-            child: SvgPicture.asset(tab.icon, width: 22, height: 22),
+            child: SvgPicture.asset(
+              tab.icon,
+              width: 22,
+              height: 22,
+              colorFilter: ColorFilter.mode(
+                active ? Colors.white : TataColors.muted,
+                BlendMode.srcIn,
+              ),
+            ),
           ),
           const SizedBox(height: 5),
           Text(

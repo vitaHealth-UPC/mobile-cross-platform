@@ -15,6 +15,7 @@ final class LevelBloc extends Bloc<LevelEvent, LevelState> {
     required this._olderAdultId,
     required this._summary,
     this._periodDays = adherenceLevelPeriodDays,
+    this._treatmentId,
   }) : super(const LevelState()) {
     on<LevelRequested>(_load);
   }
@@ -22,12 +23,17 @@ final class LevelBloc extends Bloc<LevelEvent, LevelState> {
   final String _olderAdultId;
   final GetAdherenceSummary _summary;
   final int _periodDays;
+  final String? _treatmentId;
   int _revision = 0;
 
   Future<void> _load(LevelRequested event, Emitter<LevelState> emit) async {
     final revision = ++_revision;
     emit(const LevelState());
-    final result = await _summary(_olderAdultId, _periodDays);
+    final result = await _summary(
+      _olderAdultId,
+      _periodDays,
+      treatmentId: _treatmentId,
+    );
     if (revision != _revision || emit.isDone) return;
     switch (result) {
       case AppSuccess(:final value) when value != null:

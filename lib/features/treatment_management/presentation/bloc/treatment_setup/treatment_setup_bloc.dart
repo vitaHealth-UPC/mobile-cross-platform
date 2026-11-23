@@ -32,6 +32,16 @@ final class TreatmentSetupBloc
     on<ReminderSubmitted>(_reminders);
     on<TreatmentSetupBackRequested>(_back);
     on<TreatmentActivationRequested>(_activate);
+    on<TreatmentConfigurationCorrectionRequested>((event, emit) {
+      if (!state.loading && state.configurationIncomplete) {
+        emit(
+          state.copyWith(
+            step: TreatmentSetupStep.regimen,
+            configurationIncomplete: false,
+          ),
+        );
+      }
+    });
   }
 
   final CreateTreatment _create;
@@ -162,8 +172,12 @@ final class TreatmentSetupBloc
           emit(state.copyWith(loading: false, errorCode: 'INVALID_RESPONSE'));
           return;
         }
-        if (value.status != TreatmentStatus.draft) {
+        if (value.status == TreatmentStatus.active) {
           emit(state.copyWith(loading: false, activated: true));
+          return;
+        }
+        if (value.status != TreatmentStatus.draft) {
+          emit(state.copyWith(loading: false, errorCode: 'CONFLICT'));
           return;
         }
     }
