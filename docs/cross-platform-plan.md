@@ -14,6 +14,7 @@ La documentación técnica se organiza por responsabilidad, con la misma separac
 | [Convenciones](architecture/development-guidelines.md) | Figma, recursos, Flutter, formato y Dartdoc |
 | [Requisitos](architecture/course-requirements.md) | Enunciado y referencias del curso |
 | [Contratos API](api/contract-guidelines.md) | Transporte, autorización y recibos |
+| [Notificaciones y voz](api/notifications-and-voice.md) | Contratos push, avisos nativos y confirmación hablada |
 | [Identidad y vínculos](api/identity-and-care-links.md) | Acceso, proveedores y consentimiento |
 | [Validación](architecture/validation-status.md) | Evidencia vigente y controles de cierre |
 

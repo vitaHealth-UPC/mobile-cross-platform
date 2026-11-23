@@ -1,0 +1,27 @@
+# Notifications and voice
+
+## Push contract
+
+The device registry uses authenticated `PUT` and `DELETE /api/v1/push-devices/{installationId}` operations. The installation identifier is a persisted opaque UUID. The current Tata credential determines its owner; SDK addresses do not authorize clinical access.
+
+Version-1 data messages carry `schemaVersion`, `kind`, `olderAdultId`, `deliveryId`, `intakeId`, `medicationName` and `scheduledAt`. Supported kinds are `REINFORCED_REMINDER` and `CAREGIVER_ALERT`. The mapper rejects incomplete or unknown versioned messages instead of inferring an event from localized text.
+
+## Native display
+
+`LocalOmissionNotifier` uses the shared plugin initialization and the existing ES/EN resources. Omission reminders and caregiver alerts own separate channels. Their negative notification identifiers do not overlap the nonnegative scheduled-dose identifiers. Repeated delivery references replace the same notice.
+
+The visible body is generic and the Android notice has private lock-screen visibility. The monochrome status-bar icon is shared with the Android client. Tap payloads retain the intake reference, and opening a destination requires recipient authorization again.
+
+Display and cleanup operations are serialized. Recipient access is checked around asynchronous work; a session change during display removes omission notices while retaining scheduled-dose notices. Clearing a notice does not acknowledge or close an alert on the server.
+
+## Delivery boundary
+
+The SDK token source and native notifier are composed in production. Device registration remains disabled while the host messaging lifecycle is completed. Local adapter tests do not establish background delivery or a successful remote push. The integration also requires Firebase configuration for the target platform, permission, message reception, token rotation, authenticated cleanup and authorized tap handling.
+
+Firebase initialization is shared with social access. The current backend registry accepts FCM tokens; changing to the newer SDK installation-ID protocol requires a corresponding sender migration.
+
+## Spoken confirmation
+
+The voice flow captures audio through its platform port and sends it through the Intake Execution contract. A recognized phrase does not itself confirm a dose: the server response supplies the outcome. Cancellation, lost permission and session changes discard pending clinical UI results. Audio and provider credentials do not enter presentation diagnostics.
+
+See the [Firebase messaging lifecycle](https://firebase.google.com/docs/cloud-messaging/flutter/receive-messages) and the [offline synchronization boundary](../architecture/offline-sync.md).
