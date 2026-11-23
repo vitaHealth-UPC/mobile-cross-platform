@@ -156,7 +156,7 @@ void main() {
       addTearDown(tester.view.reset);
     }
 
-    Widget host(Widget child) => RepaintBoundary(
+    Widget host(Widget child, {double scale = 1}) => RepaintBoundary(
       key: const Key('pin-capture'),
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -164,6 +164,11 @@ void main() {
         locale: const Locale('es'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context)
+              .copyWith(textScaler: TextScaler.linear(scale)),
+          child: child!,
+        ),
         home: child,
       ),
     );
@@ -301,42 +306,89 @@ void main() {
       expect(completed, 1);
     });
 
-    testWidgets('incorrect and locked PINs show their Figma messages', (
-      tester,
-    ) async {
-      phone(tester);
-      final fake = FakePinAccess(signInResult: const AppFailure('INVALID_PIN'));
-      await tester.pumpWidget(
-        host(
-          PinRoute(
-            createBloc: () => access(fake),
-            adultName: null,
-            onCompleted: () {},
-            onBack: () {},
-          ),
-        ),
-      );
-      Future<void> enter() async {
-        for (final digit in ['1', '2', '3', '4']) {
-          await tester.tap(find.text(digit));
-          await tester.pump();
-        }
-        await tester.tap(find.widgetWithText(ElevatedButton, 'Ingresar'));
-        await tester.pumpAndSettle();
-      }
+    for (final scale in [1.0, 1.5]) {
+      testWidgets(
+        'incorrect and locked PINs show their Figma messages at $scale',
+        (tester) async {
+          phone(tester);
+          if (scale > 1) {
+            tester.view.physicalSize = const Size(1080, 1920);
+          }
+          final fake = FakePinAccess(
+            signInResult: const AppFailure('INVALID_PIN'),
+          );
+          await tester.pumpWidget(
+            host(
+              PinRoute(
+                createBloc: () => access(fake),
+                adultName: 'Rosa Vargas',
+                onCompleted: () {},
+                onBack: () {},
+              ),
+              scale: scale,
+            ),
+          );
+          Future<void> enter() async {
+            for (final digit in ['1', '2', '3', '4']) {
+              await tester.ensureVisible(find.text(digit));
+              await tester.pumpAndSettle();
+              await tester.tap(find.text(digit));
+              await tester.pump();
+            }
+            await tester.ensureVisible(
+              find.widgetWithText(ElevatedButton, 'Ingresar'),
+            );
+            await tester.pumpAndSettle();
+            await tester.tap(find.widgetWithText(ElevatedButton, 'Ingresar'));
+            await tester.pumpAndSettle();
+          }
 
-      await enter();
-      expect(find.text('PIN incorrecto'), findsOneWidget);
-      await captureWidget(
-        tester,
-        find.byKey(const Key('pin-capture')),
-        'pin_incorrect',
-      );
+          await enter();
+          expect(find.text('PIN incorrecto'), findsOneWidget);
+          expect(find.byKey(const ValueKey('pin-dot-filled')), findsNothing);
+          await tester.ensureVisible(find.text('PIN incorrecto'));
+          await tester.pumpAndSettle();
+          await captureWidget(
+            tester,
+            find.byKey(const Key('pin-capture')),
+            'pin_incorrect_$scale',
+          );
 
-      fake.signInResult = const AppFailure('PIN_LOCKED');
-      await enter();
-      expect(find.text('Acceso temporalmente bloqueado'), findsOneWidget);
-      expect(find.text('Intenta más tarde'), findsOneWidget);
-    });
+          fake.signInResult = const AppFailure('PIN_LOCKED');
+          await enter();
+          expect(find.text('Acceso temporalmente bloqueado'), findsOneWidget);
+          expect(find.text('Intenta más tarde'), findsOneWidget);
+          await tester.ensureVisible(
+            find.text('Acceso temporalmente bloqueado'),
+          );
+          await tester.pumpAndSettle();
+          await captureWidget(
+            tester,
+            find.byKey(const Key('pin-capture')),
+            'pin_locked_$scale',
+          );
+          expect(
+            tester
+                .widget<ElevatedButton>(find.byType(ElevatedButton))
+                .onPressed,
+            isNull,
+          );
+          for (final digit in List.generate(10, (index) => '$index')) {
+            final key = find.ancestor(
+              of: find.text(digit),
+              matching: find.byType(InkWell),
+            );
+            expect(tester.widget<InkWell>(key).onTap, isNull);
+          }
+          final delete = find.ancestor(
+            of: find.byIcon(Icons.backspace_outlined),
+            matching: find.byType(InkWell),
+          );
+          expect(tester.widget<InkWell>(delete).onTap, isNull);
+          expect(fake.submitted.length, 2);
+          expect(tester.takeException(), isNull);
+        },
+      );
+    }
   });
 }

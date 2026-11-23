@@ -3,7 +3,7 @@ import '../../../../shared/application/session/session_store.dart';
 import '../../../../shared/application/session/stored_session.dart';
 import '../../../../shared/application/time/clock.dart';
 import '../../domain/value_objects/omission_push.dart';
-import '../ports/omission_ports.dart';
+import '../ports/push_target_store.dart';
 import '../readmodels/push_destination.dart';
 
 /// Prevents delayed messages from displaying after logout or under a different recipient

@@ -43,34 +43,36 @@ class _FollowUpNoteDialogState extends State<FollowUpNoteDialog> {
         final error = state.error;
         return AlertDialog(
           title: Text(text.fmNoteDialogTitle),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextField(
-                controller: _controller,
-                enabled: !state.saving,
-                minLines: 3,
-                maxLines: 6,
-                onChanged: (_) => setState(() {}),
-                decoration: InputDecoration(
-                  labelText: text.fmNoteDialogLabel,
-                  border: const OutlineInputBorder(),
-                  errorText: error == null
-                      ? null
-                      : noteProblemText(text, error),
-                  errorMaxLines: 3,
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: _controller,
+                  enabled: !state.saving,
+                  minLines: 3,
+                  maxLines: 6,
+                  onChanged: (_) => setState(() {}),
+                  decoration: InputDecoration(
+                    labelText: text.fmNoteDialogLabel,
+                    border: const OutlineInputBorder(),
+                    errorText: error == null
+                        ? null
+                        : noteProblemText(text, error),
+                    errorMaxLines: 3,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                text.fmNoteDialogCounter(
-                  _controller.text.length,
-                  FollowUpNote.maxLength,
+                const SizedBox(height: 6),
+                Text(
+                  text.fmNoteDialogCounter(
+                    _controller.text.length,
+                    FollowUpNote.maxLength,
+                  ),
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -95,32 +97,61 @@ class _FollowUpNoteDialogState extends State<FollowUpNoteDialog> {
 /// Shows the composer while [NoteComposerCubit] is open and closes it afterwards. The
 /// dialog is driven only by the cubit, so a lost session or a clear removes it too.
 class NoteComposerHost extends StatefulWidget {
-  const NoteComposerHost({super.key, required this.child, this.onSaved});
+  const NoteComposerHost({
+    super.key,
+    required this.child,
+    this.onSaved,
+    this.showSavedMessage = true,
+  });
 
   final Widget child;
 
   /// Called once with each note the server stored.
   final ValueChanged<FollowUpNote>? onSaved;
 
+  /// Screens with an inline live receipt suppress the duplicate transient message.
+  final bool showSavedMessage;
+
   @override
   State<NoteComposerHost> createState() => _NoteComposerHostState();
 }
 
 class _NoteComposerHostState extends State<NoteComposerHost> {
-  bool _showing = false;
+  DialogRoute<void>? _dialog;
 
   void _sync(BuildContext context, NoteComposerState state) {
-    if (state.open && !_showing) {
-      _showing = true;
+    if (state.open && _dialog == null) {
       final cubit = context.read<NoteComposerCubit>();
-      showDialog<void>(
+      final navigator = Navigator.of(context, rootNavigator: true);
+      final route = DialogRoute<void>(
         context: context,
         barrierDismissible: false,
         builder: (_) =>
             BlocProvider.value(value: cubit, child: const FollowUpNoteDialog()),
-      ).whenComplete(() => _showing = false);
-    } else if (!state.open && _showing) {
-      Navigator.of(context, rootNavigator: true).pop();
+      );
+      _dialog = route;
+      navigator.push(route).whenComplete(() {
+        if (_dialog == route) {
+          _dialog = null;
+        }
+        if (_dialog == null &&
+            !cubit.isClosed &&
+            cubit.state.open &&
+            !cubit.state.saving) {
+          cubit.dismiss();
+        }
+      });
+    } else if (!state.open && _dialog != null) {
+      final route = _dialog!;
+      _dialog = null;
+      final navigator = route.navigator;
+      if (navigator != null && route.isActive) {
+        if (route.isCurrent) {
+          navigator.pop();
+        } else {
+          navigator.removeRoute(route);
+        }
+      }
     }
   }
 
@@ -133,9 +164,13 @@ class _NoteComposerHostState extends State<NoteComposerHost> {
           final note = state.note;
           if (state.saved && note != null) {
             widget.onSaved?.call(note);
-            ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-              SnackBar(content: Text(AppLocalizations.of(context).fmNoteSaved)),
-            );
+            if (widget.showSavedMessage) {
+              ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+                SnackBar(
+                  content: Text(AppLocalizations.of(context).fmNoteSaved),
+                ),
+              );
+            }
           }
         },
         child: widget.child,

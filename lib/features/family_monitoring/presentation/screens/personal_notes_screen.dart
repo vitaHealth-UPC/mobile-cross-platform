@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
+import '../../../../shared/application/time/clock.dart';
 import '../../../../shared/presentation/theme/tata_colors.dart';
+import '../../../../shared/presentation/theme/tata_typography.dart';
 import '../../../../shared/presentation/widgets/adult_navigation_bar.dart';
 import '../../domain/entities/notes.dart';
 import '../../domain/value_objects/note_values.dart';
 import '../bloc/personal_notes/personal_notes_bloc.dart';
-import '../texts/monitoring_texts.dart';
 import '../widgets/monitoring_widgets.dart';
+import '../widgets/personal_note_card.dart';
 
 /// Older adult's own notes, filtered by category.
 class PersonalNotesScreen extends StatelessWidget {
@@ -19,6 +21,7 @@ class PersonalNotesScreen extends StatelessWidget {
     this.onAgenda,
     this.onMore,
     this.onSignIn,
+    this.clock = DateTime.now,
   });
 
   final VoidCallback? onHome;
@@ -29,14 +32,42 @@ class PersonalNotesScreen extends StatelessWidget {
   /// Sends the person back to sign in when the session no longer allows reading notes.
   final VoidCallback? onSignIn;
 
+  /// Local calendar used for grouping; note instants remain server evidence.
+  final Clock clock;
+
   @override
   Widget build(BuildContext context) {
     final text = AppLocalizations.of(context);
     return BlocConsumer<PersonalNotesBloc, PersonalNotesState>(
-      listenWhen: (a, b) => !a.composing && b.composing,
-      listener: (context, state) => _compose(context),
+      listenWhen: (a, b) =>
+          (!a.composing && b.composing) ||
+          (a.saving &&
+              !b.saving &&
+              !b.saveError &&
+              !b.requiresSignIn &&
+              !b.composing),
+      listener: (context, state) {
+        if (state.composing) {
+          _compose(context);
+        } else {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(text.fmNoteSaved)));
+        }
+      },
       builder: (context, state) {
         final notes = state.visibleNotes;
+        final now = clock().toLocal();
+        final today = notes
+            .where((n) => DateUtils.isSameDay(n.recordedAt.toLocal(), now))
+            .toList();
+        final recent = notes
+            .where((n) => !DateUtils.isSameDay(n.recordedAt.toLocal(), now))
+            .toList();
+        final add = state.requiresSignIn || state.saving || state.loading
+            ? null
+            : () => context.read<PersonalNotesBloc>().add(
+                const PersonalNoteComposerToggled(open: true),
+              );
         return Scaffold(
           backgroundColor: TataColors.background,
           extendBody: true,
@@ -51,9 +82,7 @@ class PersonalNotesScreen extends StatelessWidget {
           body: SafeArea(
             bottom: false,
             child: RefreshIndicator(
-              onRefresh: () async => context.read<PersonalNotesBloc>().add(
-                const PersonalNotesRequested(),
-              ),
+              onRefresh: () => _refresh(context),
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: EdgeInsets.fromLTRB(
@@ -65,56 +94,131 @@ class PersonalNotesScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    MonitoringHeader(
-                      title: text.pnTitle,
-                      subtitle: text.pnSubtitle,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Semantics(
+                                header: true,
+                                child: Text(
+                                  text.pnTitle,
+                                  style: TataTypography.heading.copyWith(
+                                    fontSize: 28,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                text.pnSubtitle,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF5B6475),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton.filledTonal(
+                          onPressed: add,
+                          tooltip: text.pnAdd,
+                          style: IconButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: TataColors.primary,
+                            side: const BorderSide(color: Color(0xFFE3E3F0)),
+                          ),
+                          icon: const Icon(Icons.add, size: 24),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
+                    Text(
+                      today.isNotEmpty ? text.pnToday : text.pnRecent,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: TataColors.ink,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
                       children: [
-                        MonitoringFilterChip(
-                          label: text.pnAll,
-                          selected: state.category == null,
-                          onTap: () => context.read<PersonalNotesBloc>().add(
-                            const PersonalNotesFiltered(null),
+                        IntrinsicWidth(
+                          child: MonitoringFilterChip(
+                            fontSize: 11,
+                            label: text.pnAll,
+                            selected: state.category == null,
+                            onTap: () => context.read<PersonalNotesBloc>().add(
+                              const PersonalNotesFiltered(null),
+                            ),
                           ),
                         ),
                         for (final category in PersonalNoteCategory.values)
-                          MonitoringFilterChip(
-                            label: category == PersonalNoteCategory.medication
-                                ? text.pnMedications
-                                : text.pnRoutine,
-                            selected: state.category == category,
-                            onTap: () => context.read<PersonalNotesBloc>().add(
-                              PersonalNotesFiltered(category),
+                          IntrinsicWidth(
+                            child: MonitoringFilterChip(
+                              fontSize: 11,
+                              label: category == PersonalNoteCategory.medication
+                                  ? text.pnMedications
+                                  : text.pnRoutine,
+                              selected: state.category == category,
+                              onTap: () => context
+                                  .read<PersonalNotesBloc>()
+                                  .add(PersonalNotesFiltered(category)),
                             ),
                           ),
                       ],
                     ),
                     const SizedBox(height: 16),
-                    if (state.loading)
+                    if (state.loading && notes.isEmpty)
                       MonitoringLoading(label: text.pnToday)
                     else if (state.errorCode != null)
                       MonitoringError(
                         message: text.pnLoadError,
+                        retryLabel: state.requiresSignIn ? text.pnSignIn : null,
                         onRetry: state.requiresSignIn
                             ? onSignIn
                             : () => context.read<PersonalNotesBloc>().add(
                                 const PersonalNotesRequested(),
                               ),
-                      )
-                    else if (notes.isEmpty)
+                      ),
+                    if (!state.loading &&
+                        state.errorCode == null &&
+                        notes.isEmpty)
                       Text(
                         text.pnEmpty,
                         style: const TextStyle(color: TataColors.muted),
-                      )
-                    else
-                      for (final note in notes) ...[
-                        _NoteCard(note: note),
-                        const SizedBox(height: 12),
+                      ),
+                    if (!state.loading || notes.isNotEmpty) ...[
+                      for (final note in today) ...[
+                        PersonalNoteCard(note: note, now: now, highlight: true),
+                        const SizedBox(height: 16),
                       ],
+                      if (today.isNotEmpty && recent.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          text.pnRecent,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: TataColors.ink,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                      ],
+                      for (var i = 0; i < recent.length; i++) ...[
+                        PersonalNoteCard(
+                          note: recent[i],
+                          now: now,
+                          blue: i.isOdd,
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                    ],
                     const SizedBox(height: 8),
                     MonitoringCard(
                       color: const Color(0xFFFFF5DE),
@@ -123,22 +227,25 @@ class PersonalNotesScreen extends StatelessWidget {
                         children: [
                           Text(
                             text.pnTip,
-                            style: const TextStyle(fontWeight: FontWeight.w700),
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                           const SizedBox(height: 4),
-                          Text(text.pnTipText),
+                          Text(
+                            text.pnTipText,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              height: 1.35,
+                              color: Color(0xFF5B6475),
+                            ),
+                          ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 16),
-                    MonitoringPrimaryButton(
-                      label: text.pnAdd,
-                      onPressed: state.requiresSignIn
-                          ? null
-                          : () => context.read<PersonalNotesBloc>().add(
-                              const PersonalNoteComposerToggled(open: true),
-                            ),
-                    ),
+                    MonitoringPrimaryButton(label: text.pnAdd, onPressed: add),
                   ],
                 ),
               ),
@@ -149,6 +256,13 @@ class PersonalNotesScreen extends StatelessWidget {
     );
   }
 
+  Future<void> _refresh(BuildContext context) async {
+    final bloc = context.read<PersonalNotesBloc>();
+    if (bloc.state.saving) return;
+    bloc.add(const PersonalNotesRequested());
+    await bloc.stream.firstWhere((s) => !s.loading, orElse: () => bloc.state);
+  }
+
   Future<void> _compose(BuildContext context) async {
     final bloc = context.read<PersonalNotesBloc>();
     await showDialog<void>(
@@ -157,42 +271,9 @@ class PersonalNotesScreen extends StatelessWidget {
       builder: (_) =>
           BlocProvider.value(value: bloc, child: const _PersonalNoteDialog()),
     );
-    if (bloc.state.composing && !bloc.state.saving) {
+    if (!bloc.isClosed && bloc.state.composing && !bloc.state.saving) {
       bloc.add(const PersonalNoteComposerToggled(open: false));
     }
-  }
-}
-
-class _NoteCard extends StatelessWidget {
-  const _NoteCard({required this.note});
-  final PersonalNote note;
-
-  @override
-  Widget build(BuildContext context) {
-    final text = AppLocalizations.of(context);
-    final locale = Localizations.localeOf(context).toString();
-    return MonitoringCard(
-      color: note.category == PersonalNoteCategory.medication
-          ? TataColors.lavender
-          : Colors.white,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            note.title,
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-          ),
-          const SizedBox(height: 4),
-          Text(note.text),
-          const SizedBox(height: 6),
-          Text(
-            '${note.category == PersonalNoteCategory.medication ? text.pnMedications : text.pnRoutine}'
-            ' · ${monitoringDateTime(locale, note.recordedAt)}',
-            style: const TextStyle(color: TataColors.muted, fontSize: 12),
-          ),
-        ],
-      ),
-    );
   }
 }
 
@@ -220,7 +301,12 @@ class _PersonalNoteDialogState extends State<_PersonalNoteDialog> {
     final text = AppLocalizations.of(context);
     return BlocConsumer<PersonalNotesBloc, PersonalNotesState>(
       listenWhen: (a, b) => a.composing && !b.composing,
-      listener: (context, state) => Navigator.of(context).maybePop(),
+      listener: (context, state) {
+        // System Back may already be dismissing this dialog when composition resets.
+        if (ModalRoute.of(context)?.isCurrent == true) {
+          Navigator.of(context).pop();
+        }
+      },
       builder: (context, state) {
         final canSave =
             !state.saving &&

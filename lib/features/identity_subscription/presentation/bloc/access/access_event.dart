@@ -1,6 +1,14 @@
+import '../../../domain/value_objects/social_provider.dart';
+
 /// User or startup intent handled by the access state machine.
 sealed class AccessEvent {
   const AccessEvent();
+}
+
+/// Requests a provider flow without exposing its credentials to presentation.
+final class AccessSocialSignInRequested extends AccessEvent {
+  const AccessSocialSignInRequested(this.provider);
+  final SocialProvider provider;
 }
 
 /// Requests validation of a stored session against the current server identity.

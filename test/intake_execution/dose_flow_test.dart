@@ -199,10 +199,13 @@ void main() {
       expect(fake.agendaRanges, hasLength(1));
 
       subject.add(AgendaDaySelected(DateTime(2026, 11, 20)));
-      await Future<void>.delayed(Duration.zero);
-      expect(subject.state.selectedDay, DateTime(2026, 11, 6));
+      await subject.stream.firstWhere(
+        (s) => s.status == AgendaStatus.ready && s.selectedDay.day == 20,
+      );
+      expect(subject.state.selectedDay, DateTime(2026, 11, 20));
+      expect(fake.agendaRanges.last.$1, DateTime(2026, 11, 16).toUtc());
 
-      subject.add(const AgendaWeekMoved(1));
+      subject.add(AgendaDaySelected(DateTime(2026, 11, 13)));
       await subject.stream.firstWhere(
         (s) => s.status == AgendaStatus.ready && s.week.start.day == 9,
       );

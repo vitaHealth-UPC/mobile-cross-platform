@@ -10,7 +10,7 @@ import '../../features/identity_subscription/application/readmodels/remembered_a
 import '../../features/identity_subscription/presentation/bloc/pin/pin_bloc.dart';
 import '../../features/identity_subscription/presentation/navigation/pin_route.dart';
 import '../../features/intake_execution/application/ports/intake_sync.dart';
-import '../../features/intake_execution/application/ports/voice_confirmation.dart';
+import '../../features/intake_execution/application/ports/phrase_speaker.dart';
 import '../../features/intake_execution/application/services/intake_reminder_sync.dart';
 import '../../features/intake_execution/presentation/bloc/agenda/agenda_bloc.dart';
 import '../../features/intake_execution/presentation/bloc/dose/dose_bloc.dart';
@@ -362,6 +362,13 @@ class _AdultEntryRouteState extends State<AdultEntryRoute> {
         MaterialPageRoute(
           builder: (routeContext) => AgendaRoute(
             createBloc: widget.createAgendaBloc,
+            onNotes: widget.monitoring == null
+                ? null
+                : () {
+                    Navigator.of(routeContext)
+                        .popUntil((route) => route.isFirst);
+                    _openNotes(this.context);
+                  },
             onMedications: widget.treatments == null
                 ? null
                 : () {

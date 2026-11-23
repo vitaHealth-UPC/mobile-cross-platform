@@ -8,6 +8,8 @@ import '../../domain/value_objects/accessibility_preferences.dart';
 import '../bloc/accessibility/accessibility_bloc.dart';
 import '../bloc/accessibility/accessibility_event.dart';
 import '../bloc/accessibility/accessibility_state.dart';
+import '../widgets/accessibility_save_receipt.dart';
+import '../widgets/language_preference_tile.dart';
 
 /// Figma accessibility groups with native controls, four text sizes and account sync.
 /// Colors follow the selected theme; artwork never replaces a toggle or selector.
@@ -90,12 +92,16 @@ class AccessibilityScreen extends StatelessWidget {
       void change(AccessibilityChange value) =>
           bloc.add(AccessibilityChanged(value));
       final titleStyle = theme.textTheme.bodyMedium!.copyWith(
-        fontSize: 14,
+        fontSize: 16,
+        letterSpacing: 0,
+        height: 1.2,
         fontWeight: FontWeight.w600,
         color: colors.onSurface,
       );
       final hintStyle = theme.textTheme.bodySmall!.copyWith(
-        fontSize: 11,
+        fontSize: 12.5,
+        letterSpacing: 0,
+        height: 1.2,
         color: colors.onSurfaceVariant,
       );
       Widget icon(String asset, Color background) => CircleAvatar(
@@ -146,7 +152,18 @@ class AccessibilityScreen extends StatelessWidget {
         ),
       );
       return Scaffold(
-        bottomNavigationBar: navigationBar,
+        bottomNavigationBar: state.receipt == null
+            ? navigationBar
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AccessibilitySaveReceipt(
+                    field: state.receipt!,
+                    preferences: prefs,
+                  ),
+                  ?navigationBar,
+                ],
+              ),
         body: DecoratedBox(
           decoration: BoxDecoration(
             gradient: normal
@@ -163,7 +180,7 @@ class AccessibilityScreen extends StatelessWidget {
           child: SafeArea(
             bottom: navigationBar == null,
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(22, 28, 22, 24),
+              padding: const EdgeInsets.fromLTRB(22, 16, 22, 24),
               children: [
                 const _AccessibilityHeader(),
                 heading(text.pfViewGroup),
@@ -288,14 +305,9 @@ class AccessibilityScreen extends StatelessWidget {
                 const SizedBox(height: 24),
                 _Group(
                   children: [
-                    ListTile(
-                      title: Text(text.pfLanguage, style: titleStyle),
-                      subtitle: Text(
-                        state.language.displayName,
-                        style: hintStyle,
-                      ),
-                      trailing: Icon(Icons.translate, color: colors.primary),
-                      onTap: () => bloc.add(const LanguageToggled()),
+                    LanguagePreferenceTile(
+                      language: state.language,
+                      onChanged: () => bloc.add(const LanguageToggled()),
                     ),
                   ],
                 ),
@@ -337,10 +349,15 @@ class _Group extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Material(
     color: Theme.of(context).colorScheme.surface,
-    borderRadius: BorderRadius.circular(18),
     clipBehavior: Clip.antiAlias,
     elevation: 3,
     shadowColor: const Color(0x141A2138),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(18),
+      side: MediaQuery.highContrastOf(context)
+          ? BorderSide(color: Theme.of(context).colorScheme.outline)
+          : BorderSide.none,
+    ),
     child: Column(
       children: [
         for (var index = 0; index < children.length; index++) ...[

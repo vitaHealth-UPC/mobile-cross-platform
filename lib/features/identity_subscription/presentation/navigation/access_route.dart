@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/application/session/session_owner.dart';
 import '../../application/readmodels/remembered_adult.dart';
+import '../../domain/value_objects/social_provider.dart';
 import '../bloc/access/access_bloc.dart';
 import '../bloc/access/access_event.dart';
 import '../bloc/access/access_state.dart';
@@ -11,6 +12,7 @@ import '../bloc/pin/pin_bloc.dart';
 import '../bloc/plan_choice/plan_choice_cubit.dart';
 import '../bloc/recovery/recovery_bloc.dart';
 import '../bloc/registration/registration_bloc.dart';
+import '../screens/landing_value_screen.dart';
 import '../screens/login_screen.dart';
 import '../screens/onboarding_screen.dart';
 import '../screens/password_recovery_screen.dart';
@@ -111,6 +113,14 @@ class _AccessRouteState extends State<AccessRoute> {
   Future<void> _start(BuildContext context) async {
     final plans = widget.createPlanChoiceCubit;
     if (plans == null) return _register(context);
+    final continueToPlans = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (landingContext) => LandingValueScreen(
+          onStart: () => Navigator.of(landingContext).pop(true),
+        ),
+      ),
+    );
+    if (continueToPlans != true || !context.mounted) return;
     final choice = await Navigator.of(context).push<PlanChoice>(
       MaterialPageRoute(
         builder: (_) => PlanChoiceRoute(
@@ -261,8 +271,12 @@ class _AccessRouteState extends State<AccessRoute> {
           onRegister: widget.createRegistrationBloc == null
               ? unavailable
               : () => _register(context),
-          onGoogle: unavailable,
-          onFacebook: unavailable,
+          onGoogle: () => context.read<AccessBloc>().add(
+            const AccessSocialSignInRequested(SocialProvider.google),
+          ),
+          onFacebook: () => context.read<AccessBloc>().add(
+            const AccessSocialSignInRequested(SocialProvider.facebook),
+          ),
           onPinAccess: _remembered == null || widget.createPinAccessBloc == null
               ? null
               : () => _pinAccess(context, _remembered!),
@@ -280,6 +294,10 @@ class _AccessRouteState extends State<AccessRoute> {
     'NETWORK_UNAVAILABLE' => text.networkUnavailable,
     'ACCESS_DENIED' => text.accessDenied,
     'RATE_LIMITED' => text.rateLimited,
+    'SOCIAL_NOT_CONFIGURED' ||
+    'SOCIAL_PROVIDER_UNAVAILABLE' => text.accessMethodUnavailable,
+    'SOCIAL_LINK_REQUIRED' => text.socialLinkRequired,
+    'SOCIAL_EMAIL_REQUIRED' => text.socialEmailRequired,
     _ => text.genericAccessError,
   };
 }

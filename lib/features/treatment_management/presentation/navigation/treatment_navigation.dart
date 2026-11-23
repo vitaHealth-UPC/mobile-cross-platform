@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../application/readmodels/medication_registration_result.dart';
 import '../../domain/entities/medication.dart';
 import '../bloc/medication_management/medication_management_bloc.dart';
 import '../bloc/medication_management/medication_management_event.dart';
@@ -114,7 +115,7 @@ final class TreatmentNavigation {
                   ),
                 ),
               );
-              list.add(const TreatmentListRequested());
+              if (listContext.mounted) list.add(const TreatmentListRequested());
             },
             onNew: () async {
               final list = listContext.read<TreatmentListBloc>();
@@ -123,8 +124,9 @@ final class TreatmentNavigation {
                 olderAdultId,
                 onSessionInvalidated,
                 picking: true,
+                personName: personName,
               );
-              list.add(const TreatmentListRequested());
+              if (listContext.mounted) list.add(const TreatmentListRequested());
             },
           ),
         ),
@@ -132,8 +134,6 @@ final class TreatmentNavigation {
     ),
   );
 
-  /// Medication catalog of [olderAdultId] with registration, edition and treatments.
-  /// [onOpenInventory] lets the host open the stock of a medication.
   /// Active medications of [olderAdultId] for a host screen (Figma 563:1121).
   Widget activeMedicationsCard(
     String olderAdultId,
@@ -143,10 +143,13 @@ final class TreatmentNavigation {
     onSessionInvalidated: onSessionInvalidated,
   );
 
+  /// Medication catalog of [olderAdultId] with registration, editing and treatments.
+  /// [onOpenInventory] lets the host open the stock of a medication.
   Future<void> openMedications(
     BuildContext context,
     String olderAdultId,
     VoidCallback onSessionInvalidated, {
+    String? personName,
     void Function(BuildContext context, Medication medication)? onOpenInventory,
   }) => _openMedicationManagement(
     context,
@@ -154,6 +157,7 @@ final class TreatmentNavigation {
     onSessionInvalidated,
     picking: false,
     onOpenInventory: onOpenInventory,
+    personName: personName,
   );
 
   Future<void> _openMedicationManagement(
@@ -161,6 +165,7 @@ final class TreatmentNavigation {
     String olderAdultId,
     VoidCallback onSessionInvalidated, {
     required bool picking,
+    String? personName,
     void Function(BuildContext context, Medication medication)? onOpenInventory,
   }) => Navigator.of(context).push<void>(
     MaterialPageRoute(
@@ -182,59 +187,87 @@ final class TreatmentNavigation {
             onRegister: () async {
               final medications = medicationsContext
                   .read<MedicationManagementBloc>();
-              await Navigator.of(medicationsContext).push<void>(
-                MaterialPageRoute(
-                  builder: (_) => BlocProvider(
-                    create: (_) =>
-                        _factories.createRegistrationBloc(olderAdultId),
-                    child: Builder(
-                      builder: (registrationContext) =>
-                          MedicationRegistrationScreen(
-                            onRegistered: () =>
-                                Navigator.of(registrationContext).pop(),
-                            onSessionInvalidated: _invalidate(
-                              registrationContext,
-                              onSessionInvalidated,
-                            ),
-                          ),
-                    ),
-                  ),
-                ),
-              );
-              medications.add(const MedicationsRequested());
-            },
-            onCreateTreatment: (medication) async {
-              final medications = medicationsContext
-                  .read<MedicationManagementBloc>();
-              await Navigator.of(medicationsContext).push<void>(
-                MaterialPageRoute(
-                  builder: (_) => BlocProvider(
-                    create: (_) =>
-                        _factories.createSetupBloc(olderAdultId, medication.id),
-                    child: Builder(
-                      builder: (setupContext) => TreatmentSetupScreen(
-                        medicationLabel: medication.label,
-                        onFinished: () => Navigator.of(setupContext).pop(),
-                        onSessionInvalidated: _invalidate(
-                          setupContext,
-                          onSessionInvalidated,
+              final result = await Navigator.of(medicationsContext)
+                  .push<MedicationRegistrationResult>(
+                    MaterialPageRoute(
+                      builder: (_) => BlocProvider(
+                        create: (_) =>
+                            _factories.createRegistrationBloc(olderAdultId),
+                        child: Builder(
+                          builder: (registrationContext) =>
+                              MedicationRegistrationScreen(
+                                personName: personName,
+                                onRegistered: (result) =>
+                                    Navigator.of(registrationContext)
+                                        .pop(result),
+                                onSessionInvalidated: _invalidate(
+                                  registrationContext,
+                                  onSessionInvalidated,
+                                ),
+                              ),
                         ),
                       ),
                     ),
-                  ),
-                ),
-              );
+                  );
+              if (!medicationsContext.mounted) return;
               medications.add(const MedicationsRequested());
-              // A treatment created from the picker returns to the list that opened it.
-              if (picking && medicationsContext.mounted) {
-                Navigator.of(medicationsContext).pop();
+              if (result != null) {
+                await _createFromMedication(
+                  medicationsContext,
+                  olderAdultId,
+                  result.medication,
+                  onSessionInvalidated,
+                  picking: picking,
+                  initial: result,
+                );
               }
             },
+            onCreateTreatment: (medication) => _createFromMedication(
+              medicationsContext,
+              olderAdultId,
+              medication,
+              onSessionInvalidated,
+              picking: picking,
+            ),
           ),
         ),
       ),
     ),
   );
+
+  /// The same wizard handles an existing medication or the registration receipt.
+  Future<void> _createFromMedication(
+    BuildContext context,
+    String olderAdultId,
+    Medication medication,
+    VoidCallback onSessionInvalidated, {
+    required bool picking,
+    MedicationRegistrationResult? initial,
+  }) async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => BlocProvider(
+          create: (_) =>
+              _factories.createSetupBloc(olderAdultId, medication.id),
+          child: Builder(
+            builder: (setupContext) => TreatmentSetupScreen(
+              medicationLabel: medication.label,
+              initialFrequency: initial?.frequency ?? '',
+              initialInstructions: initial?.instructions ?? '',
+              onFinished: () => Navigator.of(setupContext).pop(),
+              onSessionInvalidated: _invalidate(
+                setupContext,
+                onSessionInvalidated,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    if (!context.mounted) return;
+    context.read<MedicationManagementBloc>().add(const MedicationsRequested());
+    if (picking) Navigator.of(context).pop();
+  }
 
   /// Read-only medication catalog for the signed-in older adult.
   Future<void> openMyMedications(

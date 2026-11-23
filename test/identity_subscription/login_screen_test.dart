@@ -1,24 +1,10 @@
-import 'dart:io';
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tata/features/identity_subscription/presentation/screens/login_screen.dart';
 import 'package:tata/l10n/generated/app_localizations.dart';
 import 'package:tata/shared/presentation/theme/tata_theme.dart';
 
-Future<void> _loadFonts() async {
-  final inter = FontLoader('Inter');
-  for (final weight in ['regular', 'medium', 'semibold', 'bold']) {
-    inter.addFont(rootBundle.load('assets/fonts/inter_$weight.ttf'));
-  }
-  await inter.load();
-  await (FontLoader(
-    'DMSerifDisplay',
-  )..addFont(rootBundle.load('assets/fonts/dm_serif_display.ttf'))).load();
-}
+import '../support/visual_capture.dart';
 
 void main() {
   Widget host(
@@ -105,7 +91,7 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      await _loadFonts();
+      await loadTataFonts();
       Widget screen() => LoginScreen(
         onSignIn: (_, _) {},
         onRecover: () {},
@@ -127,24 +113,27 @@ void main() {
       tester.testTextInput.hide();
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
-      final directory = Platform.environment['TATA_CAPTURE_DIR'];
-      if (directory != null) {
-        await tester.runAsync(() async {
-          final boundary = tester.renderObject<RenderRepaintBoundary>(
-            find.byKey(const Key('login-capture')),
-          );
-          final image = await boundary.toImage();
-          final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-          await Directory(directory).create(recursive: true);
-          await File('$directory/login-es.png')
-              .writeAsBytes(bytes!.buffer.asUint8List());
-          image.dispose();
-        });
-      }
+      await captureWidget(
+        tester,
+        find.byKey(const Key('login-capture')),
+        'login-es',
+      );
+      tester.view.physicalSize = const Size(360, 640);
       await tester.pumpWidget(host(screen(), scale: 1.5));
       await tester.pumpAndSettle();
+      await captureWidget(
+        tester,
+        find.byKey(const Key('login-capture')),
+        'login-es-large',
+      );
       await tester.ensureVisible(find.text('Crear cuenta'));
-      expect(find.text('Crear cuenta'), findsOneWidget);
+      await tester.pumpAndSettle();
+      expect(find.text('Crear cuenta').hitTestable(), findsOneWidget);
+      await captureWidget(
+        tester,
+        find.byKey(const Key('login-capture')),
+        'login-es-large-bottom',
+      );
       expect(tester.takeException(), isNull);
     },
   );

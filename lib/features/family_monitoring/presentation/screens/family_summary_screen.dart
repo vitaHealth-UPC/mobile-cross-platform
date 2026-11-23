@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/presentation/theme/tata_colors.dart';
+import '../../../../shared/presentation/theme/tata_typography.dart';
 import '../../../../shared/presentation/widgets/caregiver_tab_bar.dart';
+import '../../../../shared/presentation/widgets/initials_avatar.dart';
 import '../../application/ports/contact_launcher.dart';
-import '../../application/readmodels/monitoring_readmodels.dart';
-import '../../domain/value_objects/adherence_counts.dart';
+import '../../application/readmodels/family_summary.dart';
 import '../bloc/summary/family_summary_bloc.dart';
 import '../texts/monitoring_texts.dart';
+import '../widgets/family_summary_cards.dart';
 import '../widgets/monitoring_widgets.dart';
 
 /// Home of the caregiver: weekly adherence, today's doses, next dose and what needs
@@ -20,6 +22,8 @@ class FamilySummaryScreen extends StatelessWidget {
     required this.launcher,
     required this.onTab,
     this.onHistory,
+    this.onOpenAgenda,
+    this.onChoosePerson,
     this.onAddMedication,
     this.onOpenAlerts,
     this.onLinkAnother,
@@ -29,6 +33,10 @@ class FamilySummaryScreen extends StatelessWidget {
   final ContactLauncher launcher;
   final ValueChanged<CaregiverTab> onTab;
   final VoidCallback? onHistory;
+
+  /// Read-only agenda and selection of the followed person, supplied by the shell.
+  final VoidCallback? onOpenAgenda;
+  final VoidCallback? onChoosePerson;
   final VoidCallback? onAddMedication;
   final VoidCallback? onOpenAlerts;
   final VoidCallback? onLinkAnother;
@@ -54,45 +62,154 @@ class FamilySummaryScreen extends StatelessWidget {
           listener: (context, state) => _showContact(context),
           builder: (context, state) {
             final summary = state.summary;
-            return RefreshIndicator(
-              onRefresh: () async => context.read<FamilySummaryBloc>().add(
-                const FamilySummaryRequested(),
-              ),
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: EdgeInsets.fromLTRB(
-                  22,
-                  22,
-                  22,
-                  MediaQuery.paddingOf(context).bottom + 110,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    MonitoringHeader(
-                      title: text.fmSummaryTitle,
-                      // The name stays visible even when the summary is refused.
-                      subtitle:
-                          summary?.olderAdultName ??
-                          context.read<FamilySummaryBloc>().olderAdultName,
-                    ),
-                    const SizedBox(height: 20),
-                    if (state.status == FamilySummaryStatus.failure)
-                      _Failure(state: state)
-                    else if (summary == null)
-                      MonitoringLoading(label: text.fmSummaryLoading)
-                    else
-                      _Content(
-                        summary: summary,
-                        onHistory: onHistory,
-                        onAddMedication: onAddMedication,
-                        onOpenAlerts: onOpenAlerts,
-                        onLinkAnother: onLinkAnother,
-                        onOpenStock: onOpenStock,
+            return Stack(
+              fit: StackFit.expand,
+              children: [
+                const Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.white,
+                          TataColors.background,
+                          Color(0xFFFCFBFF),
+                        ],
                       ),
-                  ],
+                    ),
+                  ),
                 ),
-              ),
+                Positioned(
+                  top: -12,
+                  right: 0,
+                  child: IgnorePointer(
+                    child: Image.asset(
+                      'assets/illustrations/summary_glow.png',
+                      width: 316,
+                      height: 386,
+                      excludeFromSemantics: true,
+                    ),
+                  ),
+                ),
+                RefreshIndicator(
+                  onRefresh: () async {
+                    final bloc = context.read<FamilySummaryBloc>();
+                    final done = bloc.stream.firstWhere(
+                      (state) => state.status != FamilySummaryStatus.loading,
+                      orElse: () => const FamilySummaryState(
+                        status: FamilySummaryStatus.failure,
+                      ),
+                    );
+                    bloc.add(const FamilySummaryRequested());
+                    await done;
+                  },
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: EdgeInsets.fromLTRB(
+                      22,
+                      22,
+                      22,
+                      MediaQuery.paddingOf(context).bottom + 110,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: InkWell(
+                                onTap: onChoosePerson,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 4,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Semantics(
+                                        header: true,
+                                        child: Text(
+                                          text.fmSummaryTitle,
+                                          style: TataTypography.heading
+                                              .copyWith(fontSize: 29),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Row(
+                                        children: [
+                                          Flexible(
+                                            child: Text(
+                                              summary?.olderAdultName ??
+                                                  context
+                                                      .read<FamilySummaryBloc>()
+                                                      .olderAdultName,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 16,
+                                                color: TataColors.primary,
+                                              ),
+                                            ),
+                                          ),
+                                          if (onChoosePerson != null)
+                                            const Icon(
+                                              Icons.keyboard_arrow_down,
+                                              size: 18,
+                                            ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            InitialsAvatar(
+                              name:
+                                  summary?.olderAdultName ??
+                                  context
+                                      .read<FamilySummaryBloc>()
+                                      .olderAdultName,
+                              size: 40,
+                            ),
+                            IconButton(
+                              style: IconButton.styleFrom(
+                                backgroundColor: Colors.white,
+                              ),
+                              onPressed: onOpenAlerts,
+                              tooltip: text.fmSeeAlerts,
+                              icon: SvgPicture.asset(
+                                'assets/icons/summary_bell.svg',
+                                width: 22,
+                                height: 22,
+                                excludeFromSemantics: true,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        if (state.status == FamilySummaryStatus.failure)
+                          _Failure(state: state)
+                        else if (summary == null)
+                          MonitoringLoading(label: text.fmSummaryLoading)
+                        else
+                          FamilySummaryCards(
+                            summary: summary,
+                            onAgenda: onOpenAgenda,
+                            onHistory: onHistory,
+                            onContact: () => context
+                                .read<FamilySummaryBloc>()
+                                .add(const FamilyContactRequested()),
+                            onAlerts: onOpenAlerts,
+                            onStock: onOpenStock,
+                            onAddMedication: onAddMedication,
+                            onLinkAnother: onLinkAnother,
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             );
           },
         ),
@@ -168,279 +285,6 @@ class _Failure extends StatelessWidget {
   }
 }
 
-class _Content extends StatelessWidget {
-  const _Content({
-    required this.summary,
-    this.onHistory,
-    this.onAddMedication,
-    this.onOpenAlerts,
-    this.onLinkAnother,
-    this.onOpenStock,
-  });
-
-  final FamilySummary summary;
-  final VoidCallback? onHistory;
-  final VoidCallback? onAddMedication;
-  final VoidCallback? onOpenAlerts;
-  final VoidCallback? onLinkAnother;
-  final ValueChanged<StockAttention>? onOpenStock;
-
-  @override
-  Widget build(BuildContext context) {
-    final text = AppLocalizations.of(context);
-    final locale = Localizations.localeOf(context).toString();
-    final weekly = summary.weekly;
-    final today = summary.today;
-    final next = summary.nextDose;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (summary.openAlerts.isNotEmpty) ...[
-          InkWell(
-            borderRadius: BorderRadius.circular(18),
-            onTap: onOpenAlerts,
-            child: MonitoringCard(
-              color: TataColors.errorSurface,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      text.fmPendingSummary(summary.openAlerts.length),
-                      style: const TextStyle(
-                        color: TataColors.errorText,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    text.fmSeeAlerts,
-                    style: const TextStyle(color: TataColors.errorText),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 14),
-        ],
-        MonitoringCard(
-          color: TataColors.lavender,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                text.fmWeeklyAdherence,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                _percent(weekly, text),
-                style: const TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.w700,
-                  color: TataColors.primary,
-                ),
-              ),
-              Text(
-                weekly.total == 0
-                    ? text.fmNoResolved
-                    : text.fmWeeklyConfirmed(weekly.confirmed, weekly.total),
-                style: const TextStyle(color: TataColors.muted),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 14),
-        MonitoringCard(
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      text.fmToday,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    Text(
-                      text.fmDosesCompleted,
-                      style: const TextStyle(color: TataColors.muted),
-                    ),
-                  ],
-                ),
-              ),
-              Text(
-                text.fmTodayProgress(today.confirmed, today.total),
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                  color: TataColors.primary,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 14),
-        MonitoringCard(
-          color: TataColors.mint,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                text.fmNextDose,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 6),
-              if (next == null)
-                Text(text.fmNoNextDose)
-              else ...[
-                Text(
-                  next.medicationName,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 17,
-                  ),
-                ),
-                Text(
-                  '${next.dose} · ${DateFormat.jm(locale).format(next.scheduledAt.toLocal())}',
-                  style: const TextStyle(color: TataColors.muted),
-                ),
-              ],
-            ],
-          ),
-        ),
-        const SizedBox(height: 14),
-        MonitoringCard(
-          color: TataColors.infoSurface,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                text.fmAttention,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 6),
-              if (!summary.inventoryAvailable)
-                Text(text.fmInventoryUnavailable)
-              else if (summary.stockAttention.isEmpty)
-                Text(text.fmNoRestock)
-              else
-                for (final stock in summary.stockAttention)
-                  if (onOpenStock case final open?)
-                    _StockLine(
-                      label: text.fmLowStock(
-                        stock.remaining,
-                        stock.medicationName,
-                      ),
-                      onTap: () => open(stock),
-                    )
-                  else
-                    Text(
-                      text.fmLowStock(stock.remaining, stock.medicationName),
-                    ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 18),
-        Text(
-          text.fmQuickMonitoring,
-          style: const TextStyle(fontWeight: FontWeight.w700),
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(
-              child: _QuickAction(label: text.fmQuickHistory, onTap: onHistory),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _QuickAction(
-                label: text.fmQuickContact,
-                onTap: () => context.read<FamilySummaryBloc>().add(
-                  const FamilyContactRequested(),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 14),
-        MonitoringPrimaryButton(
-          label: text.fmAddMedication,
-          onPressed: onAddMedication,
-        ),
-        if (onLinkAnother != null)
-          TextButton(
-            onPressed: onLinkAnother,
-            child: Text(text.fmMoreLinkPerson),
-          ),
-      ],
-    );
-  }
-
-  String _percent(AdherenceCounts counts, AppLocalizations text) {
-    final value = counts.percentage;
-    return value == null ? text.fmNoData : '${value.round()}%';
-  }
-}
-
-/// Low-stock line that leads to the medication's inventory (US-42 to US-43).
-class _StockLine extends StatelessWidget {
-  const _StockLine({required this.label, required this.onTap});
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => Semantics(
-    button: true,
-    child: InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 48),
-        child: Row(
-          children: [
-            Expanded(child: Text(label)),
-            const ExcludeSemantics(
-              child: Icon(Icons.chevron_right, color: TataColors.infoText),
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
-}
-
-class _QuickAction extends StatelessWidget {
-  const _QuickAction({required this.label, required this.onTap});
-  final String label;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) => Semantics(
-    button: true,
-    enabled: onTap != null,
-    child: InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: onTap,
-      child: Container(
-        constraints: const BoxConstraints(minHeight: 56),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: TataColors.border),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            color: onTap == null ? TataColors.muted : TataColors.primary,
-          ),
-        ),
-      ),
-    ),
-  );
-}
-
 class _ContactDialog extends StatelessWidget {
   const _ContactDialog({required this.launcher});
   final ContactLauncher launcher;
@@ -470,7 +314,9 @@ class _ContactDialog extends StatelessWidget {
             children: [
               Text(monitoringErrorText(text, dialog.errorCode)),
               TextButton(
-                onPressed: () => bloc.add(const FamilyContactRequested()),
+                onPressed: () => bloc.add(
+                  FamilyContactRequested(channelType: dialog.channelType),
+                ),
                 child: Text(text.fmContactRetry),
               ),
             ],

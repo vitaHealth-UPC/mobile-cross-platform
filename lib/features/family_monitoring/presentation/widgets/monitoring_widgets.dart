@@ -4,7 +4,7 @@ import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/presentation/theme/tata_colors.dart';
 import '../../../../shared/presentation/theme/tata_typography.dart';
 import '../../application/ports/contact_launcher.dart';
-import '../../application/readmodels/monitoring_readmodels.dart';
+import '../../application/readmodels/contact_option.dart';
 import '../../domain/value_objects/contact_channel.dart';
 
 /// Rounded white card shared by the follow-up screens.
@@ -73,10 +73,16 @@ class MonitoringLoading extends StatelessWidget {
 
 /// Failure message with a retry action.
 class MonitoringError extends StatelessWidget {
-  const MonitoringError({super.key, required this.message, this.onRetry});
+  const MonitoringError({
+    super.key,
+    required this.message,
+    this.onRetry,
+    this.retryLabel,
+  });
 
   final String message;
   final VoidCallback? onRetry;
+  final String? retryLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -97,7 +103,10 @@ class MonitoringError extends StatelessWidget {
               ),
             ),
             if (onRetry != null)
-              TextButton(onPressed: onRetry, child: Text(text.fmRetry)),
+              TextButton(
+                onPressed: onRetry,
+                child: Text(retryLabel ?? text.fmRetry),
+              ),
           ],
         ),
       ),
@@ -112,11 +121,13 @@ class MonitoringFilterChip extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    this.fontSize = 13,
   });
 
   final String label;
   final bool selected;
   final VoidCallback onTap;
+  final double fontSize;
 
   @override
   Widget build(BuildContext context) => Semantics(
@@ -140,7 +151,7 @@ class MonitoringFilterChip extends StatelessWidget {
           label,
           style: TextStyle(
             color: selected ? Colors.white : TataColors.ink,
-            fontSize: 13,
+            fontSize: fontSize,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -182,10 +193,14 @@ class ContactChannelView extends StatelessWidget {
     super.key,
     required this.option,
     required this.launcher,
+    this.actionLabel,
+    this.showChannel = true,
   });
 
   final ContactOption option;
   final ContactLauncher launcher;
+  final String? actionLabel;
+  final bool showChannel;
 
   @override
   Widget build(BuildContext context) {
@@ -200,10 +215,13 @@ class ContactChannelView extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
-        const SizedBox(height: 12),
+        if (showChannel) ...[
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 12),
+        ],
         MonitoringPrimaryButton(
-          label: isPhone ? text.fmOpenPhone : text.fmOpenWhatsapp,
+          label:
+              actionLabel ?? (isPhone ? text.fmOpenPhone : text.fmOpenWhatsapp),
           onPressed: () async {
             final messenger = ScaffoldMessenger.maybeOf(context);
             final opened = await launcher.open(channel);

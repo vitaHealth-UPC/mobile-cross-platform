@@ -2,9 +2,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../shared/application/time/clock.dart';
 import '../../../../../shared/common/result/app_result.dart';
-import '../../../application/readmodels/monitoring_readmodels.dart';
-import '../../../application/usecases/alert_usecases.dart';
+import '../../../application/readmodels/monitored_dose.dart';
+import '../../../application/usecases/get_alert_timeline.dart';
 import '../../../domain/entities/caregiver_alert.dart';
+import '../../../domain/value_objects/alert_severity.dart';
 import '../../../domain/value_objects/alert_status.dart';
 
 /// Filters follow-up alerts and scheduled dose events without conflating their statuses.
@@ -24,7 +25,10 @@ sealed class AlertsEvent {
 
 /// Load or reload the alerts and the day's doses; also sent when the screen resumes.
 final class AlertsRequested extends AlertsEvent {
-  const AlertsRequested();
+  const AlertsRequested({this.background = false});
+
+  /// Periodic reads skip an unfinished request; explicit reloads supersede it.
+  final bool background;
 }
 
 final class AlertsFilterSelected extends AlertsEvent {
@@ -87,14 +91,20 @@ final class AlertsState {
 
   List<MonitoredDose> _visibleDoses(AlertFilter filter) {
     final now = asOf;
+    final represented = {for (final alert in alerts) alert.intakeId};
     bool upcoming(MonitoredDose d) =>
         d.status == 'PENDING' && now != null && d.scheduledAt.isAfter(now);
+    bool unrepresentedPending(MonitoredDose dose) =>
+        dose.status == 'PENDING' && !represented.contains(dose.id);
     return doses.where((dose) {
       return switch (filter) {
-        AlertFilter.pending => false,
+        AlertFilter.pending => unrepresentedPending(dose) && !upcoming(dose),
         AlertFilter.upcoming => upcoming(dose),
         AlertFilter.completed => dose.isDone,
-        AlertFilter.all => upcoming(dose) || dose.isDone,
+        AlertFilter.all =>
+          unrepresentedPending(dose) ||
+              dose.isDone ||
+              (dose.status == 'OMITTED' && !represented.contains(dose.id)),
       };
     }).toList();
   }
@@ -105,6 +115,20 @@ final class AlertsState {
 
   int get pendingCount =>
       alerts.where((a) => a.status == AlertStatus.open).length;
+
+  /// Critical follow-ups awaiting explicit closure, independent of the current filter.
+  int get criticalCount => alerts
+      .where(
+        (alert) =>
+            alert.status != AlertStatus.closed &&
+            alert.severity == AlertSeverity.critical,
+      )
+      .length;
+
+  /// Missing classification must not become a reassuring "no critical alerts" banner.
+  bool get severityKnown => alerts
+      .where((alert) => alert.status != AlertStatus.closed)
+      .every((alert) => alert.severity != AlertSeverity.unknown);
 }
 
 /// Alerts of one adult with the doses of the day. A reload over visible content keeps it on
@@ -127,6 +151,7 @@ final class AlertsBloc extends Bloc<AlertsEvent, AlertsState> {
   final String olderAdultId;
   final Clock _clock;
   int _revision = 0;
+  bool _loading = false;
 
   static DateTime _day(DateTime instant) {
     final local = instant.toLocal();
@@ -134,7 +159,9 @@ final class AlertsBloc extends Bloc<AlertsEvent, AlertsState> {
   }
 
   Future<void> _load(AlertsRequested event, Emitter<AlertsState> emit) async {
+    if (event.background && _loading) return;
     final revision = ++_revision;
+    _loading = true;
     final hasContent =
         state.status == AlertsStatus.ready ||
         state.status == AlertsStatus.empty;
@@ -142,6 +169,7 @@ final class AlertsBloc extends Bloc<AlertsEvent, AlertsState> {
     final now = _clock();
     final result = await _timeline(olderAdultId, _day(now));
     if (revision != _revision || emit.isDone) return;
+    _loading = false;
     switch (result) {
       case AppSuccess(:final value):
         final next = AlertsState(

@@ -2,13 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tata/features/family_monitoring/application/ports/contact_launcher.dart';
-import 'package:tata/features/family_monitoring/application/ports/monitoring_ports.dart';
-import 'package:tata/features/family_monitoring/application/readmodels/monitoring_readmodels.dart';
-import 'package:tata/features/family_monitoring/application/usecases/alert_usecases.dart';
-import 'package:tata/features/family_monitoring/application/usecases/note_usecases.dart';
-import 'package:tata/features/family_monitoring/application/usecases/summary_usecases.dart';
+import 'package:tata/features/family_monitoring/application/ports/family_monitoring_repository.dart';
+import 'package:tata/features/family_monitoring/application/readmodels/alert_timeline.dart';
+import 'package:tata/features/family_monitoring/application/readmodels/family_summary.dart';
+import 'package:tata/features/family_monitoring/application/readmodels/intake_history_entry.dart';
+import 'package:tata/features/family_monitoring/application/readmodels/monitored_dose.dart';
+import 'package:tata/features/family_monitoring/application/readmodels/monitored_person.dart';
+import 'package:tata/features/family_monitoring/application/readmodels/recorded_alert_event.dart';
+import 'package:tata/features/family_monitoring/application/usecases/create_personal_note.dart';
+import 'package:tata/features/family_monitoring/application/usecases/get_alert_detail.dart';
+import 'package:tata/features/family_monitoring/application/usecases/get_alert_timeline.dart';
+import 'package:tata/features/family_monitoring/application/usecases/get_contact_option.dart';
+import 'package:tata/features/family_monitoring/application/usecases/get_family_summary.dart';
+import 'package:tata/features/family_monitoring/application/usecases/get_follow_up_notes.dart';
+import 'package:tata/features/family_monitoring/application/usecases/get_personal_notes.dart';
+import 'package:tata/features/family_monitoring/application/usecases/register_follow_up_note.dart';
+import 'package:tata/features/family_monitoring/application/usecases/update_alert_status.dart';
+import 'package:tata/features/family_monitoring/domain/entities/caregiver_alert.dart';
 import 'package:tata/features/family_monitoring/domain/entities/notes.dart';
 import 'package:tata/features/family_monitoring/domain/value_objects/adherence_counts.dart';
+import 'package:tata/features/family_monitoring/domain/value_objects/alert_severity.dart';
 import 'package:tata/features/family_monitoring/domain/value_objects/alert_status.dart';
 import 'package:tata/features/family_monitoring/domain/value_objects/contact_channel.dart';
 import 'package:tata/features/family_monitoring/domain/value_objects/note_values.dart';
@@ -97,14 +110,222 @@ void main() {
               .copyWith(textScaler: TextScaler.linear(scale)),
           child: child!,
         ),
-        home: child,
+        debugShowCheckedModeBanner: false,
+        home: RepaintBoundary(key: const Key('summary-capture'), child: child),
       ),
     );
     await tester.pump();
+    if (find.byType(FamilySummaryScreen).evaluate().isNotEmpty) {
+      await tester.runAsync(
+        () => precacheImage(
+          const AssetImage('assets/illustrations/summary_glow.png'),
+          tester.element(find.byType(FamilySummaryScreen).first),
+        ),
+      );
+    }
+    if (find.byType(AlertsScreen).evaluate().isNotEmpty) {
+      await tester.runAsync(() async {
+        final context = tester.element(find.byType(AlertsScreen).first);
+        await precacheImage(
+          const AssetImage('assets/illustrations/alerts_glow.png'),
+          context,
+        );
+        await precacheImage(
+          const AssetImage('assets/illustrations/alerts_botanical.png'),
+          context,
+        );
+      });
+    }
+    if (find.byType(AlertDetailScreen).evaluate().isNotEmpty) {
+      await tester.runAsync(
+        () => precacheImage(
+          const AssetImage('assets/illustrations/alert_tablet.png'),
+          tester.element(find.byType(AlertDetailScreen).first),
+        ),
+      );
+    }
     await tester.pump();
   }
 
   group('alerts screen', () {
+    testWidgets(
+      'foreground refresh receives escalation and pauses with the app',
+      (tester) async {
+        final now = DateTime(2026, 7, 20, 9, 15);
+        AlertTimeline timeline(AlertSeverity severity) => AlertTimeline(
+          alerts: [anAlert(severity: severity)],
+          doses: const [],
+          olderAdultName: 'Rosa Vargas',
+          day: DateTime(2026, 7, 20),
+        );
+        final reader = FakeTimeline(
+          AppSuccess(timeline(AlertSeverity.standard)),
+        );
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.resumed,
+        );
+        await pump(
+          tester,
+          BlocProvider(
+            create: (_) => AlertsBloc(
+              timeline: GetAlertTimeline(reader),
+              olderAdultId: 'adult-1',
+              clock: () => now,
+            )..add(const AlertsRequested()),
+            child: AlertsScreen(onTab: (_) {}, onOpenAlert: (_) {}),
+          ),
+        );
+        expect(reader.reads, 1);
+        expect(find.text('Sin alertas críticas'), findsOneWidget);
+        reader.result = AppSuccess(timeline(AlertSeverity.critical));
+        await tester.pump(const Duration(minutes: 1));
+        await tester.pump();
+        expect(reader.reads, 2);
+        expect(find.text('Sin alertas críticas'), findsNothing);
+
+        tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+        await tester.pump(const Duration(minutes: 2));
+        expect(reader.reads, 2);
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.resumed,
+        );
+        await tester.pump();
+        await tester.pump();
+        expect(reader.reads, 3);
+
+        reader.result = const AppFailure('ACCESS_DENIED');
+        await tester.pump(const Duration(minutes: 1));
+        await tester.pump();
+        expect(reader.reads, 4);
+        await tester.pump(const Duration(minutes: 2));
+        expect(reader.reads, 4);
+      },
+    );
+
+    for (final scale in [1.0, 1.5]) {
+      testWidgets(
+        'alerts compose recorded priorities and dose evidence at scale $scale',
+        (tester) async {
+          final now = DateTime(2026, 7, 20, 9, 15);
+          final person = 'Rosa Morales';
+          final pending = CaregiverAlert(
+            id: 1,
+            intakeId: 'pending-dose',
+            medicationName: 'Losartán 50 mg',
+            scheduledAt: DateTime(2026, 7, 20, 8),
+            reason: 'No confirmation',
+            status: AlertStatus.open,
+            openedAt: DateTime(2026, 7, 20, 8, 30),
+            closedAt: null,
+            severity: AlertSeverity.standard,
+          );
+          final data = AlertTimeline(
+            alerts: [pending],
+            doses: [
+              MonitoredDose(
+                id: 'confirmed',
+                medicationId: 'm1',
+                medicationName: 'Levotiroxina 75 mcg',
+                dose: '1 comprimido',
+                scheduledAt: DateTime(2026, 7, 20, 8),
+                status: 'CONFIRMED',
+                confirmedAt: DateTime(2026, 7, 20, 7, 58),
+              ),
+              MonitoredDose(
+                id: 'upcoming',
+                medicationId: 'm2',
+                medicationName: 'Metformina 500 mg',
+                dose: '1 comprimido',
+                scheduledAt: DateTime(2026, 7, 20, 12, 30),
+                status: 'PENDING',
+              ),
+            ],
+            olderAdultName: person,
+            day: DateTime(2026, 7, 20),
+          );
+          await pump(
+            tester,
+            BlocProvider(
+              create: (_) => AlertsBloc(
+                timeline: GetAlertTimeline(FakeTimeline(AppSuccess(data))),
+                olderAdultId: 'adult-1',
+                clock: () => now,
+              )..add(const AlertsRequested()),
+              child: AlertsScreen(
+                onTab: (_) {},
+                onOpenAlert: (_) {},
+                tickEvery: const Duration(days: 1),
+              ),
+            ),
+            scale: scale,
+          );
+          await tester.pumpAndSettle();
+          await captureWidget(
+            tester,
+            find.byKey(const Key('summary-capture')),
+            'alerts_$scale',
+          );
+          expect(find.text('Sin alertas críticas'), findsOneWidget);
+          expect(find.textContaining('Rosa Morales'), findsNWidgets(3));
+          await tester.scrollUntilVisible(find.text('Metformina 500 mg'), 150);
+          await tester.tap(find.text('Metformina 500 mg'));
+          await tester.pumpAndSettle();
+          expect(find.byType(AlertDialog), findsOneWidget);
+          expect(find.text('Confirmar toma'), findsNothing);
+          expect(tester.takeException(), isNull);
+        },
+      );
+    }
+
+    testWidgets(
+      'critical and unknown follow-ups never show an all-clear banner',
+      (tester) async {
+        for (final severity in [
+          AlertSeverity.critical,
+          AlertSeverity.unknown,
+        ]) {
+          final now = DateTime(2026, 11, 18, 10);
+          final data = AlertTimeline(
+            alerts: [anAlert(severity: severity)],
+            doses: const [],
+            olderAdultName: 'Rosa',
+            day: DateTime(2026, 11, 18),
+          );
+          await pump(
+            tester,
+            BlocProvider(
+              create: (_) => AlertsBloc(
+                timeline: GetAlertTimeline(FakeTimeline(AppSuccess(data))),
+                olderAdultId: 'adult-1',
+                clock: () => now,
+              )..add(const AlertsRequested()),
+              child: AlertsScreen(
+                onTab: (_) {},
+                onOpenAlert: (_) {},
+                tickEvery: const Duration(days: 1),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          expect(find.text('Sin alertas críticas'), findsNothing);
+          expect(
+            find.text(
+              severity == AlertSeverity.critical
+                  ? '1 alerta crítica'
+                  : 'Prioridad por verificar',
+            ),
+            findsOneWidget,
+          );
+          await captureWidget(
+            tester,
+            find.byKey(const Key('summary-capture')),
+            'alerts_${severity.name}',
+          );
+          await tester.pumpWidget(const SizedBox.shrink());
+        }
+      },
+    );
+
     final now = DateTime(2026, 11, 13, 10);
 
     AlertsBloc bloc(AlertTimeline timeline) => AlertsBloc(
@@ -144,7 +365,7 @@ void main() {
         expect(find.text('Alerta pendiente'), findsOneWidget);
         expect(find.text('Alerta cerrada'), findsOneWidget);
         expect(find.text('Recordatorio próximo'), findsOneWidget);
-        expect(find.text('1 alerta pendiente'), findsOneWidget);
+        expect(find.text('Sin alertas críticas'), findsOneWidget);
         expect(find.text('En 2 h 30 min'), findsOneWidget);
         expect(tester.takeException(), isNull);
       });
@@ -230,6 +451,9 @@ void main() {
       required _Launcher launcher,
       FakeContact? contact,
       FakeNotes? notes,
+      List<RecordedAlertEvent>? history,
+      VoidCallback? onOpenProfile,
+      ValueChanged<CaregiverTab>? onTab,
     }) => MultiBlocProvider(
       providers: [
         BlocProvider(
@@ -252,12 +476,15 @@ void main() {
               ),
             ),
             history: FakeEventsReader(
-              AppSuccess([
-                RecordedAlertEvent(
-                  type: RecordedAlertEventType.alertGenerated,
-                  occurredAt: DateTime.utc(2026, 11, 13, 12, 30),
-                ),
-              ]),
+              AppSuccess(
+                history ??
+                    [
+                      RecordedAlertEvent(
+                        type: RecordedAlertEventType.alertGenerated,
+                        occurredAt: DateTime.utc(2026, 11, 13, 12, 30),
+                      ),
+                    ],
+              ),
             ),
             olderAdultId: 'adult-1',
             alertId: 1,
@@ -270,10 +497,51 @@ void main() {
           ),
         ),
       ],
-      child: AlertDetailScreen(launcher: launcher),
+      child: AlertDetailScreen(
+        launcher: launcher,
+        onOpenProfile: onOpenProfile,
+        onTab: onTab,
+      ),
     );
 
     for (final scale in [1.0, 1.5]) {
+      testWidgets(
+        'detail Figma composition with recorded reminders at $scale',
+        (tester) async {
+          await pump(
+            tester,
+            screen(
+              alerts: FakeAlerts(alerts: [anAlert()]),
+              launcher: _Launcher(),
+              onOpenProfile: () {},
+              onTab: (_) {},
+              history: [
+                for (final minute in [0, 10, 25, 30])
+                  RecordedAlertEvent(
+                    type: minute == 0
+                        ? RecordedAlertEventType.intakeScheduled
+                        : minute == 30
+                        ? RecordedAlertEventType.alertGenerated
+                        : RecordedAlertEventType.reinforcedReminderSent,
+                    occurredAt: DateTime(2026, 11, 13, 8, minute),
+                  ),
+              ],
+            ),
+            scale: scale,
+          );
+          expect(find.text('Recordatorio reforzado enviado'), findsNWidgets(2));
+          expect(find.text('Ver perfil'), findsOneWidget);
+          expect(tester.takeException(), isNull);
+          await captureWidget(
+            tester,
+            find.byKey(const Key('summary-capture')),
+            'alert_detail_$scale',
+          );
+          await tester.ensureVisible(find.text('Agregar nota de seguimiento'));
+          expect(tester.takeException(), isNull);
+        },
+      );
+
       testWidgets('shows the person, the evidence and the actions at $scale', (
         tester,
       ) async {
@@ -288,7 +556,7 @@ void main() {
         expect(find.text('Rosa Vargas'), findsOneWidget);
         expect(find.text('Alerta generada'), findsOneWidget);
         expect(find.text('Marcar como atendida'), findsOneWidget);
-        expect(find.text('Cerrar alerta'), findsOneWidget);
+        expect(find.byType(PopupMenuButton<AlertStatus>), findsOneWidget);
         expect(find.textContaining('Contacta a Rosa'), findsOneWidget);
         expect(tester.takeException(), isNull);
       });
@@ -297,6 +565,8 @@ void main() {
     testWidgets('closing asks for confirmation first', (tester) async {
       final alerts = FakeAlerts(alerts: [anAlert()]);
       await pump(tester, screen(alerts: alerts, launcher: _Launcher()));
+      await tester.tap(find.byType(PopupMenuButton<AlertStatus>));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Cerrar alerta'));
       await tester.pumpAndSettle();
       expect(find.text('¿Cerrar esta alerta?'), findsOneWidget);
@@ -306,6 +576,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(alerts.updates, isEmpty);
 
+      await tester.tap(find.byType(PopupMenuButton<AlertStatus>));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Cerrar alerta'));
       await tester.pumpAndSettle();
       await tester.tap(
@@ -340,7 +612,7 @@ void main() {
           launcher: launcher,
         ),
       );
-      await tester.tap(find.text('Abrir teléfono'));
+      await tester.tap(find.text('Contactar a Rosa'));
       await tester.pump();
       await tester.pump();
       expect(launcher.opened.single.digits, '51999111');
@@ -360,6 +632,7 @@ void main() {
           notes: notes,
         ),
       );
+      await tester.ensureVisible(find.text('Agregar nota de seguimiento'));
       await tester.tap(find.text('Agregar nota de seguimiento'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Guardar nota'));
@@ -369,6 +642,7 @@ void main() {
       await tester.tap(find.text('Guardar nota'));
       await tester.pumpAndSettle();
       expect(notes.registered, ['Llamé y está bien']);
+      expect(find.byKey(const Key('follow-up-note-saved')), findsOneWidget);
       expect(find.text('Nota guardada'), findsOneWidget);
       expect(find.byType(AlertDialog), findsNothing);
     });
@@ -534,12 +808,74 @@ void main() {
           child: PersonalNotesScreen(onSignIn: () => signIn++),
         ),
       );
-      await tester.tap(find.text('Reintentar'));
+      await tester.tap(find.text('Ingresar con PIN'));
       expect(signIn, 1);
     });
   });
 
   group('family summary', () {
+    for (final scale in [1.0, 1.5]) {
+      testWidgets('summary Figma layout renders data at scale $scale', (
+        tester,
+      ) async {
+        final data = FamilySummary(
+          olderAdultName: 'Rosa Vargas',
+          date: DateTime(2026, 7, 22),
+          weekly: AdherenceCounts(23, 25),
+          today: AdherenceCounts(3, 4),
+          nextDose: MonitoredDose(
+            id: 'dose-1',
+            medicationId: 'med-A',
+            medicationName: 'Amlodipino 5 mg',
+            dose: '1 comprimido',
+            scheduledAt: DateTime(2026, 7, 22, 20).toUtc(),
+            status: 'PENDING',
+          ),
+          stockAttention: const [
+            StockAttention(
+              medicationId: 'med-B',
+              medicationName: 'Losartán',
+              remaining: 5,
+            ),
+          ],
+          openAlerts: const [],
+          inventoryAvailable: true,
+        );
+        await pump(
+          tester,
+          BlocProvider(
+            create: (_) => FamilySummaryBloc(
+              summary: GetFamilySummary(
+                _FakeSummaryRepository(AppSuccess(data)),
+              ),
+              contact: GetContactOption(FakeContact()),
+              olderAdultId: 'adult-1',
+              olderAdultName: 'Rosa Vargas',
+            )..add(const FamilySummaryRequested()),
+            child: FamilySummaryScreen(
+              launcher: _Launcher(),
+              onTab: (_) {},
+              onOpenAgenda: () {},
+              onChoosePerson: () {},
+              onOpenAlerts: () {},
+              onHistory: () {},
+              onOpenStock: (_) {},
+            ),
+          ),
+          scale: scale,
+        );
+        await tester.pumpAndSettle();
+        await captureWidget(
+          tester,
+          find.byKey(const Key('summary-capture')),
+          'family_summary_$scale',
+        );
+        expect(find.text('92%'), findsOneWidget);
+        await tester.scrollUntilVisible(find.text('Ver agenda'), 150);
+        expect(tester.takeException(), isNull);
+      });
+    }
+
     FamilySummary summary({
       List<StockAttention> stock = const [],
       bool inventory = true,

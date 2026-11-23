@@ -3,7 +3,7 @@ import '../../../../shared/application/session/stored_session.dart';
 import '../../../../shared/common/result/app_result.dart';
 import '../../../../shared/infrastructure/network/api_response.dart';
 import '../../domain/entities/medication.dart';
-import '../../domain/repositories/treatment_repositories.dart';
+import '../../domain/repositories/medication_management_repository.dart';
 import '../mappers/treatment_mapper.dart';
 import '../remote/treatment_api.dart';
 import 'treatment_requests.dart';

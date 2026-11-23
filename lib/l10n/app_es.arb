@@ -233,8 +233,7 @@
       }
     }
   },
-  "agendaPreviousWeek": "Semana anterior",
-  "agendaNextWeek": "Semana siguiente",
+  "agendaChooseDate": "Elegir fecha",
   "agendaLoading": "Cargando tus tomas…",
   "agendaEmptyDay": "Sin tomas este día",
   "agendaEmptyDayBody": "No tienes tomas programadas para este día.",
@@ -626,6 +625,30 @@
   "tmMedicationsTitle": "Medicamentos",
   "tmNoMedications": "Aún no hay medicamentos registrados.",
   "tmRegisterMedication": "Registrar medicamento",
+  "tmAddMedication": "Agregar medicamento",
+  "tmAddMedicationFor": "Agregar medicamento: {name}",
+  "@tmAddMedicationFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tmMedicationDataStep": "Cuidador, Paso 1 de 4",
+  "tmMedicationBasicInfo": "Información básica",
+  "tmMedicationNameHint": "Ej. Losartán",
+  "tmMedicationDosePresentation": "Dosis y presentación",
+  "tmMedicationPresentationHint": "Ej. 50 mg, comprimido",
+  "tmMedicationFrequencyHint": "¿Cada cuánto lo tomas?",
+  "tmMedicationWhen": "¿Cuándo lo tomas?",
+  "tmMedicationWhenHint": "Ej. Con el desayuno",
+  "tmMedicationNotes": "Notas opcionales",
+  "tmMedicationNotesHint": "Algo importante que recordar",
+  "tmFrequencyDaily": "Una vez al día",
+  "tmFrequencyTwelveHours": "Cada 12 horas",
+  "tmFrequencyEightHours": "Cada 8 horas",
+  "tmRegistrationNext": "Siguiente",
+  "tmMedicationLength": "El nombre y la presentación admiten hasta 160 caracteres cada uno.",
   "tmMedicationName": "Nombre del medicamento",
   "tmMedicationPresentation": "Presentación (por ejemplo, tabletas de 500 mg)",
   "tmMedicationRegistered": "Medicamento registrado.",
@@ -718,7 +741,7 @@
   "pfChannelSms": "SMS",
   "pfChannelEmail": "Correo electrónico",
   "pfChannelCall": "Llamada",
-  "pfQuietHours": "Horas de silencio",
+  "pfQuietHours": "Horario de silencio",
   "pfQuietStart": "Inicio",
   "pfQuietEnd": "Fin",
   "pfPolicyTitle": "Avisos por tomas",
@@ -859,7 +882,7 @@
     }
   },
   "fmAlertsEmptyTitle": "Sin alertas",
-  "fmAlertsEmptyMessage": "Todo bajo control. Te avisaremos si una toma no se confirma.",
+  "fmAlertsEmptyMessage": "No hay avisos de seguimiento ni tomas que mostrar para este día.",
   "fmAlertsFilterEmpty": "No hay alertas en este filtro.",
   "fmAlertScheduled": "Programada: {time}",
   "@fmAlertScheduled": {
@@ -880,6 +903,8 @@
   "fmTitleAttended": "Alerta atendida",
   "fmTitleClosed": "Alerta cerrada",
   "fmDetailTitle": "Detalle de la alerta",
+  "fmReminderTimeline": "Línea de tiempo de recordatorios",
+  "fmPersonProfile": "Ver perfil",
   "fmDetailSection": "Información de la alerta",
   "fmDetailScheduled": "Toma programada",
   "fmDetailReason": "Motivo",
@@ -1131,6 +1156,14 @@
   "pnTitle": "Notas",
   "pnSubtitle": "Apuntes para acompañar tu rutina.",
   "pnToday": "Hoy",
+  "pnYesterday": "Ayer",
+  "pnRecordedAt": "{day} - {time}",
+  "@pnRecordedAt": {
+    "placeholders": {
+      "day": {"type": "String"},
+      "time": {"type": "String"}
+    }
+  },
   "pnAll": "Todas",
   "pnMedications": "Medicamentos",
   "pnRoutine": "Rutina",
@@ -1358,7 +1391,9 @@
   "homeDueBody": "{medication} · Confirma cuando la hayas tomado.",
   "@homeDueBody": {
     "placeholders": {
-      "medication": {"type": "String"}
+      "medication": {
+        "type": "String"
+      }
     }
   },
   "homeReinforcedTitle": "Segundo recordatorio",
@@ -1370,7 +1405,13 @@
   "planChoiceLoadErrorBody": "Inténtalo nuevamente o continúa con tu registro.",
   "planChoiceContinue": "Continuar al registro",
   "planChoiceChoose": "Elegir {name}",
-  "@planChoiceChoose": {"placeholders": {"name": {"type": "String"}}},
+  "@planChoiceChoose": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "planChoiceRecommended": "Recomendado",
   "planChoiceDescEssential": "Recordatorios, agenda y confirmación accesible.",
   "planChoiceDescFamily": "Incluye seguimiento, alertas e insights para cuidadores.",
@@ -1384,26 +1425,77 @@
   "planChoiceRowMonitoring": "Seguimiento familiar",
   "planChoiceRowInsights": "Insights de adherencia",
   "planChoiceIncluded": "Incluido en {name}",
-  "@planChoiceIncluded": {"placeholders": {"name": {"type": "String"}}},
+  "@planChoiceIncluded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "planChoiceNotIncluded": "No incluido en {name}",
-  "@planChoiceNotIncluded": {"placeholders": {"name": {"type": "String"}}},
+  "@planChoiceNotIncluded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "planChoiceApplyFailed": "Tu cuenta está lista. No pudimos activar el plan elegido; puedes cambiarlo en Ajustes.",
   "reminderChannelName": "Recordatorios de tomas",
   "reminderChannelDescription": "Avisos a la hora de cada toma y si sigue pendiente.",
   "reminderDueBody": "{medication} · {dose}. Confírmala cuando la hayas tomado.",
-  "@reminderDueBody": {"placeholders": {"medication": {"type": "String"}, "dose": {"type": "String"}}},
+  "@reminderDueBody": {
+    "placeholders": {
+      "medication": {
+        "type": "String"
+      },
+      "dose": {
+        "type": "String"
+      }
+    }
+  },
   "reminderReinforcedBody": "{medication} sigue pendiente. Confírmala cuando la tomes.",
-  "@reminderReinforcedBody": {"placeholders": {"medication": {"type": "String"}}},
+  "@reminderReinforcedBody": {
+    "placeholders": {
+      "medication": {
+        "type": "String"
+      }
+    }
+  },
   "lpAge": "{years} años",
-  "@lpAge": {"placeholders": {"years": {"type": "int"}}},
+  "@lpAge": {
+    "placeholders": {
+      "years": {
+        "type": "int"
+      }
+    }
+  },
   "lpBirthday": "Cumpleaños: {date}",
-  "@lpBirthday": {"placeholders": {"date": {"type": "String"}}},
+  "@lpBirthday": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "lpLinked": "Vinculada",
   "lpLinkedSince": "Desde {date}",
-  "@lpLinkedSince": {"placeholders": {"date": {"type": "String"}}},
+  "@lpLinkedSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "lpTreatmentTitle": "Tratamiento actual",
   "lpMedicationsActive": "{count, plural, =1{1 medicamento activo} other{{count} medicamentos activos}}",
-  "@lpMedicationsActive": {"placeholders": {"count": {"type": "int"}}},
+  "@lpMedicationsActive": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "lpMedicationsNone": "Sin medicamentos activos",
   "lpMedicationsLoading": "Consultando medicación…",
   "lpMedicationsError": "No pudimos cargar la medicación.",
@@ -1415,5 +1507,183 @@
   "lpNoteEmpty": "Aún no hay notas. Toca para escribir la primera.",
   "lpNoteLoading": "Consultando notas…",
   "lpNoteError": "No pudimos cargar las notas.",
-  "lpOpenNotes": "Abrir notas"
+  "lpOpenNotes": "Abrir notas",
+  "clEditProfileTitle": "Editar perfil",
+  "clSaveProfile": "Guardar cambios",
+  "fmViewAgenda": "Ver agenda",
+  "fmTodayAgenda": "Agenda de hoy",
+  "fmAgendaEmpty": "No hay tomas programadas para este día.",
+  "fmDoseOmitted": "Toma omitida",
+  "fmRestockHint": "Considera registrar un reabastecimiento.",
+  "fmAlertsTodayDate": "Hoy, {date}",
+  "fmAlertsClearBody": "No hay alertas de seguimiento por atender.",
+  "fmAlertsPendingBody": "Consulta los detalles y registra el seguimiento.",
+  "fmElapsedMinutes": "Hace {minutes} min",
+  "fmElapsedHoursMinutes": "Hace {hours} h {minutes} min",
+  "@fmAlertsTodayDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "@fmElapsedMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "@fmElapsedHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "fmNoCriticalAlerts": "Sin alertas críticas",
+  "fmCriticalAlerts": "{count, plural, one{1 alerta crítica} other{{count} alertas críticas}}",
+  "fmSeverityUnknownTitle": "Prioridad por verificar",
+  "fmSeverityUnknownBody": "La prioridad de estos avisos aún no está disponible.",
+  "fmSeverityLabel": "Prioridad de seguimiento",
+  "fmSeverityStandard": "Normal",
+  "fmSeverityHigh": "Alta",
+  "fmSeverityCritical": "Crítica",
+  "@fmCriticalAlerts": {
+    "description": "Open or attended critical follow-ups not yet closed.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fmElapsedDaysHours": "Hace {days} d {hours} h",
+  "fmConfirmationRecorded": "Confirmada a las {time}",
+  "@fmElapsedDaysHours": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "@fmConfirmationRecorded": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "pfEdit": "Editar",
+  "pfNotificationPreferences": "Preferencias de notificaciones",
+  "pfMedicationReminders": "Recordatorios de medicación",
+  "pfCadence": "Cadencia",
+  "pfCaregiverAlerts": "Alertas al cuidador",
+  "pfPendingDoses": "Tomas pendientes",
+  "pfOmittedDoses": "Tomas omitidas",
+  "pfSummaryLabel": "Resumen diario",
+  "pfEmergencyEscalation": "Escalamiento de emergencia",
+  "pfEscalateNoResponse": "Escalar si no hay respuesta",
+  "pfNotificationChannels": "Canales de notificación",
+  "pfNotConfigured": "Sin configurar",
+  "pfDisabled": "Desactivado",
+  "pfAfterMinutes": "Después de {count} min",
+  "@pfAfterMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pfAfterHours": "Después de {count} h",
+  "@pfAfterHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pfReminderAfter": "{count} min después de la hora programada",
+  "@pfReminderAfter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pfConfiguredContacts": "{count} configurados",
+  "@pfConfiguredContacts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pfPreferencesSaved": "Preferencias guardadas",
+  "pfPolicyReceipt": "Los avisos y contactos de emergencia fueron actualizados.",
+  "pfChannelsReceipt": "Los canales de notificación fueron actualizados.",
+  "pfQuietReceipt": "El horario de silencio fue actualizado.",
+  "tmMissingMedicationTitle": "Faltan datos obligatorios",
+  "tmMissingMedicationBody": "Completa medicamento, dosis y frecuencia antes de continuar.",
+  "tmChangesSaved": "Cambios guardados",
+  "tmFutureRegimenReceipt": "La nueva pauta se aplicará solo a tomas futuras.",
+  "tmDeactivationReceipt": "No se generarán nuevas tomas. El historial se conserva.",
+  "tmReactivationReceipt": "El medicamento vuelve a estar disponible.",
+  "fmFollowUpNoteTitle": "Observación",
+  "tmReminderLead": "Anticipación del recordatorio (minutos)",
+  "tmReminderLeadHelp": "Minutos antes de la toma, de 0 a 1440.",
+  "tmErrReminderLead": "Ingresa la anticipación entre 0 y 1440 minutos.",
+  "tmReminderLeadCompact": "recordatorio {minutes} min antes",
+  "@tmReminderLeadCompact": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "pfAccessibilitySaved": "Preferencia guardada",
+  "pfAccessibilityReceipt": "{preference}: tu elección se conserva en próximos ingresos.",
+  "@pfAccessibilityReceipt": {
+    "placeholders": {
+      "preference": { "type": "String" }
+    }
+  },
+  "pfContrastActive": "Contraste reforzado activo",
+  "pfContrastApplied": "Textos, bordes y controles usan contraste reforzado.",
+  "pfMotionReduced": "Movimiento reducido",
+  "pfMotionApplied": "Las transiciones no esenciales usan una alternativa reducida.",
+  "pfReadingActive": "Ayuda de lectura activa",
+  "pfReadingApplied": "Más espacio entre líneas y letras en el contenido compatible.",
+  "linkPendingBadge": "Pendiente",
+  "linkConfirmedBadge": "Confirmado",
+  "pfLanguageHint": "Idioma de la aplicación",
+  "landingTagline": "Cuidar los medicamentos sin complicarte.",
+  "landingHeadline": "Más tranquilidad para ti y tu familia.",
+  "landingDescription": "Recordatorios claros y seguimiento familiar cuando realmente se necesita.",
+  "landingFeatures": "Funciones principales",
+  "landingReminders": "Recordatorios",
+  "landingReminderBody": "Horarios y avisos accesibles.",
+  "landingFamily": "Familia",
+  "landingFamilyBody": "Alertas y seguimiento remoto.",
+  "landingInsights": "Insights",
+  "landingInsightsBody": "Patrones y recomendaciones.",
+  "landingAudience": "Para adultos mayores y familiares/cuidadores.",
+  "landingQuote": "“Ahora puedo saber si mi mamá tomó su medicamento sin llamarla a cada rato.”",
+  "landingQuoteAuthor": "Diego, familiar/cuidador",
+  "landingSteps": "3 pasos",
+  "landingStepsBody": "para confirmar una toma",
+  "landingRoles": "2 roles",
+  "landingRolesBody": "adulto mayor + familiar",
+  "landingPreviewLabel": "Vista de ejemplo de Tata, con datos ilustrativos.",
+  "landingToday": "Hoy",
+  "landingMedication": "Losartán",
+  "landingExampleTime": "8:00 p. m.",
+  "landingExampleAdherence": "92% adherencia",
+  "socialLinkRequired": "Este correo ya tiene una cuenta. Accede con tu contraseña para vincular el proveedor de forma explícita.",
+  "socialEmailRequired": "El proveedor debe compartir un correo verificado para crear la cuenta."
 }

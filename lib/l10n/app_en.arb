@@ -233,8 +233,7 @@
       }
     }
   },
-  "agendaPreviousWeek": "Previous week",
-  "agendaNextWeek": "Next week",
+  "agendaChooseDate": "Choose date",
   "agendaLoading": "Loading your doses…",
   "agendaEmptyDay": "No doses this day",
   "agendaEmptyDayBody": "You have no doses scheduled for this day.",
@@ -619,6 +618,30 @@
   "tmMedicationsTitle": "Medications",
   "tmNoMedications": "No medications registered yet.",
   "tmRegisterMedication": "Register medication",
+  "tmAddMedication": "Add medication",
+  "tmAddMedicationFor": "Add medication: {name}",
+  "@tmAddMedicationFor": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tmMedicationDataStep": "Caregiver, Step 1 of 4",
+  "tmMedicationBasicInfo": "Basic information",
+  "tmMedicationNameHint": "E.g. Losartan",
+  "tmMedicationDosePresentation": "Strength and presentation",
+  "tmMedicationPresentationHint": "E.g. 50 mg, tablet",
+  "tmMedicationFrequencyHint": "How often do you take it?",
+  "tmMedicationWhen": "When do you take it?",
+  "tmMedicationWhenHint": "E.g. With breakfast",
+  "tmMedicationNotes": "Optional notes",
+  "tmMedicationNotesHint": "Something important to remember",
+  "tmFrequencyDaily": "Once a day",
+  "tmFrequencyTwelveHours": "Every 12 hours",
+  "tmFrequencyEightHours": "Every 8 hours",
+  "tmRegistrationNext": "Next",
+  "tmMedicationLength": "The name and presentation allow up to 160 characters each.",
   "tmMedicationName": "Medication name",
   "tmMedicationPresentation": "Presentation (for example, 500 mg tablets)",
   "tmMedicationRegistered": "Medication registered.",
@@ -852,7 +875,7 @@
     }
   },
   "fmAlertsEmptyTitle": "No alerts",
-  "fmAlertsEmptyMessage": "Everything is under control. We will let you know if a dose is missed.",
+  "fmAlertsEmptyMessage": "There are no follow-up alerts or doses to show for this day.",
   "fmAlertsFilterEmpty": "There are no alerts in this filter.",
   "fmAlertScheduled": "Scheduled for {time}",
   "@fmAlertScheduled": {
@@ -873,6 +896,8 @@
   "fmTitleAttended": "Attended alert",
   "fmTitleClosed": "Closed alert",
   "fmDetailTitle": "Alert detail",
+  "fmReminderTimeline": "Reminder timeline",
+  "fmPersonProfile": "View profile",
   "fmDetailSection": "Alert information",
   "fmDetailScheduled": "Scheduled dose",
   "fmDetailReason": "Reason",
@@ -1124,6 +1149,14 @@
   "pnTitle": "Notes",
   "pnSubtitle": "Notes to support your routine.",
   "pnToday": "Today",
+  "pnYesterday": "Yesterday",
+  "pnRecordedAt": "{day} - {time}",
+  "@pnRecordedAt": {
+    "placeholders": {
+      "day": {"type": "String"},
+      "time": {"type": "String"}
+    }
+  },
   "pnAll": "All",
   "pnMedications": "Medications",
   "pnRoutine": "Routine",
@@ -1300,5 +1333,183 @@
   "lpNoteEmpty": "No notes yet. Tap to write the first one.",
   "lpNoteLoading": "Checking notes…",
   "lpNoteError": "We could not load the notes.",
-  "lpOpenNotes": "Open notes"
+  "lpOpenNotes": "Open notes",
+  "clEditProfileTitle": "Edit profile",
+  "clSaveProfile": "Save changes",
+  "fmViewAgenda": "View schedule",
+  "fmTodayAgenda": "Today's schedule",
+  "fmAgendaEmpty": "No doses are scheduled for this day.",
+  "fmDoseOmitted": "Missed dose",
+  "fmRestockHint": "Consider recording a replenishment.",
+  "fmAlertsTodayDate": "Today, {date}",
+  "fmAlertsClearBody": "There are no follow-up alerts to attend to.",
+  "fmAlertsPendingBody": "Review the details and record the follow-up.",
+  "fmElapsedMinutes": "{minutes} min ago",
+  "fmElapsedHoursMinutes": "{hours} h {minutes} min ago",
+  "@fmAlertsTodayDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "@fmElapsedMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "@fmElapsedHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "fmNoCriticalAlerts": "No critical alerts",
+  "fmCriticalAlerts": "{count, plural, one{1 critical alert} other{{count} critical alerts}}",
+  "fmSeverityUnknownTitle": "Priority not yet verified",
+  "fmSeverityUnknownBody": "Priority is not yet available for these alerts.",
+  "fmSeverityLabel": "Follow-up priority",
+  "fmSeverityStandard": "Standard",
+  "fmSeverityHigh": "High",
+  "fmSeverityCritical": "Critical",
+  "@fmCriticalAlerts": {
+    "description": "Open or attended critical follow-ups not yet closed.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fmElapsedDaysHours": "{days} d {hours} h ago",
+  "fmConfirmationRecorded": "Confirmed at {time}",
+  "@fmElapsedDaysHours": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "@fmConfirmationRecorded": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "pfEdit": "Edit",
+  "pfNotificationPreferences": "Notification preferences",
+  "pfMedicationReminders": "Medication reminders",
+  "pfCadence": "Cadence",
+  "pfCaregiverAlerts": "Caregiver alerts",
+  "pfPendingDoses": "Pending doses",
+  "pfOmittedDoses": "Missed doses",
+  "pfSummaryLabel": "Daily summary",
+  "pfEmergencyEscalation": "Emergency escalation",
+  "pfEscalateNoResponse": "Escalate if no response",
+  "pfNotificationChannels": "Notification channels",
+  "pfNotConfigured": "Not configured",
+  "pfDisabled": "Disabled",
+  "pfAfterMinutes": "After {count} min",
+  "@pfAfterMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pfAfterHours": "After {count} h",
+  "@pfAfterHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pfReminderAfter": "{count} min after the scheduled time",
+  "@pfReminderAfter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pfConfiguredContacts": "{count} configured",
+  "@pfConfiguredContacts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pfPreferencesSaved": "Preferences saved",
+  "pfPolicyReceipt": "Alerts and emergency contacts were updated.",
+  "pfChannelsReceipt": "Notification channels were updated.",
+  "pfQuietReceipt": "Quiet hours were updated.",
+  "tmMissingMedicationTitle": "Required details are missing",
+  "tmMissingMedicationBody": "Complete the medication, strength and frequency before continuing.",
+  "tmChangesSaved": "Changes saved",
+  "tmFutureRegimenReceipt": "The new regimen will apply only to future doses.",
+  "tmDeactivationReceipt": "No new doses will be generated. History is preserved.",
+  "tmReactivationReceipt": "The medication is available again.",
+  "fmFollowUpNoteTitle": "Observation",
+  "tmReminderLead": "Reminder lead time (minutes)",
+  "tmReminderLeadHelp": "Minutes before the dose, from 0 to 1440.",
+  "tmErrReminderLead": "Enter a lead time between 0 and 1440 minutes.",
+  "tmReminderLeadCompact": "reminder {minutes} min before",
+  "@tmReminderLeadCompact": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "pfAccessibilitySaved": "Preference saved",
+  "pfAccessibilityReceipt": "{preference}: your choice is kept for future sign-ins.",
+  "@pfAccessibilityReceipt": {
+    "placeholders": {
+      "preference": { "type": "String" }
+    }
+  },
+  "pfContrastActive": "High contrast enabled",
+  "pfContrastApplied": "Text, borders and controls use high contrast.",
+  "pfMotionReduced": "Reduced motion",
+  "pfMotionApplied": "Non-essential transitions use a reduced alternative.",
+  "pfReadingActive": "Reading assistance enabled",
+  "pfReadingApplied": "More space between lines and letters in supported content.",
+  "linkPendingBadge": "Pending",
+  "linkConfirmedBadge": "Confirmed",
+  "pfLanguageHint": "Application language",
+  "landingTagline": "Managing medication without complications.",
+  "landingHeadline": "More peace of mind for you and your family.",
+  "landingDescription": "Clear reminders and family follow-up when it is truly needed.",
+  "landingFeatures": "Key features",
+  "landingReminders": "Reminders",
+  "landingReminderBody": "Accessible schedules and alerts.",
+  "landingFamily": "Family",
+  "landingFamilyBody": "Alerts and remote follow-up.",
+  "landingInsights": "Insights",
+  "landingInsightsBody": "Patterns and recommendations.",
+  "landingAudience": "For older adults and family members/caregivers.",
+  "landingQuote": "“Now I can know if my mother took her medication without calling her all the time.”",
+  "landingQuoteAuthor": "Diego, family member/caregiver",
+  "landingSteps": "3 steps",
+  "landingStepsBody": "to confirm an intake",
+  "landingRoles": "2 roles",
+  "landingRolesBody": "older adult + family",
+  "landingPreviewLabel": "Example preview of Tata with illustrative data.",
+  "landingToday": "Today",
+  "landingMedication": "Losartan",
+  "landingExampleTime": "8:00 p.m.",
+  "landingExampleAdherence": "92% adherence",
+  "socialLinkRequired": "This email already has an account. Sign in with your password to explicitly link the provider.",
+  "socialEmailRequired": "The provider must share a verified email to create the account."
 }

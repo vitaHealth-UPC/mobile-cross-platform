@@ -2,7 +2,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../shared/common/result/app_result.dart';
 import '../../../application/readmodels/accessibility_change.dart';
-import '../../../application/usecases/preferences_usecases.dart';
+import '../../../application/usecases/change_application_language.dart';
+import '../../../application/usecases/observe_accessibility.dart';
+import '../../../application/usecases/observe_application_language.dart';
+import '../../../application/usecases/sync_user_preferences.dart';
+import '../../../application/usecases/update_accessibility.dart';
 import '../../../domain/entities/user_preferences.dart';
 import '../../../domain/value_objects/accessibility_preferences.dart';
 import 'accessibility_event.dart';
@@ -32,6 +36,7 @@ final class AccessibilityBloc
   final ChangeApplicationLanguage _changeLanguage;
   final SyncUserPreferences _sync;
   final String userId;
+  int _editVersion = 0;
 
   Future<void> _start(
     AccessibilityStarted event,
@@ -72,14 +77,18 @@ final class AccessibilityBloc
     AccessibilityChanged event,
     Emitter<AccessibilityState> emit,
   ) async {
+    final version = ++_editVersion;
+    emit(state.copyWith(clearReceipt: true));
     final result = await _update(userId, event.change);
-    if (emit.isDone) return;
+    if (emit.isDone || version != _editVersion) return;
     emit(switch (result) {
       AppSuccess<PreferenceUpdate>(:final value) => state.copyWith(
         accessibility: value.accessibility,
         sync: value.syncedWithServer
             ? AccessibilitySyncStatus.synced
             : AccessibilitySyncStatus.pending,
+        receipt: value.syncedWithServer ? event.change.field : null,
+        clearReceipt: !value.syncedWithServer,
       ),
       AppFailure<PreferenceUpdate>(:final code) => state.copyWith(
         errorCode: code,

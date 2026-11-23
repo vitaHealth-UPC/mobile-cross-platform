@@ -5,7 +5,8 @@ import '../../../../shared/application/session/session_store.dart';
 import '../../../../shared/application/session/stored_session.dart';
 import '../../../../shared/application/time/clock.dart';
 import '../../../../shared/common/result/app_result.dart';
-import '../ports/omission_ports.dart';
+import '../ports/device_push_token_source.dart';
+import '../ports/device_token_registry.dart';
 
 /// Serializes installation updates across login, SDK token rotation and authenticated
 /// logout.

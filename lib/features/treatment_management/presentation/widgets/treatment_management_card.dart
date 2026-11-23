@@ -14,11 +14,13 @@ class TreatmentManagementCard extends StatelessWidget {
     required this.onEdit,
     required this.onPause,
     required this.onResume,
+    required this.onReactivate,
   });
   final TreatmentManagementState state;
   final VoidCallback onEdit;
   final VoidCallback onPause;
   final VoidCallback onResume;
+  final VoidCallback onReactivate;
   @override
   Widget build(BuildContext context) {
     final text = AppLocalizations.of(context);
@@ -38,18 +40,22 @@ class TreatmentManagementCard extends StatelessWidget {
     final actions = [
       OutlinedButton(
         style: actionStyle,
-        onPressed: state.busy ? null : onEdit,
+        onPressed: state.busy || state.medicationInactive ? null : onEdit,
         child: Text(text.tmEditRegimen),
       ),
       OutlinedButton(
         style: actionStyle,
         onPressed: state.busy
             ? null
+            : state.medicationInactive
+            ? onReactivate
             : detail.status == TreatmentStatus.active
             ? onPause
             : onResume,
         child: Text(
-          detail.status == TreatmentStatus.active
+          state.medicationInactive
+              ? text.tmReactivate
+              : detail.status == TreatmentStatus.active
               ? text.tmPause
               : text.tmResume,
         ),
@@ -87,11 +93,15 @@ class TreatmentManagementCard extends StatelessWidget {
                 ),
               ),
               Text(
-                treatmentStatusText(text, detail.status),
+                state.medicationInactive
+                    ? text.tmInactive
+                    : treatmentStatusText(text, detail.status),
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: detail.status == TreatmentStatus.active
+                  color: state.medicationInactive
+                      ? TataColors.muted
+                      : detail.status == TreatmentStatus.active
                       ? const Color(0xFF2E734D)
                       : const Color(0xFF9D702B),
                 ),
@@ -99,14 +109,14 @@ class TreatmentManagementCard extends StatelessWidget {
             ],
           ),
           if (state.medication != null) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Text(
               state.medication!.label,
               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
             ),
           ],
           if (detail.configured) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Text(
               [
                 detail.dose!,
@@ -115,23 +125,18 @@ class TreatmentManagementCard extends StatelessWidget {
               ].join(', '),
               style: const TextStyle(fontSize: 12, color: TataColors.muted),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Text(
               [
                 if (detail.instructions.trim().isNotEmpty) detail.instructions,
+                if ((detail.reminderLeadMinutes ?? 0) > 0)
+                  text.tmReminderLeadCompact(detail.reminderLeadMinutes!),
                 detail.followUpDelayMinutes == null
                     ? text.tmDefaultFollowUp
                     : text.tmFollowUpCompact(detail.followUpDelayMinutes!),
               ].join(', '),
               style: const TextStyle(fontSize: 12, color: TataColors.muted),
             ),
-            if (detail.recurrenceZone != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                detail.recurrenceZone!,
-                style: const TextStyle(fontSize: 11, color: TataColors.muted),
-              ),
-            ],
           ],
           if (!state.manageable) ...[
             const SizedBox(height: 12),
@@ -140,15 +145,8 @@ class TreatmentManagementCard extends StatelessWidget {
               style: const TextStyle(fontSize: 12, color: TataColors.muted),
             ),
           ],
-          if (state.medicationInactive) ...[
-            const SizedBox(height: 12),
-            Text(
-              text.tmMedicationInactiveNotice,
-              style: const TextStyle(fontSize: 12, color: TataColors.muted),
-            ),
-          ],
-          if (state.manageable && !state.medicationInactive) ...[
-            const SizedBox(height: 20),
+          if (state.manageable || state.medicationInactive) ...[
+            const SizedBox(height: 16),
             if (MediaQuery.textScalerOf(context).scale(14) > 18) ...[
               for (final action in actions) ...[
                 SizedBox(width: double.infinity, child: action),

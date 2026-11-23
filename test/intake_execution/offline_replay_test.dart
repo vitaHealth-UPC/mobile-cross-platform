@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tata/features/intake_execution/application/ports/intake_confirmation.dart';
+import 'package:tata/features/intake_execution/application/ports/intake_confirmation_replay.dart';
 import 'package:tata/features/intake_execution/application/ports/intake_reader.dart';
 import 'package:tata/features/intake_execution/application/readmodels/confirmation_receipt.dart';
 import 'package:tata/features/intake_execution/application/usecases/get_daily_progress.dart';

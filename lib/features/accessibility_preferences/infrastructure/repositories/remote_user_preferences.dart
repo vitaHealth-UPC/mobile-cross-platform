@@ -4,7 +4,7 @@ import '../../../../shared/application/session/stored_session.dart';
 import '../../../../shared/common/result/app_result.dart';
 import '../../../../shared/infrastructure/network/api_response.dart';
 import '../../../../shared/infrastructure/session/authorized_request.dart';
-import '../../application/ports/preferences_ports.dart';
+import '../../application/ports/user_preferences_remote.dart';
 import '../../application/readmodels/accessibility_change.dart';
 import '../../domain/entities/user_preferences.dart';
 import '../../domain/repositories/notification_preferences_repository.dart';

@@ -1,10 +1,9 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 import '../../../../l10n/generated/app_localizations.dart';
+import '../../../../shared/infrastructure/notifications/local_notification_platform.dart';
 import '../../application/ports/reminder_scheduler.dart';
 import '../../application/readmodels/intake_reminder.dart';
 
@@ -14,13 +13,14 @@ final class LocalReminderScheduler implements ReminderScheduler {
   LocalReminderScheduler({
     required this._texts,
     FlutterLocalNotificationsPlugin? plugin,
-  }) : _plugin = plugin ?? FlutterLocalNotificationsPlugin();
+    LocalNotificationPlatform? notifications,
+  }) : _notifications =
+           notifications ?? LocalNotificationPlatform(plugin: plugin);
 
   /// Texts in the app language of the adult, read when reminders change.
   final Future<AppLocalizations> Function() _texts;
-  final FlutterLocalNotificationsPlugin _plugin;
-  final _opened = StreamController<String>.broadcast();
-  Future<bool>? _ready;
+  final LocalNotificationPlatform _notifications;
+  FlutterLocalNotificationsPlugin get _plugin => _notifications.plugin;
   bool _launchTaken = false;
 
   static const _channel = 'intake_reminders';
@@ -30,32 +30,25 @@ final class LocalReminderScheduler implements ReminderScheduler {
         AndroidFlutterLocalNotificationsPlugin
       >();
 
-  /// Initializes once; false where the platform has no notifications.
-  Future<bool> _initialize() => _ready ??= () async {
-    try {
-      final ok = await _plugin.initialize(
-        settings: const InitializationSettings(
-          android: AndroidInitializationSettings('@mipmap/ic_launcher'),
-          iOS: DarwinInitializationSettings(
-            requestAlertPermission: false,
-            requestBadgePermission: false,
-            requestSoundPermission: false,
-          ),
-        ),
-        onDidReceiveNotificationResponse: (response) {
-          if (response.payload case final id? when id.isNotEmpty) {
-            _opened.add(id);
-          }
-        },
-      );
-      return ok ?? false;
-    } on Object {
-      return false;
+  static const _prefix = 'intake:';
+  static final _legacyId = RegExp(
+    r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+  );
+
+  static String? _dose(String? payload) {
+    if (payload == null) return null;
+    if (payload.startsWith(_prefix)) {
+      final id = payload.substring(_prefix.length);
+      return id.isEmpty ? null : id;
     }
-  }();
+    return _legacyId.hasMatch(payload) ? payload : null;
+  }
+
+  Future<bool> _initialize() => _notifications.initialize();
 
   @override
-  Stream<String> get opened => _opened.stream;
+  Stream<String> get opened =>
+      _notifications.opened.map(_dose).where((id) => id != null).cast<String>();
 
   @override
   Future<void> prepare() async {
@@ -87,7 +80,7 @@ final class LocalReminderScheduler implements ReminderScheduler {
   Future<void> replaceAll(List<IntakeReminder> reminders) async {
     if (!await _initialize()) return;
     final text = await _texts();
-    await _plugin.cancelAllPendingNotifications();
+    await _notifications.cancelPending((payload) => _dose(payload) != null);
     // Exact alarms keep the dose time; without that permission Android may
     // delay an inexact one by a few minutes.
     final exact = await _android?.canScheduleExactNotifications() ?? true;
@@ -103,7 +96,7 @@ final class LocalReminderScheduler implements ReminderScheduler {
         body: due
             ? text.reminderDueBody(reminder.medicationName, reminder.dose)
             : text.reminderReinforcedBody(reminder.medicationName),
-        payload: reminder.intakeId,
+        payload: '$_prefix${reminder.intakeId}',
         androidScheduleMode: mode,
         notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
@@ -124,7 +117,11 @@ final class LocalReminderScheduler implements ReminderScheduler {
   Future<void> cancelAll() async {
     if (!await _initialize()) return;
     try {
-      await _plugin.cancelAll();
+      await _notifications.cancelPending((payload) => _dose(payload) != null);
+      await _notifications.cancelDisplayed(
+        channel: _channel,
+        ownsPayload: (payload) => _dose(payload) != null,
+      );
     } on Object {
       // Nothing scheduled on this platform.
     }
@@ -135,10 +132,7 @@ final class LocalReminderScheduler implements ReminderScheduler {
     if (_launchTaken || !await _initialize()) return null;
     _launchTaken = true;
     try {
-      final details = await _plugin.getNotificationAppLaunchDetails();
-      if (details?.didNotificationLaunchApp != true) return null;
-      final id = details?.notificationResponse?.payload;
-      return id == null || id.isEmpty ? null : id;
+      return _dose(await _notifications.launchPayload());
     } on Object {
       return null;
     }

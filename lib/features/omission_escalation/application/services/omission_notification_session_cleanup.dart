@@ -3,7 +3,7 @@ import 'dart:async';
 import '../../../../shared/application/session/session_owner.dart';
 import '../../../../shared/application/session/stored_session.dart';
 import '../../../../shared/application/time/clock.dart';
-import '../ports/omission_ports.dart';
+import '../ports/omission_notifier.dart';
 
 /// Removes already displayed clinical notices when their local recipient session ceases to
 /// apply: on the first observation of the process, when the owner changes and when the

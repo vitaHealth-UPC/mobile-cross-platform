@@ -3,11 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../features/accessibility_preferences/presentation/navigation/preferences_navigation.dart';
 import '../../features/adherence_analytics/presentation/bloc/level/level_bloc.dart';
-import '../../features/adherence_analytics/presentation/navigation/adherence_badge_view.dart';
 import '../../features/adherence_analytics/presentation/navigation/adherence_level_view.dart';
-import '../../features/adherence_analytics/presentation/navigation/treatment_adherence_view.dart';
 import '../../features/care_link/application/readmodels/caregiver_link_summary.dart';
-import '../../features/family_monitoring/application/readmodels/monitoring_readmodels.dart';
+import '../../features/care_link/presentation/bloc/profile_editor/profile_editor_cubit.dart';
+import '../../features/care_link/presentation/navigation/profile_editor_route.dart';
+import '../../features/family_monitoring/application/readmodels/family_summary.dart';
 import '../../features/family_monitoring/presentation/navigation/family_monitoring_navigation.dart';
 import '../../features/identity_subscription/presentation/bloc/subscription/subscription_bloc.dart';
 import '../../features/identity_subscription/presentation/bloc/subscription/subscription_event.dart';
@@ -19,6 +19,7 @@ import '../../features/treatment_management/domain/entities/medication.dart';
 import '../../features/treatment_management/presentation/navigation/treatment_navigation.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../shared/presentation/widgets/caregiver_tab_bar.dart';
+import 'caregiver_treatment_entry.dart';
 
 /// Care area of one confirmed profile: the family follow-up (summary, alerts, notes) with
 /// treatments, medications and settings under "More".
@@ -36,6 +37,7 @@ class CaregiverCareRoute extends StatelessWidget {
     this.createTreatmentAdherenceBloc,
     this.createPersonAdherenceBloc,
     this.inventory,
+    this.createProfileEditorCubit,
   });
 
   final CaregiverLinkSummary profile;
@@ -46,6 +48,8 @@ class CaregiverCareRoute extends StatelessWidget {
 
   /// Stock of each medication (US-40 to US-43); absent when not wired.
   final InventoryNavigation? inventory;
+  final ProfileEditorCubit Function(String olderAdultId)?
+  createProfileEditorCubit;
   final LevelBloc Function(String olderAdultId)? createPersonAdherenceBloc;
   final LevelBloc Function(String olderAdultId, String treatmentId)?
   createTreatmentAdherenceBloc;
@@ -70,11 +74,20 @@ class CaregiverCareRoute extends StatelessWidget {
           inner,
           profile.olderAdultId,
           onSessionInvalidated,
+          personName: profile.fullName,
           onOpenInventory: _inventoryOpener(inner),
         ),
         onPerson: () => Navigator.of(inner).maybePop(),
         person: LinkedPersonSlots(
           linkedSince: profile.confirmedAt,
+          onEdit: switch (createProfileEditorCubit) {
+            final create? => (context) async => (await openProfileEditor(
+              context,
+              createCubit: () => create(profile.olderAdultId),
+              onSessionInvalidated: onSessionInvalidated,
+            ))?.fullName,
+            null => null,
+          },
           adherence: switch (createPersonAdherenceBloc) {
             final create? => (_) => AdherenceLevelView(
               createBloc: () => create(profile.olderAdultId),
@@ -189,6 +202,7 @@ class CaregiverCareRoute extends StatelessWidget {
           context,
           profile.olderAdultId,
           onSessionInvalidated,
+          personName: profile.fullName,
           onOpenInventory: _inventoryOpener(context),
         );
       case _MoreChoice.settings:
@@ -197,39 +211,14 @@ class CaregiverCareRoute extends StatelessWidget {
   }
 
   Future<void> _openTreatments(BuildContext context) {
-    return treatments.openTreatments(
+    return openCaregiverTreatments(
       context,
-      profile.olderAdultId,
-      onSessionInvalidated,
+      olderAdultId: profile.olderAdultId,
       personName: profile.fullName,
-      personBadgeBuilder: createPersonAdherenceBloc == null
-          ? null
-          : (invalidated) => AdherenceBadgeView(
-              createBloc: () =>
-                  createPersonAdherenceBloc!(profile.olderAdultId),
-              onSessionInvalidated: invalidated,
-            ),
-      adherenceBuilder: createTreatmentAdherenceBloc == null
-          ? null
-          : (id, invalidated) => TreatmentAdherenceView(
-              key: ValueKey('treatment-adherence-$id'),
-              createBloc: () =>
-                  createTreatmentAdherenceBloc!(profile.olderAdultId, id),
-              onSessionInvalidated: invalidated,
-            ),
-      navigationBuilder: (detailContext) => CaregiverTabBar(
-        selected: CaregiverTab.person,
-        enabledTabs: const {CaregiverTab.home, CaregiverTab.person},
-        onSelected: (tab) {
-          final navigator = Navigator.of(detailContext);
-          if (tab == CaregiverTab.home) {
-            navigator.popUntil((route) => route.isFirst);
-          } else if (tab == CaregiverTab.person) {
-            final person = ModalRoute.of(context);
-            navigator.popUntil((route) => route == person || route.isFirst);
-          }
-        },
-      ),
+      treatments: treatments,
+      onSessionInvalidated: onSessionInvalidated,
+      createPersonAdherenceBloc: createPersonAdherenceBloc,
+      createTreatmentAdherenceBloc: createTreatmentAdherenceBloc,
     );
   }
 }
@@ -289,6 +278,18 @@ class CaregiverSettingsRoute extends StatelessWidget {
               context,
               caregiverId,
               onSessionInvalidated,
+              navigationBuilder: (notificationsContext) => CaregiverTabBar(
+                selected: CaregiverTab.more,
+                enabledTabs: const {CaregiverTab.home, CaregiverTab.more},
+                onSelected: (tab) {
+                  final navigator = Navigator.of(notificationsContext);
+                  if (tab == CaregiverTab.home) {
+                    navigator.popUntil((route) => route.isFirst);
+                  } else if (tab == CaregiverTab.more) {
+                    navigator.pop();
+                  }
+                },
+              ),
             ),
           ),
           ListTile(

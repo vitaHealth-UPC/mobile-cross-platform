@@ -1,3 +1,4 @@
+import '../value_objects/alert_severity.dart';
 import '../value_objects/alert_status.dart';
 
 /// Alert raised by an intake that was not confirmed in time, seen from the caregiver side.
@@ -11,6 +12,7 @@ final class CaregiverAlert {
     required this.status,
     required this.openedAt,
     required this.closedAt,
+    this.severity = AlertSeverity.unknown,
   }) {
     if (id <= 0) throw ArgumentError('Alert id must be positive');
     if (intakeId.trim().isEmpty) {
@@ -35,4 +37,5 @@ final class CaregiverAlert {
   final AlertStatus status;
   final DateTime openedAt;
   final DateTime? closedAt;
+  final AlertSeverity severity;
 }

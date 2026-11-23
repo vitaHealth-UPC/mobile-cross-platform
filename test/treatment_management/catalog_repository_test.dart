@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:tata/features/treatment_management/application/readmodels/treatment_readmodels.dart';
+import 'package:tata/features/treatment_management/application/readmodels/my_medications_overview.dart';
 import 'package:tata/features/treatment_management/infrastructure/mappers/treatment_mapper.dart';
 import 'package:tata/features/treatment_management/infrastructure/remote/treatment_api.dart';
 import 'package:tata/features/treatment_management/infrastructure/repositories/remote_treatment_readers.dart';

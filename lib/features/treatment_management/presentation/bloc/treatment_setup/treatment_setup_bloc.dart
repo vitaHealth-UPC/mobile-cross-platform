@@ -1,9 +1,14 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../shared/common/result/app_result.dart';
-import '../../../application/readmodels/treatment_readmodels.dart';
-import '../../../application/usecases/regimen_usecases.dart';
-import '../../../application/usecases/treatment_usecases.dart';
+import '../../../application/readmodels/treatment_detail.dart';
+import '../../../application/usecases/change_treatment_status.dart';
+import '../../../application/usecases/configure_treatment.dart';
+import '../../../application/usecases/create_treatment.dart';
+import '../../../application/usecases/get_treatment_detail.dart';
+import '../../../application/usecases/set_dose_frequency.dart';
+import '../../../application/usecases/set_reminder_policy.dart';
+import '../../../application/usecases/set_schedule_instructions.dart';
 import '../../../domain/entities/treatment.dart';
 import '../../../domain/value_objects/regimen_text.dart';
 import '../../../domain/value_objects/treatment_status.dart';

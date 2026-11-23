@@ -25,12 +25,15 @@ class SocialAccessButton extends StatelessWidget {
       foregroundColor: TataColors.link,
       minimumSize: const Size(double.infinity, 52),
       side: const BorderSide(color: TataColors.border),
+      elevation: 2,
+      shadowColor: const Color(0x141A2138),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       textStyle: const TextStyle(
         fontFamily: 'Inter',
         fontSize: 15,
         fontWeight: FontWeight.w600,
+        letterSpacing: 0,
       ),
     ),
     child: Row(

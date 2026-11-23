@@ -5,7 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../shared/presentation/widgets/caregiver_tab_bar.dart';
 import '../../application/ports/contact_launcher.dart';
-import '../../application/readmodels/monitoring_readmodels.dart';
+import '../../application/readmodels/family_summary.dart';
 import '../bloc/alert_detail/alert_detail_bloc.dart';
 import '../bloc/alerts/alerts_bloc.dart';
 import '../bloc/notes/note_composer_cubit.dart';
@@ -15,6 +15,7 @@ import '../bloc/summary/family_summary_bloc.dart';
 import '../screens/alert_detail_screen.dart';
 import '../screens/alerts_screen.dart';
 import '../screens/family_summary_screen.dart';
+import '../screens/followed_agenda_sheet.dart';
 import '../screens/linked_person_screen.dart';
 import '../screens/notes_screen.dart';
 import '../screens/personal_notes_screen.dart';
@@ -28,11 +29,15 @@ final class LinkedPersonSlots {
     required this.linkedSince,
     this.adherence,
     this.treatment,
+    this.onEdit,
   });
 
   final DateTime linkedSince;
   final WidgetBuilder? adherence;
   final WidgetBuilder? treatment;
+
+  /// Returns the server-acknowledged name, or null when editing is cancelled.
+  final Future<String?> Function(BuildContext)? onEdit;
 }
 
 final class FamilyMonitoringFactories {
@@ -142,6 +147,16 @@ class _CaregiverShell extends StatefulWidget {
 
 class _CaregiverShellState extends State<_CaregiverShell> {
   CaregiverTab _tab = CaregiverTab.home;
+  int _personRevision = 0;
+
+  Future<void> _editPerson() async {
+    final name = await widget.person?.onEdit?.call(context);
+    if (!mounted || name == null) return;
+    _summary.add(FamilySummaryNameUpdated(name));
+    _notes.add(const NotesRequested());
+    setState(() => _personRevision++);
+  }
+
   late final FamilySummaryBloc _summary;
   late final AlertsBloc _alerts;
   late final NotesBloc _notes;
@@ -196,6 +211,23 @@ class _CaregiverShellState extends State<_CaregiverShell> {
     }
   }
 
+  /// Shows every dose of today with the caregiver's read-only authorization.
+  Future<void> _openAgenda() async {
+    _alerts.add(const AlertsRequested());
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => FractionallySizedBox(
+        heightFactor: 0.8,
+        child: BlocProvider.value(
+          value: _alerts,
+          child: const FollowedAgendaSheet(),
+        ),
+      ),
+    );
+  }
+
   /// Runs a host flow that may change medications or stock, then reads the summary again.
   Future<void> _thenRefresh(FutureOr<void> Function() open) async {
     await open();
@@ -223,6 +255,11 @@ class _CaregiverShellState extends State<_CaregiverShell> {
                     BlocListener<AlertDetailBloc, AlertDetailState>(
                       listenWhen: (a, b) => a.errorCode != b.errorCode,
                       listener: (_, state) {
+                        if (state.errorCode == 'ACCESS_DENIED') {
+                          _summary.add(
+                            const FamilySummaryAccessLost('ACCESS_DENIED'),
+                          );
+                        }
                         if (isSessionFailure(state.errorCode)) {
                           Navigator.of(detailContext)
                               .popUntil((r) => r.isFirst);
@@ -231,6 +268,14 @@ class _CaregiverShellState extends State<_CaregiverShell> {
                       },
                       child: AlertDetailScreen(
                         launcher: f.launcher,
+                        onTab: (tab) {
+                          Navigator.of(detailContext).pop();
+                          _select(tab);
+                        },
+                        onOpenProfile: () {
+                          Navigator.of(detailContext).pop();
+                          _select(CaregiverTab.person);
+                        },
                         onOpenSummary: () {
                           Navigator.of(detailContext).pop();
                           _select(CaregiverTab.home);
@@ -263,6 +308,10 @@ class _CaregiverShellState extends State<_CaregiverShell> {
         BlocListener<FamilySummaryBloc, FamilySummaryState>(
           listenWhen: (a, b) => a.errorCode != b.errorCode,
           listener: (_, state) {
+            if (state.errorCode == 'ACCESS_DENIED') {
+              _notes.add(NotesAccessLost(state.errorCode!));
+              _composer.clear();
+            }
             if (isSessionFailure(state.errorCode)) {
               widget.onSessionInvalidated();
             }
@@ -271,6 +320,9 @@ class _CaregiverShellState extends State<_CaregiverShell> {
         BlocListener<AlertsBloc, AlertsState>(
           listenWhen: (a, b) => a.errorCode != b.errorCode,
           listener: (_, state) {
+            if (state.errorCode == 'ACCESS_DENIED') {
+              _summary.add(const FamilySummaryAccessLost('ACCESS_DENIED'));
+            }
             if (isSessionFailure(state.errorCode)) {
               widget.onSessionInvalidated();
             }
@@ -279,6 +331,9 @@ class _CaregiverShellState extends State<_CaregiverShell> {
         BlocListener<NotesBloc, NotesState>(
           listenWhen: (a, b) => a.errorCode != b.errorCode,
           listener: (_, state) {
+            if (state.errorCode == 'ACCESS_DENIED') {
+              _summary.add(const FamilySummaryAccessLost('ACCESS_DENIED'));
+            }
             if (isSessionFailure(state.errorCode)) {
               widget.onSessionInvalidated();
             }
@@ -300,13 +355,26 @@ class _CaregiverShellState extends State<_CaregiverShell> {
           onTab: _select,
           onOpenMedications: () => _thenRefresh(widget.onAddMedication),
           onOpenHistory: widget.onHistory,
-          adherence: widget.person!.adherence?.call(context),
-          treatment: widget.person!.treatment?.call(context),
+          onEdit: widget.person!.onEdit == null ? null : _editPerson,
+          adherence: KeyedSubtree(
+            key: ValueKey('adherence-$_personRevision'),
+            child:
+                widget.person!.adherence?.call(context) ??
+                const SizedBox.shrink(),
+          ),
+          treatment: KeyedSubtree(
+            key: ValueKey('treatment-$_personRevision'),
+            child:
+                widget.person!.treatment?.call(context) ??
+                const SizedBox.shrink(),
+          ),
         ),
         _ => FamilySummaryScreen(
           launcher: widget.factories.launcher,
           onTab: _select,
           onHistory: widget.onHistory,
+          onOpenAgenda: _openAgenda,
+          onChoosePerson: widget.onPerson,
           onAddMedication: () => _thenRefresh(widget.onAddMedication),
           onOpenAlerts: () => _select(CaregiverTab.alerts),
           onOpenStock: switch (widget.onOpenStock) {

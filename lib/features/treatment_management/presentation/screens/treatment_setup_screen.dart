@@ -20,11 +20,17 @@ class TreatmentSetupScreen extends StatefulWidget {
     required this.medicationLabel,
     required this.onFinished,
     required this.onSessionInvalidated,
+    this.initialFrequency = '',
+    this.initialInstructions = '',
   });
 
   final String medicationLabel;
   final VoidCallback onFinished;
   final VoidCallback onSessionInvalidated;
+
+  /// Editable text carried from registration, validated by the ordinary wizard steps.
+  final String initialFrequency;
+  final String initialInstructions;
 
   @override
   State<TreatmentSetupScreen> createState() => _TreatmentSetupScreenState();
@@ -45,9 +51,13 @@ class _TreatmentSetupScreenState extends State<TreatmentSetupScreen> {
     final state = context.read<TreatmentSetupBloc>().state;
     _name.text = state.treatmentName;
     _dose.text = state.dose;
-    _frequency.text = state.frequency;
+    _frequency.text = state.frequency.isEmpty
+        ? widget.initialFrequency
+        : state.frequency;
     _times.text = state.scheduleText;
-    _instructions.text = state.instructions;
+    _instructions.text = state.instructions.isEmpty
+        ? widget.initialInstructions
+        : state.instructions;
     _delay.text = state.followUpDelayMinutes?.toString() ?? '';
   }
 

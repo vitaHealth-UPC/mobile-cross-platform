@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../shared/common/result/app_result.dart';
-import '../../../application/usecases/subscription_usecases.dart';
+import '../../../application/usecases/get_public_plans.dart';
 import '../../../domain/entities/subscription_plan.dart';
 
 enum PlanChoiceStatus { loading, ready, failure }

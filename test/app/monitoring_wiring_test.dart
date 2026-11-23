@@ -4,11 +4,17 @@ import 'package:tata/app/integration/adult_entry_route.dart';
 import 'package:tata/app/integration/caregiver_care_route.dart';
 import 'package:tata/features/care_link/application/readmodels/caregiver_link_summary.dart';
 import 'package:tata/features/family_monitoring/application/ports/contact_launcher.dart';
-import 'package:tata/features/family_monitoring/application/ports/monitoring_ports.dart';
-import 'package:tata/features/family_monitoring/application/readmodels/monitoring_readmodels.dart';
-import 'package:tata/features/family_monitoring/application/usecases/alert_usecases.dart';
-import 'package:tata/features/family_monitoring/application/usecases/note_usecases.dart';
-import 'package:tata/features/family_monitoring/application/usecases/summary_usecases.dart';
+import 'package:tata/features/family_monitoring/application/ports/family_monitoring_repository.dart';
+import 'package:tata/features/family_monitoring/application/readmodels/family_summary.dart';
+import 'package:tata/features/family_monitoring/application/readmodels/intake_history_entry.dart';
+import 'package:tata/features/family_monitoring/application/readmodels/monitored_person.dart';
+import 'package:tata/features/family_monitoring/application/usecases/create_personal_note.dart';
+import 'package:tata/features/family_monitoring/application/usecases/get_alert_timeline.dart';
+import 'package:tata/features/family_monitoring/application/usecases/get_contact_option.dart';
+import 'package:tata/features/family_monitoring/application/usecases/get_family_summary.dart';
+import 'package:tata/features/family_monitoring/application/usecases/get_follow_up_notes.dart';
+import 'package:tata/features/family_monitoring/application/usecases/get_personal_notes.dart';
+import 'package:tata/features/family_monitoring/application/usecases/register_follow_up_note.dart';
 import 'package:tata/features/family_monitoring/domain/value_objects/adherence_counts.dart';
 import 'package:tata/features/family_monitoring/domain/value_objects/contact_channel.dart';
 import 'package:tata/features/family_monitoring/presentation/bloc/alerts/alerts_bloc.dart';
@@ -20,12 +26,17 @@ import 'package:tata/features/family_monitoring/presentation/navigation/family_m
 import 'package:tata/features/identity_subscription/application/readmodels/remembered_adult.dart';
 import 'package:tata/features/intake_execution/application/usecases/get_daily_progress.dart';
 import 'package:tata/features/intake_execution/application/usecases/get_next_intake.dart';
+import 'package:tata/features/intake_execution/application/usecases/get_week_agenda.dart';
+import 'package:tata/features/intake_execution/presentation/bloc/agenda/agenda_bloc.dart';
 import 'package:tata/features/intake_execution/presentation/bloc/home/home_bloc.dart';
 import 'package:tata/features/omission_escalation/application/policies/omission_push_access_policy.dart';
 import 'package:tata/features/omission_escalation/application/services/omission_notification_session_cleanup.dart';
 import 'package:tata/features/omission_escalation/application/services/omission_push_facade.dart';
 import 'package:tata/features/omission_escalation/application/services/push_device_registration_coordinator.dart';
-import 'package:tata/features/omission_escalation/application/usecases/omission_usecases.dart';
+import 'package:tata/features/omission_escalation/application/usecases/follow_caregiver_alerts.dart';
+import 'package:tata/features/omission_escalation/application/usecases/follow_dose_reminders.dart';
+import 'package:tata/features/omission_escalation/application/usecases/handle_incoming_omission_push.dart';
+import 'package:tata/features/omission_escalation/application/usecases/resolve_push_destination.dart';
 import 'package:tata/features/treatment_management/presentation/navigation/treatment_navigation.dart';
 import 'package:tata/l10n/generated/app_localizations.dart';
 import 'package:tata/shared/application/session/session_owner.dart';
@@ -205,7 +216,8 @@ void main() {
             next: GetNextIntake(reader),
             progress: GetDailyProgress(reader, DateTime.now),
           ),
-          createAgendaBloc: () => throw UnimplementedError(),
+          createAgendaBloc: () =>
+              AgendaBloc(agenda: GetWeekAgenda(reader), clock: DateTime.now),
           createDoseBloc: (_) => throw UnimplementedError(),
           createConsentBloc: () => throw UnimplementedError(),
           onSignOut: () {},
@@ -215,6 +227,16 @@ void main() {
         ),
       );
       expect(targets.adults, {'adult-A': 'Rosa Vargas'});
+
+      await tester.tap(find.text('Agenda'));
+      await tester.pumpAndSettle();
+      expect(find.text('Agenda semanal'), findsOneWidget);
+      await tester.tap(find.text('Notas'));
+      await tester.pumpAndSettle();
+      expect(find.text('Apuntes para acompañar tu rutina.'), findsOneWidget);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('Agenda semanal'), findsNothing);
 
       await tester.tap(find.text('Más'));
       await tester.pumpAndSettle();

@@ -22,6 +22,7 @@ Future<void> openAdherenceFlow(
   required RecommendationsBloc Function(String olderAdultId)
   createRecommendationsBloc,
   required VoidCallback onSessionInvalidated,
+  VoidCallback? onApplyAdjustments,
 }) {
   final navigator = Navigator.of(context);
   void backToCaregiverArea() => navigator.popUntil((route) => route.isFirst);
@@ -31,6 +32,7 @@ Future<void> openAdherenceFlow(
         olderAdultId: link.olderAdultId,
         createHistoryBloc: createHistoryBloc,
         createRecommendationsBloc: createRecommendationsBloc,
+        onApplyAdjustments: onApplyAdjustments,
         onTabSelected: (_) => backToCaregiverArea(),
         onSessionInvalidated: () {
           backToCaregiverArea();

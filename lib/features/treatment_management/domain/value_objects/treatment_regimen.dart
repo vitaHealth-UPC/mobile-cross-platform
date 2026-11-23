@@ -17,7 +17,7 @@ final class TreatmentRegimen {
   final AdministrationSchedule schedule;
   final AdministrationInstructions instructions;
 
-  /// Minutes before the dose; the wizard never sets it, edits preserve it.
+  /// Minutes before the dose; the editor can update it within the server bounds.
   final int reminderLeadMinutes;
 
   /// Null means the system default follow-up is used.

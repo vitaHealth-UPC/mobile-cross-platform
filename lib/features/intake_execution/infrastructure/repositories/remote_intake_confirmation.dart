@@ -1,6 +1,6 @@
 import '../../../../shared/application/session/session_store.dart';
 import '../../../../shared/common/result/app_result.dart';
-import '../../application/ports/intake_confirmation.dart';
+import '../../application/ports/intake_confirmation_replay.dart';
 import '../../application/readmodels/confirmation_receipt.dart';
 import '../mappers/intake_mapper.dart';
 import '../remote/intake_api.dart';

@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/presentation/theme/tata_colors.dart';
-import '../../application/readmodels/treatment_readmodels.dart';
+import '../../application/readmodels/my_medications_overview.dart';
 import '../../domain/value_objects/treatment_status.dart';
 import '../bloc/my_medications/my_medications_bloc.dart';
 

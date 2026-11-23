@@ -4,8 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tata/app/tata_app.dart';
-import 'package:tata/features/accessibility_preferences/application/ports/preferences_ports.dart';
-import 'package:tata/features/accessibility_preferences/application/usecases/preferences_usecases.dart';
+import 'package:tata/features/accessibility_preferences/application/ports/application_language_store.dart';
+import 'package:tata/features/accessibility_preferences/application/usecases/change_application_language.dart';
+import 'package:tata/features/accessibility_preferences/application/usecases/get_notification_preferences.dart';
+import 'package:tata/features/accessibility_preferences/application/usecases/observe_accessibility.dart';
+import 'package:tata/features/accessibility_preferences/application/usecases/observe_application_language.dart';
+import 'package:tata/features/accessibility_preferences/application/usecases/sync_user_preferences.dart';
+import 'package:tata/features/accessibility_preferences/application/usecases/update_accessibility.dart';
+import 'package:tata/features/accessibility_preferences/application/usecases/update_notification_policy.dart';
+import 'package:tata/features/accessibility_preferences/application/usecases/update_notification_preferences.dart';
 import 'package:tata/features/accessibility_preferences/domain/repositories/notification_preferences_repository.dart';
 import 'package:tata/features/accessibility_preferences/domain/value_objects/accessibility_preferences.dart';
 import 'package:tata/features/accessibility_preferences/domain/value_objects/notification_preferences.dart';
@@ -115,6 +122,7 @@ void main() {
       await settle();
       expect(bloc.state.preferences.isEnabled(ChannelType.sms), isTrue);
       expect(repository.updates, 1);
+      expect(bloc.state.receipt, NotificationPreferenceReceipt.channels);
     });
 
     test('quiet hours switch on with the suggestion and back off', () async {
@@ -125,6 +133,7 @@ void main() {
       bloc.add(const QuietHoursToggled(true));
       await settle();
       expect(bloc.state.preferences.quietHours, QuietHours(22, 0, 7, 0));
+      expect(bloc.state.receipt, NotificationPreferenceReceipt.quietHours);
       bloc.add(QuietHoursChanged(QuietHours(23, 30, 6, 0)));
       await settle();
       expect(bloc.state.preferences.quietHours, QuietHours(23, 30, 6, 0));
@@ -145,6 +154,7 @@ void main() {
       expect(bloc.state.preferences.isEnabled(ChannelType.email), isFalse);
       expect(bloc.state.errorCode, 'NETWORK_UNAVAILABLE');
       expect(bloc.state.busy, isFalse);
+      expect(bloc.state.receipt, isNull);
     });
 
     test('policy is validated before any request', () async {
@@ -203,7 +213,7 @@ void main() {
           ),
         );
         await settle();
-        expect(bloc.state.saved, isTrue);
+        expect(bloc.state.receipt, NotificationPreferenceReceipt.policy);
         expect(repository.policyUpdates, 1);
         final policy = bloc.state.preferences.policy!;
         expect(policy.escalationMinutes, 90);

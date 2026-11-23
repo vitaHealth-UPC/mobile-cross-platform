@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
-import '../../application/readmodels/treatment_readmodels.dart';
+import '../../application/readmodels/treatment_detail.dart';
 import '../bloc/treatment_management/treatment_management_event.dart';
 
 /// Native regimen editor; its state owns controllers through the dialog exit transition.
@@ -18,6 +18,7 @@ class _RegimenEditorState extends State<RegimenEditor> {
   late final TextEditingController times;
   late final TextEditingController instructions;
   late final TextEditingController delay;
+  late final TextEditingController lead;
   final form = GlobalKey<FormState>();
   @override
   void initState() {
@@ -27,6 +28,9 @@ class _RegimenEditorState extends State<RegimenEditor> {
     frequency = TextEditingController(text: detail.frequency);
     times = TextEditingController(text: detail.scheduledTimes.join(', '));
     instructions = TextEditingController(text: detail.instructions);
+    lead = TextEditingController(
+      text: (detail.reminderLeadMinutes ?? 0).toString(),
+    );
     delay = TextEditingController(
       text: detail.followUpDelayMinutes?.toString() ?? '',
     );
@@ -34,7 +38,14 @@ class _RegimenEditorState extends State<RegimenEditor> {
 
   @override
   void dispose() {
-    for (final controller in [dose, frequency, times, instructions, delay]) {
+    for (final controller in [
+      dose,
+      frequency,
+      times,
+      instructions,
+      delay,
+      lead,
+    ]) {
       controller.dispose();
     }
     super.dispose();
@@ -91,6 +102,23 @@ class _RegimenEditorState extends State<RegimenEditor> {
                   helperMaxLines: 4,
                 ),
               ),
+              const SizedBox(height: 12),
+              TextFormField(
+                key: const Key('edit-lead'),
+                controller: lead,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: text.tmReminderLead,
+                  helperText: text.tmReminderLeadHelp,
+                  helperMaxLines: 3,
+                ),
+                validator: (value) {
+                  final minutes = int.tryParse(value?.trim() ?? '');
+                  return minutes == null || minutes < 0 || minutes > 1440
+                      ? text.tmErrReminderLead
+                      : null;
+                },
+              ),
             ],
           ),
         ),
@@ -111,6 +139,7 @@ class _RegimenEditorState extends State<RegimenEditor> {
                   scheduleText: times.text,
                   instructions: instructions.text,
                   delayMinutes: delay.text,
+                  leadMinutes: lead.text,
                 ),
               );
             }

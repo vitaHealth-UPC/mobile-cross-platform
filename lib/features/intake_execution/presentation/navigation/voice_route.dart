@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/application/time/clock.dart';
-import '../../application/ports/voice_confirmation.dart';
+import '../../application/ports/phrase_speaker.dart';
 import '../bloc/voice/voice_bloc.dart';
 import '../bloc/voice/voice_event.dart';
 import '../bloc/voice/voice_state.dart';

@@ -1,6 +1,6 @@
 import '../../../../shared/application/session/session_owner.dart';
 import '../../../../shared/common/result/app_result.dart';
-import '../ports/intake_confirmation.dart';
+import '../ports/intake_confirmation_replay.dart';
 import '../ports/intake_local_store.dart';
 
 enum ReplayOutcome {

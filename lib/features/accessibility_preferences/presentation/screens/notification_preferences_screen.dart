@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -7,16 +8,20 @@ import '../../domain/value_objects/notification_preferences.dart';
 import '../bloc/notifications/notification_preferences_bloc.dart';
 import '../bloc/notifications/notification_preferences_event.dart';
 import '../bloc/notifications/notification_preferences_state.dart';
+import '../widgets/notification_preferences_summary.dart';
+import '../widgets/notification_save_receipt.dart';
 
-/// Channels, quiet hours, delivery policy and emergency contacts. Everything shown is what
-/// the server acknowledged; nothing is cached on the device.
+/// Summary and editor for channels, quiet hours, policy and emergency contacts.
+/// The summary uses server receipts; unsaved edits stay in memory until submitted.
 class NotificationPreferencesScreen extends StatefulWidget {
   const NotificationPreferencesScreen({
     super.key,
     required this.onSessionInvalidated,
+    this.navigationBar,
   });
 
   final VoidCallback onSessionInvalidated;
+  final Widget? navigationBar;
 
   @override
   State<NotificationPreferencesScreen> createState() =>
@@ -45,6 +50,7 @@ class _NotificationPreferencesScreenState
   final _summary = TextEditingController();
   final _contacts = <_ContactRow>[];
   NotificationPreferences? _loaded;
+  bool _editingPolicy = false;
 
   @override
   void dispose() {
@@ -63,10 +69,10 @@ class _NotificationPreferencesScreenState
     super.dispose();
   }
 
-  /// Copies the acknowledged policy and contacts into the form, once per snapshot.
+  /// Reloads the editor only when acknowledged policy or contact values change.
   void _fill(NotificationPreferences preferences) {
-    if (identical(_loaded?.policy, preferences.policy) &&
-        identical(_loaded?.emergencyContacts, preferences.emergencyContacts)) {
+    if (_loaded?.policy == preferences.policy &&
+        listEquals(_loaded?.emergencyContacts, preferences.emergencyContacts)) {
       return;
     }
     _loaded = preferences;
@@ -121,7 +127,31 @@ class _NotificationPreferencesScreenState
       context: context,
       initialTime: TimeOfDay(hour: hour, minute: minute),
     );
-    if (picked != null) onPicked(picked);
+    if (mounted && picked != null) onPicked(picked);
+  }
+
+  /// Cancelling either picker keeps the acknowledged interval unchanged.
+  Future<void> _editQuiet(
+    NotificationPreferencesBloc bloc,
+    QuietHours quiet,
+  ) async {
+    final start = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: quiet.startHour, minute: quiet.startMinute),
+    );
+    if (!mounted || start == null) return;
+    final end = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: quiet.endHour, minute: quiet.endMinute),
+    );
+    if (!mounted || end == null || bloc.isClosed) return;
+    final next = QuietHours.tryCreate(
+      start.hour,
+      start.minute,
+      end.hour,
+      end.minute,
+    );
+    if (next != null) bloc.add(QuietHoursChanged(next));
   }
 
   @override
@@ -133,11 +163,11 @@ class _NotificationPreferencesScreenState
     >(
       listener: (context, state) {
         if (state.errorCode == 'AUTHENTICATION_REQUIRED' ||
-            state.errorCode == 'SESSION_CHANGED') {
+            state.errorCode == 'SESSION_CHANGED' ||
+            state.errorCode == 'ACCESS_DENIED') {
           widget.onSessionInvalidated();
-        } else if (state.saved) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(text.pfPolicySaved)));
+        } else if (state.receipt == NotificationPreferenceReceipt.policy) {
+          setState(() => _editingPolicy = false);
         }
       },
       builder: (context, state) {
@@ -148,203 +178,313 @@ class _NotificationPreferencesScreenState
         final preferences = state.preferences;
         final quiet = preferences.quietHours;
         final error = _errorText(text, state.errorCode);
-        return Scaffold(
-          appBar: AppBar(title: Text(text.pfNotificationsTitle)),
-          body: switch (state.status) {
-            NotificationPreferencesStatus.loading => const Center(
-              child: CircularProgressIndicator(),
+        return PopScope<void>(
+          canPop: !_editingPolicy && !state.busy,
+          onPopInvokedWithResult: (didPop, result) {
+            if (!didPop && _editingPolicy && !state.busy) {
+              setState(() {
+                _loaded = null;
+                _editingPolicy = false;
+              });
+            }
+          },
+          child: Scaffold(
+            backgroundColor: const Color(0xFFF8F8FE),
+            appBar: AppBar(
+              toolbarHeight: MediaQuery.textScalerOf(context).scale(21) > 25
+                  ? 96
+                  : 72,
+              backgroundColor: const Color(0xFFF8F8FE),
+              surfaceTintColor: Colors.transparent,
+              leading: IconButton(
+                tooltip: text.back,
+                icon: const Icon(Icons.chevron_left),
+                onPressed: state.busy
+                    ? null
+                    : () {
+                        if (_editingPolicy) {
+                          setState(() {
+                            _loaded = null;
+                            _editingPolicy = false;
+                          });
+                        } else {
+                          Navigator.of(context).maybePop();
+                        }
+                      },
+              ),
+              titleSpacing: 0,
+              title: Text(
+                text.pfNotificationPreferences,
+                maxLines: 3,
+                softWrap: true,
+                overflow: TextOverflow.visible,
+                style: const TextStyle(
+                  fontFamily: 'DMSerifDisplay',
+                  fontSize: 21,
+                ),
+              ),
             ),
-            NotificationPreferencesStatus.failure => ErrorRetry(
-              message: error ?? text.pfErrGeneric,
-              retryLabel: text.tmRetry,
-              onRetry: () => bloc.add(const NotificationPreferencesRequested()),
-            ),
-            NotificationPreferencesStatus.ready => ListView(
-              padding: const EdgeInsets.all(16),
+            bottomNavigationBar: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(text.pfNotificationsOnlineNote),
-                const SizedBox(height: 12),
-                Text(
-                  text.pfChannels,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                for (final channel in preferences.channels)
-                  SwitchListTile(
-                    title: Text(_channelLabel(text, channel.type)),
-                    value: channel.enabled,
-                    onChanged: state.busy
-                        ? null
-                        : (value) =>
-                              bloc.add(ChannelToggled(channel.type, value)),
-                  ),
-                SwitchListTile(
-                  title: Text(text.pfQuietHours),
-                  value: quiet != null,
-                  onChanged: state.busy
-                      ? null
-                      : (value) => bloc.add(QuietHoursToggled(value)),
-                ),
-                if (quiet != null)
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: state.busy
-                              ? null
-                              : () => _pickTime(
-                                  context,
-                                  quiet.startHour,
-                                  quiet.startMinute,
-                                  (time) {
-                                    final next = QuietHours.tryCreate(
-                                      time.hour,
-                                      time.minute,
-                                      quiet.endHour,
-                                      quiet.endMinute,
-                                    );
-                                    if (next != null) {
-                                      bloc.add(QuietHoursChanged(next));
-                                    }
-                                  },
-                                ),
-                          child: Text(
-                            '${text.pfQuietStart}: '
-                            '${MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay(hour: quiet.startHour, minute: quiet.startMinute))}',
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: state.busy
-                              ? null
-                              : () => _pickTime(
-                                  context,
-                                  quiet.endHour,
-                                  quiet.endMinute,
-                                  (time) {
-                                    final next = QuietHours.tryCreate(
-                                      quiet.startHour,
-                                      quiet.startMinute,
-                                      time.hour,
-                                      time.minute,
-                                    );
-                                    if (next != null) {
-                                      bloc.add(QuietHoursChanged(next));
-                                    }
-                                  },
-                                ),
-                          child: Text(
-                            '${text.pfQuietEnd}: '
-                            '${MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay(hour: quiet.endHour, minute: quiet.endMinute))}',
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                if (preferences.policy != null) ...[
-                  const SizedBox(height: 20),
-                  Text(
-                    text.pfPolicyTitle,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  for (final (label, controller, key) in [
-                    (text.pfReminderMinutes, _reminder, 'policy-reminder'),
-                    (text.pfPendingMinutes, _pending, 'policy-pending'),
-                    (text.pfOmittedMinutes, _omitted, 'policy-omitted'),
-                    (
-                      text.pfEscalationMinutes,
-                      _escalation,
-                      'policy-escalation',
-                    ),
-                  ])
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: TextField(
-                        key: Key(key),
-                        controller: controller,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(labelText: label),
-                      ),
-                    ),
-                  TextField(
-                    key: const Key('policy-summary'),
-                    controller: _summary,
-                    keyboardType: TextInputType.datetime,
-                    decoration: InputDecoration(labelText: text.pfDailySummary),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    text.pfContactsTitle,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  for (var i = 0; i < _contacts.length; i++)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _contacts[i].name,
-                              decoration: InputDecoration(
-                                labelText: text.pfContactName,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: TextField(
-                              controller: _contacts[i].phone,
-                              keyboardType: TextInputType.phone,
-                              decoration: InputDecoration(
-                                labelText: text.pfContactPhone,
-                              ),
-                            ),
-                          ),
-                          IconButton(
-                            tooltip: text.pfRemoveContact,
-                            icon: const Icon(Icons.delete_outline),
-                            onPressed: () => setState(() {
-                              _contacts.removeAt(i).dispose();
-                            }),
-                          ),
-                        ],
-                      ),
-                    ),
-                  if (_contacts.length < 5)
-                    TextButton.icon(
-                      onPressed: () =>
-                          setState(() => _contacts.add(_ContactRow('', ''))),
-                      icon: const Icon(Icons.add),
-                      label: Text(text.pfAddContact),
-                    ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: state.busy
-                        ? null
-                        : () => bloc.add(
-                            PolicySaved(
-                              reminder: _reminder.text,
-                              pending: _pending.text,
-                              omitted: _omitted.text,
-                              escalation: _escalation.text,
-                              dailySummary: _summary.text,
-                              contacts: [
-                                for (final row in _contacts)
-                                  ContactInput(row.name.text, row.phone.text),
-                              ],
-                            ),
-                          ),
-                    child: Text(
-                      state.busy ? text.processing : text.pfSavePolicy,
-                    ),
-                  ),
-                ],
-                if (error != null) InlineError(error),
+                if (!_editingPolicy &&
+                    state.status == NotificationPreferencesStatus.ready)
+                  if (state.receipt case final receipt?)
+                    NotificationSaveReceipt(receipt: receipt),
+                ?widget.navigationBar,
               ],
             ),
-          },
+            body: switch (state.status) {
+              NotificationPreferencesStatus.loading => const Center(
+                child: CircularProgressIndicator(),
+              ),
+              NotificationPreferencesStatus.failure => ErrorRetry(
+                message: error ?? text.pfErrGeneric,
+                retryLabel: text.tmRetry,
+                onRetry: () =>
+                    bloc.add(const NotificationPreferencesRequested()),
+              ),
+              NotificationPreferencesStatus.ready =>
+                !_editingPolicy
+                    ? ListView(
+                        padding: const EdgeInsets.fromLTRB(22, 14, 22, 12),
+                        children: [
+                          NotificationPreferencesSummary(
+                            preferences: preferences,
+                            busy: state.busy,
+                            onEditPolicy: preferences.policy == null
+                                ? null
+                                : () => setState(() => _editingPolicy = true),
+                            onToggleChannel: (type, value) =>
+                                bloc.add(ChannelToggled(type, value)),
+                            onToggleQuiet: (value) =>
+                                bloc.add(QuietHoursToggled(value)),
+                            onEditQuiet: () => _editQuiet(bloc, quiet!),
+                          ),
+                          if (error != null) InlineError(error),
+                        ],
+                      )
+                    : ListView(
+                        padding: const EdgeInsets.all(16),
+                        children: [
+                          Text(text.pfNotificationsOnlineNote),
+                          const SizedBox(height: 12),
+                          Text(
+                            text.pfChannels,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          for (final channel in preferences.channels)
+                            SwitchListTile(
+                              title: Text(_channelLabel(text, channel.type)),
+                              value: channel.enabled,
+                              onChanged: state.busy
+                                  ? null
+                                  : (value) => bloc.add(
+                                      ChannelToggled(channel.type, value),
+                                    ),
+                            ),
+                          SwitchListTile(
+                            title: Text(text.pfQuietHours),
+                            value: quiet != null,
+                            onChanged: state.busy
+                                ? null
+                                : (value) => bloc.add(QuietHoursToggled(value)),
+                          ),
+                          if (quiet != null)
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: state.busy
+                                        ? null
+                                        : () => _pickTime(
+                                            context,
+                                            quiet.startHour,
+                                            quiet.startMinute,
+                                            (time) {
+                                              final next = QuietHours.tryCreate(
+                                                time.hour,
+                                                time.minute,
+                                                quiet.endHour,
+                                                quiet.endMinute,
+                                              );
+                                              if (next != null) {
+                                                bloc.add(
+                                                  QuietHoursChanged(next),
+                                                );
+                                              }
+                                            },
+                                          ),
+                                    child: Text(
+                                      '${text.pfQuietStart}: '
+                                      '${MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay(hour: quiet.startHour, minute: quiet.startMinute))}',
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: state.busy
+                                        ? null
+                                        : () => _pickTime(
+                                            context,
+                                            quiet.endHour,
+                                            quiet.endMinute,
+                                            (time) {
+                                              final next = QuietHours.tryCreate(
+                                                quiet.startHour,
+                                                quiet.startMinute,
+                                                time.hour,
+                                                time.minute,
+                                              );
+                                              if (next != null) {
+                                                bloc.add(
+                                                  QuietHoursChanged(next),
+                                                );
+                                              }
+                                            },
+                                          ),
+                                    child: Text(
+                                      '${text.pfQuietEnd}: '
+                                      '${MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay(hour: quiet.endHour, minute: quiet.endMinute))}',
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          if (preferences.policy != null) ...[
+                            const SizedBox(height: 20),
+                            Text(
+                              text.pfPolicyTitle,
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: 8),
+                            for (final (label, controller, key) in [
+                              (
+                                text.pfReminderMinutes,
+                                _reminder,
+                                'policy-reminder',
+                              ),
+                              (
+                                text.pfPendingMinutes,
+                                _pending,
+                                'policy-pending',
+                              ),
+                              (
+                                text.pfOmittedMinutes,
+                                _omitted,
+                                'policy-omitted',
+                              ),
+                              (
+                                text.pfEscalationMinutes,
+                                _escalation,
+                                'policy-escalation',
+                              ),
+                            ])
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: TextField(
+                                  enabled: !state.busy,
+                                  key: Key(key),
+                                  controller: controller,
+                                  keyboardType: TextInputType.number,
+                                  decoration: InputDecoration(labelText: label),
+                                ),
+                              ),
+                            TextField(
+                              enabled: !state.busy,
+                              key: const Key('policy-summary'),
+                              controller: _summary,
+                              keyboardType: TextInputType.datetime,
+                              decoration: InputDecoration(
+                                labelText: text.pfDailySummary,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            Text(
+                              text.pfContactsTitle,
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            for (var i = 0; i < _contacts.length; i++)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: TextField(
+                                        enabled: !state.busy,
+                                        controller: _contacts[i].name,
+                                        decoration: InputDecoration(
+                                          labelText: text.pfContactName,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: TextField(
+                                        enabled: !state.busy,
+                                        controller: _contacts[i].phone,
+                                        keyboardType: TextInputType.phone,
+                                        decoration: InputDecoration(
+                                          labelText: text.pfContactPhone,
+                                        ),
+                                      ),
+                                    ),
+                                    IconButton(
+                                      tooltip: text.pfRemoveContact,
+                                      icon: const Icon(Icons.delete_outline),
+                                      onPressed: state.busy
+                                          ? null
+                                          : () => setState(() {
+                                              _contacts.removeAt(i).dispose();
+                                            }),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            if (_contacts.length < 5)
+                              TextButton.icon(
+                                onPressed: state.busy
+                                    ? null
+                                    : () => setState(
+                                        () =>
+                                            _contacts.add(_ContactRow('', '')),
+                                      ),
+                                icon: const Icon(Icons.add),
+                                label: Text(text.pfAddContact),
+                              ),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: state.busy
+                                  ? null
+                                  : () => bloc.add(
+                                      PolicySaved(
+                                        reminder: _reminder.text,
+                                        pending: _pending.text,
+                                        omitted: _omitted.text,
+                                        escalation: _escalation.text,
+                                        dailySummary: _summary.text,
+                                        contacts: [
+                                          for (final row in _contacts)
+                                            ContactInput(
+                                              row.name.text,
+                                              row.phone.text,
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                              child: Text(
+                                state.busy
+                                    ? text.processing
+                                    : text.pfSavePolicy,
+                              ),
+                            ),
+                          ],
+                          if (error != null) InlineError(error),
+                        ],
+                      ),
+            },
+          ),
         );
       },
     );

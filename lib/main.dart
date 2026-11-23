@@ -5,6 +5,7 @@ import 'app/di/app_dependencies.dart';
 import 'app/integration/adult_entry_route.dart';
 import 'app/integration/caregiver_adherence_entry.dart';
 import 'app/integration/caregiver_care_route.dart';
+import 'app/integration/caregiver_treatment_entry.dart';
 import 'app/tata_app.dart';
 import 'features/accessibility_preferences/presentation/navigation/preferences_navigation.dart';
 import 'features/care_link/presentation/navigation/caregiver_setup_route.dart';
@@ -68,7 +69,7 @@ Future<void> main() async {
             createBloc: dependencies.createProfilesBloc,
             onSignOut: signOut,
             onSessionInvalidated: invalidated,
-            onOpenProfile: (link) {
+            onOpenProfile: (link) async {
               final caregiverId = context
                   .read<AccessBloc>()
                   .state
@@ -76,7 +77,7 @@ Future<void> main() async {
                   ?.owner
                   .id;
               if (caregiverId == null) return;
-              Navigator.of(context).push<void>(
+              await Navigator.of(context).push<void>(
                 MaterialPageRoute(
                   builder: (_) => CaregiverCareRoute(
                     profile: link,
@@ -85,6 +86,8 @@ Future<void> main() async {
                     monitoring: monitoring,
                     push: push,
                     inventory: inventory,
+                    createProfileEditorCubit:
+                        dependencies.createProfileEditorCubit,
                     createPersonAdherenceBloc:
                         dependencies.createAdherenceWeekBloc,
                     createTreatmentAdherenceBloc:
@@ -97,6 +100,17 @@ Future<void> main() async {
                       createRecommendationsBloc:
                           dependencies.createAdherenceRecommendationsBloc,
                       onSessionInvalidated: invalidated,
+                      onApplyAdjustments: () => openCaregiverTreatments(
+                        careContext,
+                        olderAdultId: link.olderAdultId,
+                        personName: link.fullName,
+                        treatments: treatments,
+                        onSessionInvalidated: invalidated,
+                        createPersonAdherenceBloc:
+                            dependencies.createAdherenceWeekBloc,
+                        createTreatmentAdherenceBloc:
+                            dependencies.createTreatmentAdherenceBloc,
+                      ),
                     ),
                     onOpenSettings: (careContext) =>
                         openSettings(careContext, invalidated),

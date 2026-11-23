@@ -31,8 +31,8 @@ class AdherenceFlowRoute extends StatelessWidget {
   final ValueChanged<CaregiverTab> onTabSelected;
   final VoidCallback onSessionInvalidated;
 
-  /// Receives the adjustments once the treatment flow exists; until then the
-  /// recommendations screen does not draw its "Aplicar ajustes" button.
+  /// Opens the host treatment review; the user chooses a treatment and saves
+  /// any edits there. No regimen is changed automatically by analytics.
   final VoidCallback? onApplyAdjustments;
   final Clock clock;
 

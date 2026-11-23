@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tata/features/treatment_management/application/ports/treatment_readers.dart';
-import 'package:tata/features/treatment_management/application/readmodels/treatment_readmodels.dart';
-import 'package:tata/features/treatment_management/application/usecases/treatment_usecases.dart';
+import 'package:tata/features/treatment_management/application/ports/my_medications_reader.dart';
+import 'package:tata/features/treatment_management/application/readmodels/my_medications_overview.dart';
+import 'package:tata/features/treatment_management/application/usecases/get_my_medications_overview.dart';
 import 'package:tata/features/treatment_management/infrastructure/mappers/treatment_mapper.dart';
 import 'package:tata/features/treatment_management/presentation/bloc/my_medications/my_medications_bloc.dart';
 import 'package:tata/features/treatment_management/presentation/screens/my_medications_screen.dart';

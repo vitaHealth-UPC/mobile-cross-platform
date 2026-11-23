@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../shared/presentation/widgets/adult_navigation_bar.dart';
-import '../../application/readmodels/treatment_readmodels.dart';
+import '../../application/readmodels/my_medications_overview.dart';
 import '../bloc/my_medications/my_medications_bloc.dart';
 import '../texts/treatment_texts.dart';
 import 'medication_catalog_screen.dart';

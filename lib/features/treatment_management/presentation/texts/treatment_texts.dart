@@ -11,7 +11,9 @@ String? treatmentErrorText(AppLocalizations text, String? code) =>
       'INVALID_SCHEDULE_TIME' => text.tmErrInvalidTime,
       'INSTRUCTIONS_TOO_LONG' => text.tmErrInstructionsLong,
       'INVALID_REMINDER_DELAY' => text.tmErrReminderDelay,
+      'INVALID_REMINDER_LEAD' => text.tmErrReminderLead,
       'REQUIRED_FIELDS_MISSING' => text.tmErrRequired,
+      'MEDICATION_DETAILS_TOO_LONG' => text.tmMedicationLength,
       'INVALID_TREATMENT_CONFIGURATION' ||
       'REQUEST_VALIDATION_FAILED' => text.tmErrIncomplete,
       'RESOURCE_NOT_FOUND' => text.tmErrNotFound,

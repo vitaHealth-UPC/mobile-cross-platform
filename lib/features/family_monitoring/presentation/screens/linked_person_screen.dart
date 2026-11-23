@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/presentation/theme/tata_colors.dart';
 import '../../../../shared/presentation/widgets/caregiver_tab_bar.dart';
+import '../../../../shared/presentation/widgets/initials_avatar.dart';
 import '../../application/ports/contact_launcher.dart';
 import '../../domain/entities/notes.dart';
+import '../../domain/value_objects/contact_channel.dart';
 import '../bloc/notes/notes_bloc.dart';
 import '../bloc/summary/family_summary_bloc.dart';
+import '../texts/monitoring_texts.dart';
+import '../widgets/monitoring_widgets.dart';
 import 'family_summary_screen.dart' show showFamilyContact;
 
 /// Figma 563:1121, Linked Person: who the followed adult is, how the link
@@ -28,6 +33,7 @@ class LinkedPersonScreen extends StatelessWidget {
     this.adherence,
     this.treatment,
     this.now = DateTime.now,
+    this.onEdit,
   });
 
   final String olderAdultName;
@@ -44,6 +50,7 @@ class LinkedPersonScreen extends StatelessWidget {
   final Widget? adherence;
   final Widget? treatment;
   final DateTime Function() now;
+  final VoidCallback? onEdit;
 
   static const _muted = Color(0xFF5B6475);
 
@@ -68,6 +75,19 @@ class LinkedPersonScreen extends StatelessWidget {
           listener: (context, _) => showFamilyContact(context, launcher),
           child: BlocBuilder<NotesBloc, NotesState>(
             builder: (context, notes) {
+              if (notes.status == NotesStatus.failure) {
+                return Padding(
+                  padding: const EdgeInsets.all(22),
+                  child: MonitoringError(
+                    message: monitoringErrorText(text, notes.errorCode),
+                    onRetry: () =>
+                        context.read<NotesBloc>().add(const NotesRequested()),
+                  ),
+                );
+              }
+              if (notes.status == NotesStatus.loading) {
+                return MonitoringLoading(label: text.fmSummaryLoading);
+              }
               final person = notes.person;
               final name = person?.fullName ?? olderAdultName;
               final age = person?.ageAt(now());
@@ -109,6 +129,11 @@ class LinkedPersonScreen extends StatelessWidget {
                             ),
                           ),
                         ),
+                        if (onEdit != null)
+                          TextButton(
+                            onPressed: onEdit,
+                            child: Text(text.tmEdit),
+                          ),
                       ],
                     ),
                     const SizedBox(height: 18),
@@ -189,10 +214,14 @@ class LinkedPersonScreen extends StatelessWidget {
                     const SizedBox(height: 20),
                     _QuickActions(
                       onCall: () => context.read<FamilySummaryBloc>().add(
-                        const FamilyContactRequested(),
+                        const FamilyContactRequested(
+                          channelType: ContactChannelType.phone,
+                        ),
                       ),
                       onMessage: () => context.read<FamilySummaryBloc>().add(
-                        const FamilyContactRequested(),
+                        const FamilyContactRequested(
+                          channelType: ContactChannelType.whatsapp,
+                        ),
                       ),
                       onMedications: onOpenMedications,
                       onHistory: onOpenHistory,
@@ -219,12 +248,7 @@ class _Avatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final initials = name
-        .split(RegExp(r'\s+'))
-        .where((part) => part.isNotEmpty)
-        .take(2)
-        .map((part) => part[0].toUpperCase())
-        .join();
+    final initials = InitialsAvatar.initialsOf(name);
     return ExcludeSemantics(
       child: Container(
         width: 92,
@@ -275,25 +299,15 @@ class _QuickActions extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = AppLocalizations.of(context);
     final actions = [
-      (Icons.call_outlined, text.lpCall, const Color(0xFFE4F3E8), onCall),
+      ('person_call', text.lpCall, const Color(0xFFE4F3E8), onCall),
+      ('person_message', text.lpMessages, const Color(0xFFEDE7FB), onMessage),
       (
-        Icons.chat_bubble_outline,
-        text.lpMessages,
-        const Color(0xFFEDE7FB),
-        onMessage,
-      ),
-      (
-        Icons.medication_outlined,
+        'person_medication',
         text.lpMedications,
         const Color(0xFFFFEBD8),
         onMedications,
       ),
-      (
-        Icons.bar_chart_rounded,
-        text.lpHistory,
-        const Color(0xFFE2EEF8),
-        onHistory,
-      ),
+      ('person_history', text.lpHistory, const Color(0xFFE2EEF8), onHistory),
     ];
     return Row(
       children: [
@@ -316,7 +330,12 @@ class _QuickActions extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(icon, color: TataColors.primary),
+                        SvgPicture.asset(
+                          'assets/icons/$icon.svg',
+                          width: 24,
+                          height: 24,
+                          excludeFromSemantics: true,
+                        ),
                         const SizedBox(height: 6),
                         Text(
                           label,

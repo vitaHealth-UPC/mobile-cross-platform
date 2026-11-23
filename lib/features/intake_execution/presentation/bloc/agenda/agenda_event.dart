@@ -8,14 +8,8 @@ final class AgendaRequested extends AgendaEvent {
   const AgendaRequested();
 }
 
-/// Selects a local day inside the current week without a new request.
+/// Selects a local day, loading its week only when it differs from the current one.
 final class AgendaDaySelected extends AgendaEvent {
   const AgendaDaySelected(this.day);
   final DateTime day;
-}
-
-/// Moves [weeks] weeks forward (negative values go back) and reloads.
-final class AgendaWeekMoved extends AgendaEvent {
-  const AgendaWeekMoved(this.weeks);
-  final int weeks;
 }

@@ -60,20 +60,29 @@ class LinkPersonScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(
                       vertical: 10,
-                      horizontal: 18,
+                      horizontal: 6,
                     ),
                     decoration: _panel(Colors.white),
-                    child: Row(
+                    child: Stack(
                       children: [
-                        _step('1', text.linkCodeStep, true),
-                        const Expanded(
-                          child: Divider(color: TataColors.border),
+                        const Positioned(
+                          top: 8,
+                          left: 43,
+                          right: 43,
+                          child: Divider(
+                            height: 2,
+                            thickness: 2,
+                            color: TataColors.border,
+                          ),
                         ),
-                        _step('2', text.linkRequestStep, code != null),
-                        const Expanded(
-                          child: Divider(color: TataColors.border),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _step('1', text.linkCodeStep, true),
+                            _step('2', text.linkRequestStep, code != null),
+                            _step('3', text.linkConsentStep, confirmed),
+                          ],
                         ),
-                        _step('3', text.linkConsentStep, confirmed),
                       ],
                     ),
                   ),
@@ -116,11 +125,41 @@ class LinkPersonScreen extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(height: 10),
-                              Text(
-                                confirmed
-                                    ? text.linkConfirmed
-                                    : text.linkPending,
-                                style: TataTypography.subtitle,
+                              Wrap(
+                                spacing: 12,
+                                runSpacing: 8,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                children: [
+                                  Text(
+                                    confirmed
+                                        ? text.linkConfirmed
+                                        : text.linkPending,
+                                    style: TataTypography.subtitle,
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 5,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: confirmed
+                                          ? const Color(0xFFE5F5E8)
+                                          : const Color(0xFFFFF4E2),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      confirmed
+                                          ? text.linkConfirmedBadge
+                                          : text.linkPendingBadge,
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: confirmed
+                                            ? const Color(0xFF296B40)
+                                            : const Color(0xFF855E1F),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -255,31 +294,37 @@ class LinkPersonScreen extends StatelessWidget {
     ],
   );
 
-  Widget _step(String number, String label, bool active) => Column(
-    children: [
-      Stack(
-        alignment: Alignment.center,
-        children: [
-          SvgPicture.asset(
-            'assets/icons/link_step_${active ? 'active' : 'inactive'}.svg',
-            width: 18,
-            height: 18,
-          ),
-          Text(
-            number,
-            style: TextStyle(
-              fontSize: 9,
-              fontWeight: FontWeight.w700,
-              color: active ? Colors.white : TataColors.primary,
+  Widget _step(String number, String label, bool active) => SizedBox(
+    width: 86,
+    child: Column(
+      children: [
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            SvgPicture.asset(
+              'assets/icons/link_step_${active ? 'active' : 'inactive'}.svg',
+              width: 18,
+              height: 18,
             ),
+            Text(
+              number,
+              style: TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w700,
+                color: active ? Colors.white : TataColors.primary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            label,
+            style: const TextStyle(fontSize: 9, color: TataColors.primary),
           ),
-        ],
-      ),
-      const SizedBox(height: 8),
-      Text(
-        label,
-        style: const TextStyle(fontSize: 9, color: TataColors.primary),
-      ),
-    ],
+        ),
+      ],
+    ),
   );
 }

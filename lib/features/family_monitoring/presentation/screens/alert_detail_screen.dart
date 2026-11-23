@@ -3,12 +3,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/presentation/theme/tata_colors.dart';
+import '../../../../shared/presentation/widgets/caregiver_tab_bar.dart';
 import '../../application/ports/contact_launcher.dart';
-import '../../application/readmodels/monitoring_readmodels.dart';
+import '../../domain/value_objects/alert_severity.dart';
 import '../../domain/value_objects/alert_status.dart';
 import '../bloc/alert_detail/alert_detail_bloc.dart';
 import '../bloc/notes/note_composer_cubit.dart';
 import '../texts/monitoring_texts.dart';
+import '../widgets/alert_detail_cards.dart';
 import '../widgets/follow_up_note_dialog.dart';
 import '../widgets/monitoring_widgets.dart';
 
@@ -19,11 +21,15 @@ class AlertDetailScreen extends StatefulWidget {
     required this.launcher,
     this.onBack,
     this.onOpenSummary,
+    this.onOpenProfile,
+    this.onTab,
   });
 
   final ContactLauncher launcher;
   final VoidCallback? onBack;
   final VoidCallback? onOpenSummary;
+  final VoidCallback? onOpenProfile;
+  final ValueChanged<CaregiverTab>? onTab;
 
   @override
   State<AlertDetailScreen> createState() => _AlertDetailScreenState();
@@ -53,53 +59,115 @@ class _AlertDetailScreenState extends State<AlertDetailScreen>
   @override
   Widget build(BuildContext context) {
     final text = AppLocalizations.of(context);
-    return NoteComposerHost(
-      child: Scaffold(
-        backgroundColor: TataColors.background,
-        appBar: AppBar(
+    return BlocListener<NoteComposerCubit, NoteComposerState>(
+      listenWhen: (a, b) => a.failureCode != b.failureCode,
+      listener: (context, state) {
+        final code = state.failureCode;
+        if (code != null && isAccessFailure(code)) {
+          context.read<AlertDetailBloc>().add(AlertDetailAccessLost(code));
+          context.read<NoteComposerCubit>().clear();
+        }
+      },
+      child: NoteComposerHost(
+        showSavedMessage: false,
+        child: Scaffold(
           backgroundColor: TataColors.background,
-          elevation: 0,
-          leading: BackButton(
-            onPressed: widget.onBack ?? () => Navigator.of(context).maybePop(),
-          ),
-          title: Text(text.fmDetailTitle),
-        ),
-        body: SafeArea(
-          child: BlocConsumer<AlertDetailBloc, AlertDetailState>(
-            listenWhen: (a, b) =>
-                a.feedback != b.feedback && b.feedback != null,
-            listener: (context, state) => ScaffoldMessenger.of(context)
-                .showSnackBar(
-                  SnackBar(content: Text(_feedback(text, state.feedback!))),
+          bottomNavigationBar: widget.onTab == null
+              ? null
+              : CaregiverTabBar(
+                  selected: CaregiverTab.alerts,
+                  onSelected: widget.onTab!,
                 ),
-            builder: (context, state) => SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(22, 8, 22, 32),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  switch (state.status) {
-                    AlertDetailStatus.loading => MonitoringLoading(
-                      label: text.fmDetailLoading,
-                    ),
-                    AlertDetailStatus.failure => MonitoringError(
-                      message: monitoringErrorText(
-                        text,
-                        state.errorCode,
-                        detail: true,
-                      ),
-                      onRetry: isAccessFailure(state.errorCode)
-                          ? null
-                          : () => context.read<AlertDetailBloc>().add(
-                              const AlertDetailRequested(),
+          body: SafeArea(
+            child: BlocConsumer<AlertDetailBloc, AlertDetailState>(
+              listenWhen: (a, b) =>
+                  (a.feedback != b.feedback && b.feedback != null) ||
+                  a.errorCode != b.errorCode,
+              listener: (context, state) {
+                if (isAccessFailure(state.errorCode)) {
+                  context.read<NoteComposerCubit>().clear();
+                }
+                if (state.feedback != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(_feedback(text, state.feedback!))),
+                  );
+                }
+              },
+              builder: (context, state) => SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(22, 8, 22, 32),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        BackButton(
+                          onPressed:
+                              widget.onBack ??
+                              () => Navigator.of(context).maybePop(),
+                        ),
+                        Expanded(
+                          child: Text(
+                            state.alert == null
+                                ? text.fmDetailTitle
+                                : alertStatusTitle(text, state.alert!.status),
+                            style: const TextStyle(
+                              fontFamily: 'DMSerifDisplay',
+                              fontSize: 24,
+                              color: TataColors.ink,
                             ),
+                          ),
+                        ),
+                        if (state.alert != null &&
+                            state.alert!.status != AlertStatus.closed)
+                          PopupMenuButton<AlertStatus>(
+                            tooltip: text.fmActionsTitle,
+                            enabled: state.updating == null,
+                            onSelected: (_) => _confirmAlertClose(
+                              context,
+                              context.read<AlertDetailBloc>(),
+                            ),
+                            itemBuilder: (_) => [
+                              PopupMenuItem(
+                                value: AlertStatus.closed,
+                                child: Text(text.fmActionClose),
+                              ),
+                            ],
+                          ),
+                      ],
                     ),
-                    AlertDetailStatus.ready => _Ready(
-                      state: state,
-                      launcher: widget.launcher,
-                      onOpenSummary: widget.onOpenSummary,
-                    ),
-                  },
-                ],
+                    if (state.alert != null)
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: AlertDetailStatusPill(
+                          status: state.alert!.status,
+                        ),
+                      ),
+                    const SizedBox(height: 18),
+                    switch (state.status) {
+                      AlertDetailStatus.loading => MonitoringLoading(
+                        label: text.fmDetailLoading,
+                      ),
+                      AlertDetailStatus.failure => MonitoringError(
+                        message: monitoringErrorText(
+                          text,
+                          state.errorCode,
+                          detail: true,
+                        ),
+                        onRetry: isAccessFailure(state.errorCode)
+                            ? null
+                            : () => context.read<AlertDetailBloc>().add(
+                                const AlertDetailRequested(),
+                              ),
+                      ),
+                      AlertDetailStatus.ready => _Ready(
+                        state: state,
+                        launcher: widget.launcher,
+                        onOpenSummary: widget.onOpenSummary,
+                        onOpenProfile: widget.onOpenProfile,
+                      ),
+                    },
+                  ],
+                ),
               ),
             ),
           ),
@@ -126,11 +194,13 @@ class _Ready extends StatelessWidget {
     required this.state,
     required this.launcher,
     this.onOpenSummary,
+    this.onOpenProfile,
   });
 
   final AlertDetailState state;
   final ContactLauncher launcher;
   final VoidCallback? onOpenSummary;
+  final VoidCallback? onOpenProfile;
 
   @override
   Widget build(BuildContext context) {
@@ -142,13 +212,23 @@ class _Ready extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        MonitoringHeader(title: alertStatusTitle(text, alert.status)),
-        const SizedBox(height: 14),
+        AlertMedicationHero(alert: alert, dose: state.dose),
+        const SizedBox(height: 20),
         if (person != null) ...[
           MonitoringCard(
-            color: TataColors.lavender,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             child: Row(
               children: [
+                CircleAvatar(
+                  radius: 20,
+                  backgroundColor: TataColors.lavender,
+                  child: Text(
+                    person.fullName.trim().isEmpty
+                        ? '?'
+                        : person.fullName.trim().characters.first,
+                  ),
+                ),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -161,55 +241,77 @@ class _Ready extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (onOpenSummary != null)
+                if (onOpenProfile != null || onOpenSummary != null)
                   TextButton(
-                    onPressed: onOpenSummary,
-                    child: Text(text.fmPersonSummary),
+                    onPressed: onOpenProfile ?? onOpenSummary,
+                    child: Text(
+                      onOpenProfile != null
+                          ? text.fmPersonProfile
+                          : text.fmPersonSummary,
+                    ),
                   ),
               ],
             ),
           ),
           const SizedBox(height: 14),
         ],
-        MonitoringCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                text.fmDetailSection,
-                style: const TextStyle(fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 10),
-              _Row(
-                text.fmDetailScheduled,
-                '${alert.medicationName} · '
-                '${monitoringDateTime(locale, alert.scheduledAt)}',
-              ),
-              _Row(
-                text.fmDetailReason,
-                alert.reason.trim().isEmpty
-                    ? text.fmDetailReasonMissing
-                    : alert.reason,
-              ),
-              _Row(text.fmDetailStatus, alertStatusLabel(text, alert.status)),
-              _Row(
-                text.fmDetailOpened,
-                monitoringDateTime(locale, alert.openedAt),
-              ),
-              if (alert.closedAt != null)
-                _Row(
-                  text.fmDetailClosed,
-                  monitoringDateTime(locale, alert.closedAt!),
-                ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 14),
         if (state.history != null && state.history!.isNotEmpty) ...[
-          _Events(events: state.history!, locale: locale),
-          const SizedBox(height: 14),
+          AlertReminderTimeline(events: state.history!),
+          const SizedBox(height: 20),
         ],
-        _Actions(state: state, launcher: launcher, person: person),
+        _Actions(state: state, launcher: launcher),
+        const SizedBox(height: 14),
+        ExpansionTile(
+          tilePadding: EdgeInsets.zero,
+          title: Text(
+            text.fmDetailSection,
+            style: const TextStyle(fontSize: 14),
+          ),
+          children: [
+            MonitoringCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    text.fmDetailSection,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 10),
+                  _Row(
+                    text.fmDetailScheduled,
+                    '${alert.medicationName} · '
+                    '${monitoringDateTime(locale, alert.scheduledAt)}',
+                  ),
+                  _Row(
+                    text.fmDetailReason,
+                    alert.reason.trim().isEmpty
+                        ? text.fmDetailReasonMissing
+                        : alert.reason,
+                  ),
+                  _Row(
+                    text.fmDetailStatus,
+                    alertStatusLabel(text, alert.status),
+                  ),
+                  _Row(text.fmSeverityLabel, switch (alert.severity) {
+                    AlertSeverity.standard => text.fmSeverityStandard,
+                    AlertSeverity.high => text.fmSeverityHigh,
+                    AlertSeverity.critical => text.fmSeverityCritical,
+                    AlertSeverity.unknown => text.fmSeverityUnknownTitle,
+                  }),
+                  _Row(
+                    text.fmDetailOpened,
+                    monitoringDateTime(locale, alert.openedAt),
+                  ),
+                  if (alert.closedAt != null)
+                    _Row(
+                      text.fmDetailClosed,
+                      monitoringDateTime(locale, alert.closedAt!),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -236,50 +338,11 @@ class _Row extends StatelessWidget {
   );
 }
 
-class _Events extends StatelessWidget {
-  const _Events({required this.events, required this.locale});
-  final List<RecordedAlertEvent> events;
-  final String locale;
-
-  @override
-  Widget build(BuildContext context) {
-    final text = AppLocalizations.of(context);
-    String label(RecordedAlertEventType type) => switch (type) {
-      RecordedAlertEventType.intakeScheduled => text.fmEventScheduled,
-      RecordedAlertEventType.reinforcedReminderSent => text.fmEventReinforced,
-      RecordedAlertEventType.alertGenerated => text.fmEventOpened,
-      RecordedAlertEventType.alertClosed => text.fmEventClosed,
-    };
-    return MonitoringCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            text.fmEventsTitle,
-            style: const TextStyle(fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 8),
-          for (final event in events)
-            _Row(
-              label(event.type),
-              monitoringDateTime(locale, event.occurredAt),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
 class _Actions extends StatelessWidget {
-  const _Actions({
-    required this.state,
-    required this.launcher,
-    required this.person,
-  });
+  const _Actions({required this.state, required this.launcher});
 
   final AlertDetailState state;
   final ContactLauncher launcher;
-  final MonitoredPerson? person;
 
   @override
   Widget build(BuildContext context) {
@@ -289,20 +352,25 @@ class _Actions extends StatelessWidget {
     final busy = state.updating != null;
     final contact = state.contact;
     final firstName = contact.option?.firstName;
-    return MonitoringCard(
+    return AlertDetailSurface(
+      colors: const [Color(0xFFFFF5DF), Color(0xFFFBEAC9)],
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             text.fmActionsTitle,
-            style: const TextStyle(fontWeight: FontWeight.w700),
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 4),
           Text(
             firstName == null
                 ? text.fmActionsSubtitle
                 : text.fmActionsSubtitleNamed(firstName),
-            style: const TextStyle(color: TataColors.muted),
+            style: const TextStyle(
+              fontSize: 11,
+              height: 1.4,
+              color: Color(0xFF5B6475),
+            ),
           ),
           const SizedBox(height: 12),
           if (contact.loading)
@@ -313,9 +381,28 @@ class _Actions extends StatelessWidget {
               child: Text(text.fmContactRetry),
             )
           else if (contact.option?.channel == null)
-            Text(text.fmContactUnavailable)
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: null,
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size(0, 48),
+                  disabledBackgroundColor: const Color(0xFFEBEDF2),
+                  disabledForegroundColor: const Color(0xFF575E6E),
+                  shape: const StadiumBorder(),
+                ),
+                child: Text(text.fmContactUnavailable),
+              ),
+            )
           else
-            ContactChannelView(option: contact.option!, launcher: launcher),
+            ContactChannelView(
+              option: contact.option!,
+              launcher: launcher,
+              actionLabel: firstName == null
+                  ? text.fmContactAction
+                  : text.fmContactActionNamed(firstName),
+              showChannel: false,
+            ),
           const SizedBox(height: 12),
           if (alert.status == AlertStatus.closed)
             Text(
@@ -323,63 +410,118 @@ class _Actions extends StatelessWidget {
               style: const TextStyle(color: TataColors.muted),
             )
           else ...[
-            MonitoringPrimaryButton(
-              label: state.updating == AlertStatus.attended
-                  ? text.fmActionSaving
-                  : alert.status == AlertStatus.attended
-                  ? text.fmActionAttended
-                  : text.fmActionAttend,
-              onPressed: busy || alert.status == AlertStatus.attended
-                  ? null
-                  : () => bloc.add(
-                      const AlertStatusChangeRequested(AlertStatus.attended),
-                    ),
-            ),
-            const SizedBox(height: 10),
             SizedBox(
               width: double.infinity,
-              height: 48,
               child: OutlinedButton(
-                onPressed: busy ? null : () => _confirmClose(context, bloc),
+                style: OutlinedButton.styleFrom(
+                  backgroundColor: TataColors.lavender,
+                  disabledBackgroundColor: alert.status == AlertStatus.attended
+                      ? const Color(0xFFE5F4E8)
+                      : TataColors.lavender,
+                  disabledForegroundColor: alert.status == AlertStatus.attended
+                      ? const Color(0xFF296B40)
+                      : const Color(0xFF5B6475),
+                  minimumSize: const Size(0, 48),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  side: BorderSide(
+                    color: alert.status == AlertStatus.attended
+                        ? const Color(0xFF95C4A3)
+                        : const Color(0xFFCFC4ED),
+                  ),
+                  shape: const StadiumBorder(),
+                ),
+                onPressed: busy || alert.status == AlertStatus.attended
+                    ? null
+                    : () => bloc.add(
+                        const AlertStatusChangeRequested(AlertStatus.attended),
+                      ),
                 child: Text(
-                  state.updating == AlertStatus.closed
+                  state.updating == AlertStatus.attended
                       ? text.fmActionSaving
-                      : text.fmActionClose,
+                      : alert.status == AlertStatus.attended
+                      ? text.fmActionAttended
+                      : text.fmActionAttend,
                 ),
               ),
             ),
           ],
           const SizedBox(height: 10),
-          TextButton(
-            onPressed: () => context.read<NoteComposerCubit>().open(),
-            child: Text(text.fmNoteAddFollowUp),
-          ),
+          const _FollowUpNoteAction(),
         ],
       ),
     );
   }
+}
 
-  Future<void> _confirmClose(BuildContext context, AlertDetailBloc bloc) async {
+/// Keeps the acknowledged receipt visible without removing the next-note action.
+class _FollowUpNoteAction extends StatelessWidget {
+  const _FollowUpNoteAction();
+
+  @override
+  Widget build(BuildContext context) {
     final text = AppLocalizations.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialog) => AlertDialog(
-        title: Text(text.fmCloseConfirmTitle),
-        content: Text(text.fmCloseConfirmMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialog).pop(false),
-            child: Text(text.fmCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialog).pop(true),
-            child: Text(text.fmActionClose),
-          ),
-        ],
-      ),
+    final cubit = context.read<NoteComposerCubit>();
+    return BlocBuilder<NoteComposerCubit, NoteComposerState>(
+      builder: (context, state) {
+        if (state.saved && state.note != null) {
+          return Row(
+            children: [
+              Semantics(
+                key: const Key('follow-up-note-saved'),
+                liveRegion: true,
+                child: Text(
+                  text.fmNoteSaved,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF2E754A),
+                  ),
+                ),
+              ),
+              const Spacer(),
+              IconButton(
+                onPressed: cubit.open,
+                tooltip: text.fmNoteAddFollowUp,
+                icon: const Icon(Icons.add, size: 20),
+              ),
+            ],
+          );
+        }
+        return TextButton(
+          onPressed: state.saving ? null : cubit.open,
+          child: Text(text.fmNoteAddFollowUp),
+        );
+      },
     );
-    if (confirmed == true) {
-      bloc.add(const AlertStatusChangeRequested(AlertStatus.closed));
-    }
+  }
+}
+
+Future<void> _confirmAlertClose(
+  BuildContext context,
+  AlertDetailBloc bloc,
+) async {
+  final text = AppLocalizations.of(context);
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (dialog) => AlertDialog(
+      title: Text(text.fmCloseConfirmTitle),
+      content: Text(text.fmCloseConfirmMessage),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialog).pop(false),
+          child: Text(text.fmCancel),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(dialog).pop(true),
+          child: Text(text.fmActionClose),
+        ),
+      ],
+    ),
+  );
+  if (confirmed == true && context.mounted && !bloc.isClosed) {
+    bloc.add(const AlertStatusChangeRequested(AlertStatus.closed));
   }
 }

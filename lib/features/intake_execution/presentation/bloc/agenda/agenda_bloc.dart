@@ -14,20 +14,6 @@ final class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
     : super(_initial(clock())) {
     on<AgendaRequested>((event, emit) => _load(emit, state));
     on<AgendaDaySelected>(_select);
-    on<AgendaWeekMoved>(
-      (event, emit) => _load(
-        emit,
-        state.copyWith(
-          week: state.week.shift(event.weeks),
-          selectedDay: DateTime(
-            state.selectedDay.year,
-            state.selectedDay.month,
-            state.selectedDay.day + 7 * event.weeks,
-          ),
-          intakes: const [],
-        ),
-      ),
-    );
   }
 
   final GetWeekAgenda _agenda;
@@ -38,9 +24,23 @@ final class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
     return AgendaState(week: AgendaWeek.containing(today), selectedDay: today);
   }
 
-  void _select(AgendaDaySelected event, Emitter<AgendaState> emit) {
+  Future<void> _select(
+    AgendaDaySelected event,
+    Emitter<AgendaState> emit,
+  ) async {
     final day = DateTime(event.day.year, event.day.month, event.day.day);
-    if (state.week.contains(day)) emit(state.copyWith(selectedDay: day));
+    if (state.week.contains(day)) {
+      emit(state.copyWith(selectedDay: day));
+    } else {
+      await _load(
+        emit,
+        state.copyWith(
+          week: AgendaWeek.containing(day),
+          selectedDay: day,
+          intakes: const [],
+        ),
+      );
+    }
   }
 
   Future<void> _load(Emitter<AgendaState> emit, AgendaState target) async {

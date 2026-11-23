@@ -1,7 +1,9 @@
-import 'package:tata/features/treatment_management/application/readmodels/treatment_readmodels.dart';
+import 'package:tata/features/treatment_management/application/readmodels/treatment_detail.dart';
 import 'package:tata/features/treatment_management/domain/entities/medication.dart';
 import 'package:tata/features/treatment_management/domain/entities/treatment.dart';
-import 'package:tata/features/treatment_management/domain/repositories/treatment_repositories.dart';
+import 'package:tata/features/treatment_management/domain/repositories/medication_management_repository.dart';
+import 'package:tata/features/treatment_management/domain/repositories/treatment_lifecycle_repository.dart';
+import 'package:tata/features/treatment_management/domain/repositories/treatment_repository.dart';
 import 'package:tata/features/treatment_management/domain/value_objects/treatment_regimen.dart';
 import 'package:tata/features/treatment_management/domain/value_objects/treatment_status.dart';
 import 'package:tata/shared/common/result/app_result.dart';
@@ -105,10 +107,15 @@ final class FakeBackend
   }
 
   @override
-  Future<AppResult<Medication>> deactivate(String medicationId) async =>
-      failure != null
-      ? _fail()
-      : AppSuccess(_availability(medicationId, false));
+  Future<AppResult<Medication>> deactivate(String medicationId) async {
+    if (failure != null) return _fail();
+    final medication = _availability(medicationId, false);
+    if (stored?.medicationId == medicationId &&
+        stored?.status == TreatmentStatus.active) {
+      _treatment(TreatmentStatus.paused);
+    }
+    return AppSuccess(medication);
+  }
 
   @override
   Future<AppResult<Medication>> reactivate(String medicationId) async =>

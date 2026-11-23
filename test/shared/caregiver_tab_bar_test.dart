@@ -17,6 +17,7 @@ void main() {
     double bottomInset = 0,
     CaregiverTab selected = CaregiverTab.home,
     ValueChanged<CaregiverTab>? onSelected,
+    double scale = 1,
   }) async {
     tester.view
       ..physicalSize = const Size(1179, 2649)
@@ -26,6 +27,7 @@ void main() {
       MediaQuery(
         data: MediaQueryData(
           size: const Size(393, 883),
+          textScaler: TextScaler.linear(scale),
           padding: EdgeInsets.only(bottom: bottomInset),
         ),
         child: MaterialApp(
@@ -65,6 +67,21 @@ void main() {
     expect(tester.getSize(barBox()).height, closeTo(68, 0.1));
     expect(tester.getTopLeft(barBox()).dx, closeTo(14, 0.1));
     expect(gapBelowBar(tester), closeTo(16, 0.1));
+  });
+
+  testWidgets('large labels grow the bar and remain inside its surface', (
+    tester,
+  ) async {
+    CaregiverTab? tapped;
+    await pumpBar(tester, scale: 1.95, onSelected: (tab) => tapped = tab);
+    expect(tester.getSize(barBox()).height, greaterThan(68));
+    expect(
+      tester.getBottomLeft(find.text('Persona')).dy,
+      lessThanOrEqualTo(tester.getBottomLeft(barBox()).dy),
+    );
+    await tester.tap(find.text('Persona'));
+    expect(tapped, CaregiverTab.person);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('on gesture navigation it stays above the system inset', (

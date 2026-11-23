@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
@@ -16,13 +17,13 @@ class AgendaScreen extends StatelessWidget {
     required this.state,
     required this.today,
     required this.onSelectDay,
-    required this.onMoveWeek,
     required this.onRetry,
     required this.onOpenDose,
     this.errorText,
     this.onBack,
     this.onMore,
     this.onMedications,
+    this.onNotes,
   });
 
   final AgendaState state;
@@ -30,22 +31,32 @@ class AgendaScreen extends StatelessWidget {
   /// Local date used to mark the current day.
   final DateTime today;
   final ValueChanged<DateTime> onSelectDay;
-  final ValueChanged<int> onMoveWeek;
   final Future<void> Function() onRetry;
   final ValueChanged<String> onOpenDose;
   final String? errorText;
   final VoidCallback? onBack;
   final VoidCallback? onMore;
   final VoidCallback? onMedications;
+  final VoidCallback? onNotes;
 
   @override
   Widget build(BuildContext context) {
     final text = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context).toLanguageTag();
     final days = state.week.days;
+    final includeYear =
+        days.first.year != today.year || days.last.year != today.year;
+    final fromFormat = includeYear
+        ? DateFormat.yMMMd(locale)
+        : days.first.month == days.last.month
+        ? DateFormat.d(locale)
+        : DateFormat.MMMMd(locale);
+    final toFormat = includeYear
+        ? DateFormat.yMMMd(locale)
+        : DateFormat.MMMMd(locale);
     final range = text.agendaWeekRange(
-      DateFormat.d(locale).format(days.first),
-      DateFormat.MMMMd(locale).format(days.last),
+      fromFormat.format(days.first),
+      toFormat.format(days.last),
     );
     return Scaffold(
       bottomNavigationBar: AdultNavigationBar(
@@ -53,54 +64,66 @@ class AgendaScreen extends StatelessWidget {
         onHome: onBack,
         onMore: onMore,
         onMedications: onMedications,
+        onNotes: onNotes,
       ),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: onRetry,
           child: ListView(
             key: const PageStorageKey('adult-agenda'),
+            physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(18, 28, 22, 24),
             children: [
               Row(
                 children: [
-                  if (onBack != null)
-                    IconButton(
-                      onPressed: onBack,
-                      tooltip: text.back,
-                      icon: const Icon(Icons.chevron_left),
-                    ),
                   Expanded(
-                    child: Semantics(
-                      header: true,
-                      child: Text(
-                        text.agendaTitle,
-                        style: TataTypography.heading,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Semantics(
+                          header: true,
+                          child: Text(
+                            text.agendaTitle,
+                            style: TataTypography.heading.copyWith(
+                              fontSize: 29,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          range,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: TataColors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  DecoratedBox(
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0x141A2138),
+                          blurRadius: 18,
+                          offset: Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: IconButton(
+                      tooltip: text.agendaChooseDate,
+                      onPressed: () => _chooseDate(context),
+                      icon: SvgPicture.asset(
+                        'assets/icons/agenda_calendar.svg',
+                        width: 22,
+                        height: 22,
+                        excludeFromSemantics: true,
                       ),
                     ),
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      range,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: TataColors.primary,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => onMoveWeek(-1),
-                    tooltip: text.agendaPreviousWeek,
-                    icon: const Icon(Icons.chevron_left),
-                  ),
-                  IconButton(
-                    onPressed: () => onMoveWeek(1),
-                    tooltip: text.agendaNextWeek,
-                    icon: const Icon(Icons.chevron_right),
                   ),
                 ],
               ),
@@ -121,12 +144,27 @@ class AgendaScreen extends StatelessWidget {
               const SizedBox(height: 24),
               ..._body(context, text),
               const SizedBox(height: 16),
-              _Tip(title: text.homeTipTitle, body: text.agendaTipBody),
+              Padding(
+                padding: const EdgeInsets.only(left: 74),
+                child: _Tip(title: text.homeTipTitle, body: text.agendaTipBody),
+              ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _chooseDate(BuildContext context) async {
+    final selected = await showDatePicker(
+      context: context,
+      initialDate: state.selectedDay,
+      currentDate: today,
+      firstDate: DateTime(1),
+      lastDate: DateTime(9999, 12, 31),
+      helpText: AppLocalizations.of(context).agendaChooseDate,
+    );
+    if (selected != null && context.mounted) onSelectDay(selected);
   }
 
   List<Widget> _body(BuildContext context, AppLocalizations text) {
@@ -201,12 +239,12 @@ class _DayCell extends StatelessWidget {
             children: [
               Text(
                 letter,
-                style: const TextStyle(fontSize: 12, color: TataColors.muted),
+                style: const TextStyle(fontSize: 10, color: Color(0xFF5B6475)),
               ),
               const SizedBox(height: 8),
               Container(
-                width: 40,
-                height: 40,
+                width: 36,
+                height: 36,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: selected ? TataColors.primary : Colors.transparent,
@@ -218,7 +256,7 @@ class _DayCell extends StatelessWidget {
                 child: Text(
                   '${day.day}',
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: selected ? Colors.white : TataColors.ink,
                   ),
@@ -242,6 +280,10 @@ class _AgendaEntry extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = AppLocalizations.of(context);
     final time = intakeTime(context, intake.scheduledAt);
+    final hour = intake.scheduledAt.toLocal().hour;
+    final periodAsset = hour >= 18 || hour < 5
+        ? 'agenda_night'
+        : 'agenda_morning';
     return Padding(
       padding: const EdgeInsets.only(bottom: 24),
       child: Semantics(
@@ -285,8 +327,11 @@ class _AgendaEntry extends StatelessWidget {
                           offset: const Offset(17, 0),
                           child: ColoredBox(
                             color: TataColors.background,
-                            child: IntakePeriodIcon(
-                              instant: intake.scheduledAt,
+                            child: SvgPicture.asset(
+                              'assets/icons/$periodAsset.svg',
+                              width: 22,
+                              height: 22,
+                              excludeFromSemantics: true,
                             ),
                           ),
                         ),
@@ -296,57 +341,63 @@ class _AgendaEntry extends StatelessWidget {
                 ),
                 Expanded(
                   child: Material(
-                    color: intakeCardColor(intake.scheduledAt),
+                    color: _colors.first,
                     elevation: 2,
                     shadowColor: const Color(0x181A2138),
                     borderRadius: BorderRadius.circular(18),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(18),
-                      onTap: onTap,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    intake.medicationName,
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w700,
-                                      color: TataColors.ink,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    intake.dose,
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      color: TataColors.ink,
-                                    ),
-                                  ),
-                                  if (intake.instructions case final notes?
-                                      when notes.trim().isNotEmpty) ...[
-                                    const SizedBox(height: 6),
+                    child: Ink(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(colors: _colors),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(18),
+                        onTap: onTap,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
                                     Text(
-                                      notes,
+                                      intake.medicationName,
                                       style: const TextStyle(
-                                        fontSize: 13,
-                                        color: TataColors.muted,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: TataColors.ink,
                                       ),
                                     ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      intake.dose,
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        color: TataColors.ink,
+                                      ),
+                                    ),
+                                    if (intake.instructions case final notes?
+                                        when notes.trim().isNotEmpty) ...[
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        notes,
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          color: TataColors.ink,
+                                        ),
+                                      ),
+                                    ],
                                   ],
-                                ],
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 10),
-                            IntakeStatusMark(
-                              status: intake.status,
-                              queued: intake.queued,
-                            ),
-                          ],
+                              const SizedBox(width: 10),
+                              IntakeStatusMark(
+                                status: intake.status,
+                                queued: intake.queued,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -358,6 +409,17 @@ class _AgendaEntry extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  List<Color> get _colors {
+    final hour = intake.scheduledAt.toLocal().hour;
+    if (hour >= 21 || hour < 5) {
+      return const [Color(0xFFEEF6FC), Color(0xFFE2EEF9)];
+    }
+    if (hour >= 12 && hour < 18) {
+      return const [Color(0xFFFFF5E3), Color(0xFFFBE9C7)];
+    }
+    return const [Color(0xFFF1ECFF), Color(0xFFE7DFFC)];
   }
 }
 
@@ -417,13 +479,20 @@ class _Tip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFE8F2FC),
+        gradient: const LinearGradient(
+          colors: [Color(0xFFEEF6FC), Color(0xFFE2EEF9)],
+        ),
         borderRadius: BorderRadius.circular(18),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.notifications_none, color: TataColors.primary),
+          SvgPicture.asset(
+            'assets/icons/agenda_tip.svg',
+            width: 22,
+            height: 22,
+            excludeFromSemantics: true,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -432,7 +501,7 @@ class _Tip extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
-                    fontSize: 13,
+                    fontSize: 11,
                     fontWeight: FontWeight.w600,
                     color: TataColors.ink,
                   ),
@@ -440,7 +509,7 @@ class _Tip extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   body,
-                  style: const TextStyle(fontSize: 14, color: TataColors.ink),
+                  style: const TextStyle(fontSize: 12, color: TataColors.ink),
                 ),
               ],
             ),

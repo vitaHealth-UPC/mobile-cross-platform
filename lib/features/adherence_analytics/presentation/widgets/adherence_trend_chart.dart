@@ -8,11 +8,10 @@ import 'adherence_palette.dart';
 
 /// Geometry of the "Chart" card of the Figma history frame (349 x 246).
 abstract final class _Plot {
-  static const height = 246.0;
   static const left = 52.0;
   static const rightInset = 25.0;
-  static const top = 62.0;
-  static const bottom = 206.0;
+  static const plotHeight = 144.0;
+  static const axisSpace = 40.0;
 
   /// Points stop short of the grid end, as drawn in Figma (x = 305 of 324).
   static const pointsEndInset = 19.0;
@@ -33,8 +32,9 @@ class AdherenceTrendCard extends StatelessWidget {
     final text = AppLocalizations.of(context);
     final latest = points.last;
     final latestLabel = adherenceDateLabel(context, latest.date);
+    final largeText = MediaQuery.textScalerOf(context).scale(9) > 12;
+    final labelWidth = largeText ? 60.0 : 40.0;
     return Container(
-      height: _Plot.height,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
@@ -47,78 +47,99 @@ class AdherenceTrendCard extends StatelessWidget {
           latestLabel,
         ),
         excludeSemantics: true,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final width = constraints.maxWidth;
-            final xs = _positions(points, width);
-            return Stack(
-              children: [
-                Positioned(
-                  left: 16,
-                  top: 14,
-                  child: Row(
-                    children: [
-                      Text(
-                        text.adherenceTrendTitle,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: TataColors.ink,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 25, 0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            text.adherenceTrendTitle,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: TataColors.ink,
+                            ),
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 6),
-                      Tooltip(
-                        message: text.adherenceTrendInfo,
-                        triggerMode: TooltipTriggerMode.tap,
-                        child: const Icon(
-                          Icons.info_outline,
-                          size: 14,
-                          color: TataColors.ink,
+                        const SizedBox(width: 6),
+                        Tooltip(
+                          message: text.adherenceTrendInfo,
+                          triggerMode: TooltipTriggerMode.tap,
+                          child: const Icon(
+                            Icons.info_outline,
+                            size: 14,
+                            color: TataColors.ink,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                Positioned(
-                  top: 17,
-                  right: 29,
-                  child: Text(
-                    '${latest.adherencePercent}%\n$latestLabel',
-                    textAlign: TextAlign.right,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      height: 1.2,
-                      fontWeight: FontWeight.w500,
-                      color: TataColors.deepNavy,
+                      ],
                     ),
                   ),
-                ),
-                for (final percent in const [100, 75, 50, 25, 0])
-                  Positioned(
-                    left: 10,
-                    top: _y(percent) - 8,
-                    child: Text('$percent%', style: _axisStyle),
-                  ),
-                Positioned.fill(
-                  child: CustomPaint(
-                    painter: _TrendPainter(points: points, xs: xs),
-                  ),
-                ),
-                for (final index in _labelIndexes(points.length))
-                  Positioned(
-                    left: xs[index] - 20,
-                    width: 40,
-                    top: 214,
+                  const SizedBox(width: 12),
+                  SizedBox(
+                    width: largeText ? 90 : 65,
                     child: Text(
-                      adherenceDateLabel(context, points[index].date),
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      style: _axisStyle,
+                      '${latest.adherencePercent}%\n$latestLabel',
+                      textAlign: TextAlign.right,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        height: 1.2,
+                        fontWeight: FontWeight.w500,
+                        color: TataColors.deepNavy,
+                      ),
                     ),
                   ),
-              ],
-            );
-          },
+                ],
+              ),
+            ),
+            const SizedBox(height: 22),
+            SizedBox(
+              height: _Plot.plotHeight + _Plot.axisSpace,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final xs = _positions(points, constraints.maxWidth);
+                  return Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      for (final percent in const [100, 75, 50, 25, 0])
+                        Positioned(
+                          left: 10,
+                          top: _y(percent) - 8,
+                          child: Text('$percent%', style: _axisStyle),
+                        ),
+                      Positioned.fill(
+                        child: CustomPaint(
+                          painter: _TrendPainter(points: points, xs: xs),
+                        ),
+                      ),
+                      for (final index in _labelIndexes(
+                        points.length,
+                        maxLabels: largeText ? 3 : _Plot.maxAxisLabels,
+                      ))
+                        Positioned(
+                          left: xs[index] - labelWidth / 2,
+                          width: labelWidth,
+                          top: _Plot.plotHeight + 8,
+                          child: Text(
+                            adherenceDateLabel(context, points[index].date),
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            style: _axisStyle,
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -129,8 +150,7 @@ class AdherenceTrendCard extends StatelessWidget {
     color: AdherencePalette.chartLabel,
   );
 
-  static double _y(num percent) =>
-      _Plot.bottom - percent / 100 * (_Plot.bottom - _Plot.top);
+  static double _y(num percent) => _Plot.plotHeight * (1 - percent / 100);
 
   /// Horizontal centre of each point, proportional to its date.
   static List<double> _positions(List<AdherenceTrendPoint> points, double w) {
@@ -148,11 +168,14 @@ class AdherenceTrendCard extends StatelessWidget {
   }
 
   /// At most five evenly spread points carry an axis label.
-  static List<int> _labelIndexes(int count) {
-    if (count <= _Plot.maxAxisLabels) return List.generate(count, (i) => i);
+  static List<int> _labelIndexes(
+    int count, {
+    int maxLabels = _Plot.maxAxisLabels,
+  }) {
+    if (count <= maxLabels) return List.generate(count, (i) => i);
     return {
-      for (var i = 0; i < _Plot.maxAxisLabels; i++)
-        (i * (count - 1) / (_Plot.maxAxisLabels - 1)).round(),
+      for (var i = 0; i < maxLabels; i++)
+        (i * (count - 1) / (maxLabels - 1)).round(),
     }.toList();
   }
 }
@@ -182,21 +205,24 @@ class _TrendPainter extends CustomPainter {
       line.lineTo(offset.dx, offset.dy);
     }
     final area = Path.from(line)
-      ..lineTo(offsets.last.dx, _Plot.bottom)
-      ..lineTo(offsets.first.dx, _Plot.bottom)
+      ..lineTo(offsets.last.dx, _Plot.plotHeight)
+      ..lineTo(offsets.first.dx, _Plot.plotHeight)
       ..close();
     final highest = offsets.map((o) => o.dy).reduce((a, b) => a < b ? a : b);
     canvas.drawPath(
       area,
       Paint()
-        ..shader = const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            AdherencePalette.chartAreaTop,
-            AdherencePalette.chartAreaBottom,
-          ],
-        ).createShader(Rect.fromLTRB(_Plot.left, highest, right, _Plot.bottom)),
+        ..shader =
+            const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                AdherencePalette.chartAreaTop,
+                AdherencePalette.chartAreaBottom,
+              ],
+            ).createShader(
+              Rect.fromLTRB(_Plot.left, highest, right, _Plot.plotHeight),
+            ),
     );
     if (offsets.length > 1) {
       canvas.drawPath(

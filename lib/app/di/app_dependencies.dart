@@ -1,8 +1,17 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
-import '../../features/accessibility_preferences/application/ports/preferences_ports.dart';
-import '../../features/accessibility_preferences/application/usecases/preferences_usecases.dart';
+import '../../features/accessibility_preferences/application/ports/accessibility_local_store.dart';
+import '../../features/accessibility_preferences/application/ports/application_language_store.dart';
+import '../../features/accessibility_preferences/application/ports/user_preferences_repository.dart';
+import '../../features/accessibility_preferences/application/usecases/change_application_language.dart';
+import '../../features/accessibility_preferences/application/usecases/get_notification_preferences.dart';
+import '../../features/accessibility_preferences/application/usecases/observe_accessibility.dart';
+import '../../features/accessibility_preferences/application/usecases/observe_application_language.dart';
+import '../../features/accessibility_preferences/application/usecases/sync_user_preferences.dart';
+import '../../features/accessibility_preferences/application/usecases/update_accessibility.dart';
+import '../../features/accessibility_preferences/application/usecases/update_notification_policy.dart';
+import '../../features/accessibility_preferences/application/usecases/update_notification_preferences.dart';
 import '../../features/accessibility_preferences/domain/value_objects/accessibility_preferences.dart';
 import '../../features/accessibility_preferences/infrastructure/local/shared_preferences_stores.dart';
 import '../../features/accessibility_preferences/infrastructure/remote/preferences_api.dart';
@@ -25,16 +34,24 @@ import '../../features/care_link/application/usecases/accept_care_link.dart';
 import '../../features/care_link/application/usecases/generate_linking_code.dart';
 import '../../features/care_link/application/usecases/register_consent.dart';
 import '../../features/care_link/application/usecases/register_older_adult.dart';
+import '../../features/care_link/application/usecases/update_caregiver_profile.dart';
 import '../../features/care_link/application/usecases/withdraw_consent.dart';
 import '../../features/care_link/infrastructure/remote/care_link_api.dart';
 import '../../features/care_link/infrastructure/repositories/remote_adult_profile_reader.dart';
 import '../../features/care_link/infrastructure/repositories/remote_care_link_consent.dart';
 import '../../features/care_link/infrastructure/repositories/remote_care_link_repository.dart';
 import '../../features/care_link/presentation/bloc/consent/consent_bloc.dart';
+import '../../features/care_link/presentation/bloc/profile_editor/profile_editor_cubit.dart';
 import '../../features/care_link/presentation/bloc/profiles/profiles_bloc.dart';
-import '../../features/family_monitoring/application/usecases/alert_usecases.dart';
-import '../../features/family_monitoring/application/usecases/note_usecases.dart';
-import '../../features/family_monitoring/application/usecases/summary_usecases.dart';
+import '../../features/family_monitoring/application/usecases/create_personal_note.dart';
+import '../../features/family_monitoring/application/usecases/get_alert_detail.dart';
+import '../../features/family_monitoring/application/usecases/get_alert_timeline.dart';
+import '../../features/family_monitoring/application/usecases/get_contact_option.dart';
+import '../../features/family_monitoring/application/usecases/get_family_summary.dart';
+import '../../features/family_monitoring/application/usecases/get_follow_up_notes.dart';
+import '../../features/family_monitoring/application/usecases/get_personal_notes.dart';
+import '../../features/family_monitoring/application/usecases/register_follow_up_note.dart';
+import '../../features/family_monitoring/application/usecases/update_alert_status.dart';
 import '../../features/family_monitoring/infrastructure/launcher/url_contact_launcher.dart';
 import '../../features/family_monitoring/infrastructure/remote/family_monitoring_api.dart';
 import '../../features/family_monitoring/infrastructure/repositories/remote_alerts_repository.dart';
@@ -51,7 +68,11 @@ import '../../features/family_monitoring/presentation/bloc/summary/family_summar
 import '../../features/family_monitoring/presentation/navigation/family_monitoring_navigation.dart';
 import '../../features/identity_subscription/application/ports/remembered_adult_store.dart';
 import '../../features/identity_subscription/application/readmodels/remembered_adult.dart';
+import '../../features/identity_subscription/application/usecases/apply_chosen_plan.dart';
+import '../../features/identity_subscription/application/usecases/change_subscription_plan.dart';
 import '../../features/identity_subscription/application/usecases/complete_password_recovery.dart';
+import '../../features/identity_subscription/application/usecases/get_public_plans.dart';
+import '../../features/identity_subscription/application/usecases/get_subscription_overview.dart';
 import '../../features/identity_subscription/application/usecases/register_caregiver.dart';
 import '../../features/identity_subscription/application/usecases/register_pin.dart';
 import '../../features/identity_subscription/application/usecases/request_password_recovery.dart';
@@ -59,8 +80,8 @@ import '../../features/identity_subscription/application/usecases/request_verifi
 import '../../features/identity_subscription/application/usecases/restore_session.dart';
 import '../../features/identity_subscription/application/usecases/sign_in.dart';
 import '../../features/identity_subscription/application/usecases/sign_in_with_pin.dart';
+import '../../features/identity_subscription/application/usecases/sign_in_with_social.dart';
 import '../../features/identity_subscription/application/usecases/sign_out.dart';
-import '../../features/identity_subscription/application/usecases/subscription_usecases.dart';
 import '../../features/identity_subscription/application/usecases/verify_email.dart';
 import '../../features/identity_subscription/infrastructure/launcher/url_destination_launcher.dart';
 import '../../features/identity_subscription/infrastructure/local/secure_remembered_adult_store.dart';
@@ -74,7 +95,9 @@ import '../../features/identity_subscription/infrastructure/repositories/remote_
 import '../../features/identity_subscription/infrastructure/repositories/remote_pin_access.dart';
 import '../../features/identity_subscription/infrastructure/repositories/remote_public_plan_catalog.dart';
 import '../../features/identity_subscription/infrastructure/repositories/remote_session_repository.dart';
+import '../../features/identity_subscription/infrastructure/repositories/remote_social_session_repository.dart';
 import '../../features/identity_subscription/infrastructure/repositories/remote_subscription_repository.dart';
+import '../../features/identity_subscription/infrastructure/social/firebase_social_credentials.dart';
 import '../../features/identity_subscription/presentation/bloc/access/access_bloc.dart';
 import '../../features/identity_subscription/presentation/bloc/pin/pin_bloc.dart';
 import '../../features/identity_subscription/presentation/bloc/plan_choice/plan_choice_cubit.dart';
@@ -85,7 +108,7 @@ import '../../features/intake_execution/application/ports/intake_confirmation.da
 import '../../features/intake_execution/application/ports/intake_local_store.dart';
 import '../../features/intake_execution/application/ports/intake_reader.dart';
 import '../../features/intake_execution/application/ports/intake_sync.dart';
-import '../../features/intake_execution/application/ports/voice_confirmation.dart';
+import '../../features/intake_execution/application/ports/phrase_speaker.dart';
 import '../../features/intake_execution/application/services/intake_reminder_sync.dart';
 import '../../features/intake_execution/application/usecases/confirm_intake.dart';
 import '../../features/intake_execution/application/usecases/confirm_intake_by_voice.dart';
@@ -109,7 +132,9 @@ import '../../features/intake_execution/presentation/bloc/agenda/agenda_bloc.dar
 import '../../features/intake_execution/presentation/bloc/dose/dose_bloc.dart';
 import '../../features/intake_execution/presentation/bloc/home/home_bloc.dart';
 import '../../features/intake_execution/presentation/bloc/voice/voice_bloc.dart';
-import '../../features/inventory_replenishment/application/usecases/inventory_usecases.dart';
+import '../../features/inventory_replenishment/application/usecases/get_inventory.dart';
+import '../../features/inventory_replenishment/application/usecases/register_initial_inventory.dart';
+import '../../features/inventory_replenishment/application/usecases/register_replenishment.dart';
 import '../../features/inventory_replenishment/infrastructure/remote/inventory_api.dart';
 import '../../features/inventory_replenishment/infrastructure/repositories/remote_inventory_repository.dart';
 import '../../features/inventory_replenishment/presentation/bloc/inventory_bloc.dart';
@@ -117,15 +142,29 @@ import '../../features/omission_escalation/application/policies/omission_push_ac
 import '../../features/omission_escalation/application/services/omission_notification_session_cleanup.dart';
 import '../../features/omission_escalation/application/services/omission_push_facade.dart';
 import '../../features/omission_escalation/application/services/push_device_registration_coordinator.dart';
-import '../../features/omission_escalation/application/usecases/omission_usecases.dart';
+import '../../features/omission_escalation/application/usecases/follow_caregiver_alerts.dart';
+import '../../features/omission_escalation/application/usecases/follow_dose_reminders.dart';
+import '../../features/omission_escalation/application/usecases/handle_incoming_omission_push.dart';
+import '../../features/omission_escalation/application/usecases/resolve_push_destination.dart';
 import '../../features/omission_escalation/infrastructure/local/push_local_stores.dart';
 import '../../features/omission_escalation/infrastructure/push/not_configured_push_token_source.dart';
 import '../../features/omission_escalation/infrastructure/remote/push_device_api.dart';
 import '../../features/omission_escalation/infrastructure/repositories/remote_device_token_registry.dart';
-import '../../features/treatment_management/application/readmodels/treatment_readmodels.dart';
-import '../../features/treatment_management/application/usecases/medication_usecases.dart';
-import '../../features/treatment_management/application/usecases/regimen_usecases.dart';
-import '../../features/treatment_management/application/usecases/treatment_usecases.dart';
+import '../../features/treatment_management/application/readmodels/my_medications_overview.dart';
+import '../../features/treatment_management/application/usecases/change_treatment_status.dart';
+import '../../features/treatment_management/application/usecases/configure_treatment.dart';
+import '../../features/treatment_management/application/usecases/create_treatment.dart';
+import '../../features/treatment_management/application/usecases/deactivate_medication.dart';
+import '../../features/treatment_management/application/usecases/get_my_medications_overview.dart';
+import '../../features/treatment_management/application/usecases/get_treatment_detail.dart';
+import '../../features/treatment_management/application/usecases/list_medications.dart';
+import '../../features/treatment_management/application/usecases/list_treatments.dart';
+import '../../features/treatment_management/application/usecases/reactivate_medication.dart';
+import '../../features/treatment_management/application/usecases/register_medication.dart';
+import '../../features/treatment_management/application/usecases/set_dose_frequency.dart';
+import '../../features/treatment_management/application/usecases/set_reminder_policy.dart';
+import '../../features/treatment_management/application/usecases/set_schedule_instructions.dart';
+import '../../features/treatment_management/application/usecases/update_medication.dart';
 import '../../features/treatment_management/infrastructure/remote/treatment_api.dart';
 import '../../features/treatment_management/infrastructure/repositories/remote_medication_management_repository.dart';
 import '../../features/treatment_management/infrastructure/repositories/remote_treatment_lifecycle_repository.dart';
@@ -142,6 +181,7 @@ import '../../l10n/generated/app_localizations.dart';
 import '../../shared/application/session/session_store.dart';
 import '../../shared/common/result/app_result.dart';
 import '../../shared/infrastructure/network/api_client.dart';
+import '../../shared/infrastructure/notifications/local_notification_platform.dart';
 import '../../shared/infrastructure/security/secure_session_store.dart';
 import '../config/app_config.dart';
 
@@ -452,10 +492,15 @@ final class AppDependencies {
 
   /// Device reminders of the signed-in adult's doses (US-05 and US-22), in the
   /// adult's app language; they keep working while the app is closed.
+  final _notifications = LocalNotificationPlatform();
+
   late final IntakeReminderSync intakeReminders = IntakeReminderSync(
     local: _localIntakes,
     sessions: _sessionStore,
-    scheduler: LocalReminderScheduler(texts: _reminderTexts),
+    scheduler: LocalReminderScheduler(
+      texts: _reminderTexts,
+      notifications: _notifications,
+    ),
   );
 
   /// Spanish unless the adult chose another language, like the app itself.
@@ -589,6 +634,14 @@ final class AppDependencies {
     generate: GenerateLinkingCode(_careLinks),
   );
 
+  /// Care Link owns the basic profile form and its server-validated update.
+  ProfileEditorCubit createProfileEditorCubit(String olderAdultId) =>
+      ProfileEditorCubit(
+        editor: _careLinks,
+        update: UpdateCaregiverProfile(_careLinks, DateTime.now),
+        olderAdultId: olderAdultId,
+      );
+
   /// Creates route-owned recovery state without session persistence capabilities.
   RecoveryBloc createRecoveryBloc() {
     final recovery = RemotePasswordRecovery(PasswordRecoveryApi(_client));
@@ -607,6 +660,14 @@ final class AppDependencies {
 
   /// Creates the access authority; its provider is responsible for closing it.
   AccessBloc createAccessBloc() => AccessBloc(
+    signInWithSocial: SignInWithSocial(
+      RemoteSocialSessionRepository(
+        credentials: FirebaseSocialCredentials(),
+        api: SessionApi(_client),
+        store: _sessionStore,
+        clock: DateTime.now,
+      ),
+    ),
     signIn: SignIn(_sessions),
     restore: RestoreSession(_sessions),
     signOut: SignOut(_sessions),

@@ -1,8 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../shared/common/result/app_result.dart';
-import '../../../application/readmodels/treatment_readmodels.dart';
-import '../../../application/usecases/treatment_usecases.dart';
+import '../../../application/readmodels/my_medications_overview.dart';
+import '../../../application/usecases/get_my_medications_overview.dart';
 
 /// Intents of the adult medication catalog.
 sealed class MyMedicationsEvent {

@@ -8,7 +8,7 @@ import 'package:tata/features/adherence_analytics/application/usecases/get_adher
 import 'package:tata/features/adherence_analytics/presentation/bloc/level/level_bloc.dart';
 import 'package:tata/features/adherence_analytics/presentation/navigation/adherence_badge_view.dart';
 import 'package:tata/features/adherence_analytics/presentation/navigation/treatment_adherence_view.dart';
-import 'package:tata/features/treatment_management/application/readmodels/treatment_readmodels.dart';
+import 'package:tata/features/treatment_management/application/readmodels/treatment_detail.dart';
 import 'package:tata/features/treatment_management/domain/entities/medication.dart';
 import 'package:tata/features/treatment_management/domain/value_objects/treatment_status.dart';
 import 'package:tata/features/treatment_management/presentation/bloc/treatment_management/treatment_management_bloc.dart';
@@ -148,6 +148,75 @@ void main() {
     return bloc;
   }
 
+  for (final notice in ['updated', 'deactivated']) {
+    for (final scale in [1.0, 1.5]) {
+      testWidgets('management receipt $notice renders at text scale $scale', (
+        tester,
+      ) async {
+        final backend = _backend();
+        final bloc = await pump(tester, backend, scale);
+        expect(
+          find.byKey(const Key('treatment-management-receipt')),
+          findsNothing,
+        );
+        if (notice == 'updated') {
+          bloc.add(
+            const RegimenEdited(
+              dose: '1 comprimido',
+              frequency: 'Cada día',
+              scheduleText: '08:00',
+              instructions: 'Con agua',
+              delayMinutes: '10',
+            ),
+          );
+        } else {
+          bloc.add(const TreatmentMedicationDeactivated());
+        }
+        await tester.pumpAndSettle();
+        expect(
+          find.byKey(const Key('treatment-management-receipt')),
+          findsOneWidget,
+        );
+        expect(find.byType(SnackBar), findsNothing);
+        if (notice == 'deactivated') {
+          expect(find.text('Inactivo'), findsOneWidget);
+          expect(bloc.state.detail!.status, TreatmentStatus.paused);
+          expect(
+            tester
+                .widget<OutlinedButton>(
+                  find.widgetWithText(OutlinedButton, 'Editar pauta'),
+                )
+                .onPressed,
+            isNull,
+          );
+        } else {
+          expect(backend.configureCalls, 1);
+          expect(find.text('Cambios guardados'), findsOneWidget);
+        }
+        if (scale > 1) {
+          await tester.scrollUntilVisible(
+            find.text('Historial protegido'),
+            250,
+            scrollable: find
+                .byWidgetPredicate(
+                  (widget) =>
+                      widget is Scrollable &&
+                      widget.axisDirection == AxisDirection.down,
+                )
+                .first,
+          );
+          await tester.pumpAndSettle();
+        }
+        await captureWidget(
+          tester,
+          find.byKey(const Key('management-capture')),
+          'management-$notice-$scale',
+        );
+        expect(tester.takeException(), isNull);
+      });
+    }
+  }
+
   for (final variant in ['active', 'paused', 'inactive', 'denied']) {
     for (final scale in [1.0, 1.5]) {
       testWidgets('management $variant adapts to text scale $scale', (
@@ -204,7 +273,14 @@ void main() {
       await tester.pumpAndSettle();
       expect(backend.medications['med-1']!.active, isFalse);
       expect(bloc.state.activeMedicationCount, 0);
-      expect(find.text('Editar pauta'), findsNothing);
+      expect(
+        tester
+            .widget<OutlinedButton>(
+              find.widgetWithText(OutlinedButton, 'Editar pauta'),
+            )
+            .onPressed,
+        isNull,
+      );
       final reactivate = find.text('Reactivar');
       await tester.ensureVisible(reactivate);
       await tester.pumpAndSettle();

@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../application/ports/omission_ports.dart';
+import '../../application/ports/push_target_store.dart';
 
 /// Only identifiers and the display name the screens already show; no health data.
 final class SharedPreferencesPushTargetStore implements PushTargetStore {

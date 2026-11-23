@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tata/features/treatment_management/application/usecases/regimen_usecases.dart';
-import 'package:tata/features/treatment_management/application/usecases/treatment_usecases.dart';
+import 'package:tata/features/treatment_management/application/usecases/change_treatment_status.dart';
+import 'package:tata/features/treatment_management/application/usecases/configure_treatment.dart';
+import 'package:tata/features/treatment_management/application/usecases/create_treatment.dart';
+import 'package:tata/features/treatment_management/application/usecases/get_treatment_detail.dart';
+import 'package:tata/features/treatment_management/application/usecases/set_dose_frequency.dart';
+import 'package:tata/features/treatment_management/application/usecases/set_reminder_policy.dart';
+import 'package:tata/features/treatment_management/application/usecases/set_schedule_instructions.dart';
 import 'package:tata/features/treatment_management/domain/value_objects/treatment_status.dart';
 import 'package:tata/features/treatment_management/presentation/bloc/treatment_setup/treatment_setup_bloc.dart';
 import 'package:tata/features/treatment_management/presentation/screens/treatment_setup_screen.dart';

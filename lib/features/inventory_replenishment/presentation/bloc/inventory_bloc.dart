@@ -1,7 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../shared/common/result/app_result.dart';
-import '../../application/usecases/inventory_usecases.dart';
+import '../../application/usecases/get_inventory.dart';
+import '../../application/usecases/register_initial_inventory.dart';
+import '../../application/usecases/register_replenishment.dart';
 import '../../domain/entities/inventory.dart';
 import 'inventory_event.dart';
 import 'inventory_state.dart';

@@ -1,6 +1,6 @@
 import '../../../../shared/application/session/session_store.dart';
 import '../../../../shared/common/result/app_result.dart';
-import '../../domain/repositories/monitoring_repositories.dart';
+import '../../domain/repositories/contact_repository.dart';
 import '../../domain/value_objects/contact_channel.dart';
 import '../mappers/monitoring_mapper.dart';
 import '../remote/family_monitoring_api.dart';

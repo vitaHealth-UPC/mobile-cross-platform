@@ -4,6 +4,7 @@ import '../../../../../shared/application/session/session_owner.dart';
 import '../../../../../shared/common/result/app_result.dart';
 import '../../../application/usecases/restore_session.dart';
 import '../../../application/usecases/sign_in.dart';
+import '../../../application/usecases/sign_in_with_social.dart';
 import '../../../application/usecases/sign_out.dart';
 import '../../../domain/entities/account_session.dart';
 import 'access_event.dart';
@@ -15,6 +16,7 @@ final class AccessBloc extends Bloc<AccessEvent, AccessState> {
     required this._signIn,
     required this._restore,
     required this._signOut,
+    this._signInWithSocial,
   }) : super(const AccessState()) {
     on<AccessEvent>(_handle);
   }
@@ -22,6 +24,7 @@ final class AccessBloc extends Bloc<AccessEvent, AccessState> {
   final SignIn _signIn;
   final RestoreSession _restore;
   final SignOut _signOut;
+  final SignInWithSocial? _signInWithSocial;
   int _revision = 0;
 
   Future<void> _handle(AccessEvent event, Emitter<AccessState> emit) async {
@@ -43,6 +46,10 @@ final class AccessBloc extends Bloc<AccessEvent, AccessState> {
     }
     final AppResult<AccountSession?> result = switch (event) {
       AccessSignInSubmitted() => await _signIn(event.email, event.password),
+      AccessSocialSignInRequested() =>
+        _signInWithSocial == null
+            ? const AppFailure('SOCIAL_NOT_CONFIGURED')
+            : await _signInWithSocial(event.provider),
       AccessRestoreRequested() => await _restore(),
       AccessSignOutRequested() => throw StateError('Handled above'),
     };

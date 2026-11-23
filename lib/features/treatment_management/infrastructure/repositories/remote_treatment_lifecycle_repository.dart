@@ -3,7 +3,7 @@ import '../../../../shared/application/session/stored_session.dart';
 import '../../../../shared/common/result/app_result.dart';
 import '../../../../shared/infrastructure/network/api_response.dart';
 import '../../domain/entities/treatment.dart';
-import '../../domain/repositories/treatment_repositories.dart';
+import '../../domain/repositories/treatment_lifecycle_repository.dart';
 import '../../domain/value_objects/treatment_regimen.dart';
 import '../../domain/value_objects/treatment_status.dart';
 import '../mappers/treatment_mapper.dart';

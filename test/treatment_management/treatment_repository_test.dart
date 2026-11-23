@@ -3,8 +3,12 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:tata/features/treatment_management/application/usecases/medication_usecases.dart';
-import 'package:tata/features/treatment_management/application/usecases/treatment_usecases.dart';
+import 'package:tata/features/treatment_management/application/usecases/change_treatment_status.dart';
+import 'package:tata/features/treatment_management/application/usecases/configure_treatment.dart';
+import 'package:tata/features/treatment_management/application/usecases/create_treatment.dart';
+import 'package:tata/features/treatment_management/application/usecases/deactivate_medication.dart';
+import 'package:tata/features/treatment_management/application/usecases/list_medications.dart';
+import 'package:tata/features/treatment_management/application/usecases/register_medication.dart';
 import 'package:tata/features/treatment_management/domain/value_objects/treatment_status.dart';
 import 'package:tata/features/treatment_management/infrastructure/remote/treatment_api.dart';
 import 'package:tata/features/treatment_management/infrastructure/repositories/remote_medication_management_repository.dart';
@@ -187,6 +191,7 @@ void main() {
         final body = jsonDecode(request.body) as Map<String, dynamic>;
         expect(body['scheduledTimes'], ['08:00', '20:00']);
         expect(body['caregiverId'], 'caregiver-A');
+        expect(body['reminderLeadMinutes'], 15);
         expect(body.containsKey('followUpDelayMinutes'), isFalse);
         return http.Response(
           jsonEncode(
@@ -199,7 +204,7 @@ void main() {
                 // The backend answers seconds; they are normalized.
                 'scheduledTimes': ['20:00:00', '08:00:00'],
                 'instructions': 'Con comida',
-                'reminderLeadMinutes': 0,
+                'reminderLeadMinutes': 15,
               },
             ),
           ),
@@ -220,6 +225,7 @@ void main() {
               frequency: 'cada 12 horas',
               scheduleText: '20:00, 8:00',
               instructions: 'Con comida',
+              reminderLeadMinutes: 15,
             ),
           );
       expect(result, isA<AppSuccess>());

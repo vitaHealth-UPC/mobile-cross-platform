@@ -2,9 +2,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../shared/common/result/app_result.dart';
 import '../../../application/failure_codes.dart';
-import '../../../application/ports/monitoring_ports.dart';
-import '../../../application/readmodels/monitoring_readmodels.dart';
-import '../../../application/usecases/alert_usecases.dart';
+import '../../../application/ports/alert_history_reader.dart';
+import '../../../application/ports/contact_option_reader.dart';
+import '../../../application/ports/monitored_dose_reader.dart';
+import '../../../application/ports/monitored_person_reader.dart';
+import '../../../application/readmodels/contact_option.dart';
+import '../../../application/readmodels/monitored_dose.dart';
+import '../../../application/readmodels/monitored_person.dart';
+import '../../../application/readmodels/recorded_alert_event.dart';
+import '../../../application/usecases/get_alert_detail.dart';
+import '../../../application/usecases/update_alert_status.dart';
 import '../../../domain/entities/caregiver_alert.dart';
 import '../../../domain/value_objects/alert_status.dart';
 import '../../texts/monitoring_texts.dart';
@@ -21,6 +28,12 @@ final class AlertDetailRequested extends AlertDetailEvent {
 /// Refreshes protected evidence after returning from a contact app or the background.
 final class AlertDetailResumed extends AlertDetailEvent {
   const AlertDetailResumed();
+}
+
+/// A related protected write established that access to this adult was lost.
+final class AlertDetailAccessLost extends AlertDetailEvent {
+  const AlertDetailAccessLost(this.code);
+  final String code;
 }
 
 /// Read the contact again after it could not be read.
@@ -125,6 +138,11 @@ final class AlertDetailBloc extends Bloc<AlertDetailEvent, AlertDetailState> {
   }) : super(const AlertDetailState()) {
     on<AlertDetailRequested>(_requested);
     on<AlertDetailResumed>(_resumed);
+    on<AlertDetailAccessLost>((event, emit) {
+      if (isAccessFailure(event.code)) {
+        _deny(emit, event.code);
+      }
+    });
     on<AlertContactRequested>((event, emit) => _loadContact(emit));
     on<AlertStatusChangeRequested>(_change);
   }
@@ -270,9 +288,10 @@ final class AlertDetailBloc extends Bloc<AlertDetailEvent, AlertDetailState> {
         !current.status.canMoveTo(event.target)) {
       return;
     }
+    final revision = _alertRevision;
     emit(state.copyWith(updating: () => event.target, feedback: () => null));
     final result = await _update(olderAdultId, alertId, event.target);
-    if (emit.isDone) return;
+    if (revision != _alertRevision || _denied || emit.isDone) return;
     switch (result) {
       case AppSuccess(:final value):
         emit(
@@ -284,7 +303,7 @@ final class AlertDetailBloc extends Bloc<AlertDetailEvent, AlertDetailState> {
         );
         await _loadHistory(emit);
       case AppFailure(:final code):
-        await _afterFailedUpdate(emit, code);
+        await _afterFailedUpdate(emit, code, revision);
     }
   }
 
@@ -292,6 +311,7 @@ final class AlertDetailBloc extends Bloc<AlertDetailEvent, AlertDetailState> {
   Future<void> _afterFailedUpdate(
     Emitter<AlertDetailState> emit,
     String code,
+    int revision,
   ) async {
     if (isAccessFailure(code)) {
       _deny(emit, code);
@@ -303,7 +323,7 @@ final class AlertDetailBloc extends Bloc<AlertDetailEvent, AlertDetailState> {
       return;
     }
     final fresh = await _detail(olderAdultId, alertId);
-    if (emit.isDone) return;
+    if (revision != _alertRevision || _denied || emit.isDone) return;
     switch (fresh) {
       case AppSuccess(:final value):
         emit(

@@ -1,9 +1,20 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tata/features/treatment_management/application/ports/treatment_readers.dart';
-import 'package:tata/features/treatment_management/application/readmodels/treatment_readmodels.dart';
-import 'package:tata/features/treatment_management/application/usecases/medication_usecases.dart';
-import 'package:tata/features/treatment_management/application/usecases/regimen_usecases.dart';
-import 'package:tata/features/treatment_management/application/usecases/treatment_usecases.dart';
+import 'package:tata/features/treatment_management/application/ports/my_medications_reader.dart';
+import 'package:tata/features/treatment_management/application/ports/treatment_reader.dart';
+import 'package:tata/features/treatment_management/application/readmodels/my_medications_overview.dart';
+import 'package:tata/features/treatment_management/application/readmodels/treatment_detail.dart';
+import 'package:tata/features/treatment_management/application/usecases/change_treatment_status.dart';
+import 'package:tata/features/treatment_management/application/usecases/configure_treatment.dart';
+import 'package:tata/features/treatment_management/application/usecases/create_treatment.dart';
+import 'package:tata/features/treatment_management/application/usecases/deactivate_medication.dart';
+import 'package:tata/features/treatment_management/application/usecases/get_my_medications_overview.dart';
+import 'package:tata/features/treatment_management/application/usecases/get_treatment_detail.dart';
+import 'package:tata/features/treatment_management/application/usecases/list_medications.dart';
+import 'package:tata/features/treatment_management/application/usecases/reactivate_medication.dart';
+import 'package:tata/features/treatment_management/application/usecases/set_dose_frequency.dart';
+import 'package:tata/features/treatment_management/application/usecases/set_reminder_policy.dart';
+import 'package:tata/features/treatment_management/application/usecases/set_schedule_instructions.dart';
+import 'package:tata/features/treatment_management/application/usecases/update_medication.dart';
 import 'package:tata/features/treatment_management/domain/value_objects/administration_schedule.dart';
 import 'package:tata/features/treatment_management/domain/value_objects/regimen_text.dart';
 import 'package:tata/features/treatment_management/domain/value_objects/treatment_status.dart';
@@ -24,18 +35,28 @@ import '../support/fake_treatment_backend.dart';
 final class FakeReader implements TreatmentReader {
   FakeReader(this.backend);
   final FakeBackend backend;
+  String? detailFailure;
+  int? failOnCall;
+  int _detailCalls = 0;
 
   @override
   Future<AppResult<List<TreatmentDetail>>> list(String olderAdultId) async =>
       AppSuccess([?backend.stored]);
 
   @override
-  Future<AppResult<TreatmentDetail>> detail(String treatmentId) async =>
-      backend.failure != null
-      ? AppFailure(backend.failure!)
-      : backend.stored == null
-      ? const AppFailure('RESOURCE_NOT_FOUND')
-      : AppSuccess(backend.stored!);
+  Future<AppResult<TreatmentDetail>> detail(String treatmentId) async {
+    _detailCalls++;
+    final failure =
+        detailFailure != null &&
+            (failOnCall == null || _detailCalls >= failOnCall!)
+        ? detailFailure
+        : backend.failure;
+    return failure != null
+        ? AppFailure(failure)
+        : backend.stored == null
+        ? const AppFailure('RESOURCE_NOT_FOUND')
+        : AppSuccess(backend.stored!);
+  }
 }
 
 TreatmentSetupBloc setupBloc(FakeBackend backend) => TreatmentSetupBloc(
@@ -50,17 +71,19 @@ TreatmentSetupBloc setupBloc(FakeBackend backend) => TreatmentSetupBloc(
   medicationId: 'med-1',
 );
 
-TreatmentManagementBloc managementBloc(FakeBackend backend) =>
-    TreatmentManagementBloc(
-      detail: GetTreatmentDetail(FakeReader(backend)),
-      medications: ListMedications(backend),
-      configure: ConfigureTreatment(backend),
-      changeStatus: ChangeTreatmentStatus(backend),
-      reactivate: ReactivateMedication(backend),
-      deactivate: DeactivateMedication(backend),
-      treatmentId: 'tr-1',
-      olderAdultId: 'adult-A',
-    );
+TreatmentManagementBloc managementBloc(
+  FakeBackend backend, {
+  TreatmentReader? reader,
+}) => TreatmentManagementBloc(
+  detail: GetTreatmentDetail(reader ?? FakeReader(backend)),
+  medications: ListMedications(backend),
+  configure: ConfigureTreatment(backend),
+  changeStatus: ChangeTreatmentStatus(backend),
+  reactivate: ReactivateMedication(backend),
+  deactivate: DeactivateMedication(backend),
+  treatmentId: 'tr-1',
+  olderAdultId: 'adult-A',
+);
 
 /// Lets chained futures of the in-memory backend settle.
 Future<void> settle() async {
@@ -221,7 +244,7 @@ void main() {
         ),
       );
       await settle();
-      expect(bloc.state.regimenSaved, isTrue);
+      expect(bloc.state.notice, TreatmentManagementNotice.regimenSaved);
       expect(bloc.state.detail!.scheduledTimes, ['06:00', '14:00', '22:00']);
       expect(backend.stored!.dose, '2 tabletas');
       // Editing never changes the lifecycle state.
@@ -245,6 +268,61 @@ void main() {
       expect(backend.configureCalls, calls);
     });
 
+    test('an invalid reminder lead is refused before any request', () async {
+      final (backend, bloc) = await active();
+      final calls = backend.configureCalls;
+      for (final lead in ['', '-1', '1441', 'not a number']) {
+        bloc.add(
+          RegimenEdited(
+            dose: '1 tableta',
+            frequency: 'cada día',
+            scheduleText: '08:00',
+            instructions: '',
+            delayMinutes: '',
+            leadMinutes: lead,
+          ),
+        );
+        await settle();
+        expect(bloc.state.errorCode, 'INVALID_REMINDER_LEAD');
+        expect(backend.configureCalls, calls);
+      }
+    });
+
+    test(
+      'a caller without lead input preserves the latest server value',
+      () async {
+        final (backend, bloc) = await active();
+        final previous = backend.stored!;
+        backend.stored = TreatmentDetail(
+          id: previous.id,
+          olderAdultId: previous.olderAdultId,
+          name: previous.name,
+          status: previous.status,
+          medicationId: previous.medicationId,
+          dose: previous.dose,
+          frequency: previous.frequency,
+          scheduledTimes: previous.scheduledTimes,
+          instructions: previous.instructions,
+          reminderLeadMinutes: 45,
+          followUpDelayMinutes: previous.followUpDelayMinutes,
+          recurrenceZone: previous.recurrenceZone,
+        );
+        bloc.add(
+          const RegimenEdited(
+            dose: '1 tableta',
+            frequency: 'cada día',
+            scheduleText: '08:00',
+            instructions: '',
+            delayMinutes: '15',
+          ),
+        );
+        await settle();
+        expect(backend.stored!.reminderLeadMinutes, 45);
+        expect(bloc.state.detail!.reminderLeadMinutes, 45);
+        expect(bloc.state.notice, TreatmentManagementNotice.regimenSaved);
+      },
+    );
+
     test(
       'an inactive medication blocks pause but can be reactivated',
       () async {
@@ -255,13 +333,70 @@ void main() {
         expect(bloc.state.activeMedicationCount, 0);
         bloc.add(const TreatmentPauseRequested());
         await settle();
-        expect(backend.stored!.status, TreatmentStatus.active);
+        expect(backend.stored!.status, TreatmentStatus.paused);
         bloc.add(const TreatmentMedicationReactivated());
         await settle();
         expect(bloc.state.medicationInactive, isFalse);
         expect(bloc.state.activeMedicationCount, 1);
+        expect(bloc.state.detail!.status, TreatmentStatus.paused);
+        expect(
+          bloc.state.notice,
+          TreatmentManagementNotice.medicationReactivated,
+        );
       },
     );
+
+    test(
+      'a failed post-availability read hides stale data and retries by reading',
+      () async {
+        final (backend, _) = await active();
+        final reader = FakeReader(backend);
+        final bloc = managementBloc(backend, reader: reader)
+          ..add(const TreatmentManagementRequested());
+        addTearDown(bloc.close);
+        await settle();
+        reader.detailFailure = 'NETWORK_UNAVAILABLE';
+        bloc.add(const TreatmentMedicationDeactivated());
+        await settle();
+        expect(backend.medications['med-1']!.active, isFalse);
+        expect(bloc.state.status, TreatmentManagementStatus.failure);
+        expect(bloc.state.detail, isNull);
+        expect(bloc.state.notice, isNull);
+        reader.detailFailure = null;
+        bloc.add(const TreatmentManagementRequested());
+        await settle();
+        expect(bloc.state.detail!.status, TreatmentStatus.paused);
+        expect(bloc.state.medicationInactive, isTrue);
+        expect(bloc.state.notice, isNull);
+      },
+    );
+
+    test('access denied after saving a regimen removes the protected receipt and detail', () async {
+      final (backend, _) = await active();
+      final reader = FakeReader(backend);
+      final bloc = managementBloc(backend, reader: reader)
+        ..add(const TreatmentManagementRequested());
+      addTearDown(bloc.close);
+      await settle();
+      reader.detailFailure = 'ACCESS_DENIED';
+      reader.failOnCall = 3;
+      bloc.add(
+        const RegimenEdited(
+          dose: '2 tabletas',
+          frequency: 'cada día',
+          scheduleText: '08:00',
+          instructions: '',
+          delayMinutes: '15',
+        ),
+      );
+      await settle();
+      expect(backend.stored!.dose, '2 tabletas');
+      expect(bloc.state.status, TreatmentManagementStatus.failure);
+      expect(bloc.state.errorCode, 'ACCESS_DENIED');
+      expect(bloc.state.detail, isNull);
+      expect(bloc.state.medication, isNull);
+      expect(bloc.state.notice, isNull);
+    });
 
     test('an authorization failure leaves no management actions', () async {
       final (backend, bloc) = await active();

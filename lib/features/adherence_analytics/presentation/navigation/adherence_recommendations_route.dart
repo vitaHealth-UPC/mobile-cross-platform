@@ -10,8 +10,8 @@ import '../widgets/adherence_labels.dart';
 
 /// Owns the [RecommendationsBloc] of one adult and wires the screen.
 ///
-/// [onApplyAdjustments] is optional: until a treatment flow can receive the
-/// adjustments, the "Aplicar ajustes" button is not drawn. A credential that is
+/// [onApplyAdjustments] starts the host treatment review when configured.
+/// Without a receiver the action is omitted. A credential that is
 /// no longer valid is reported through [onSessionInvalidated].
 class AdherenceRecommendationsRoute extends StatefulWidget {
   const AdherenceRecommendationsRoute({

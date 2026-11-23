@@ -1,9 +1,13 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../shared/common/result/app_result.dart';
-import '../../../application/readmodels/treatment_readmodels.dart';
-import '../../../application/usecases/medication_usecases.dart';
-import '../../../application/usecases/treatment_usecases.dart';
+import '../../../application/readmodels/treatment_detail.dart';
+import '../../../application/usecases/change_treatment_status.dart';
+import '../../../application/usecases/configure_treatment.dart';
+import '../../../application/usecases/deactivate_medication.dart';
+import '../../../application/usecases/get_treatment_detail.dart';
+import '../../../application/usecases/list_medications.dart';
+import '../../../application/usecases/reactivate_medication.dart';
 import '../../../domain/entities/medication.dart';
 import '../../../domain/entities/treatment.dart';
 import 'treatment_management_event.dart';
@@ -158,12 +162,20 @@ final class TreatmentManagementBloc
     }
     final blank = event.delayMinutes.trim().isEmpty;
     final minutes = int.tryParse(event.delayMinutes.trim());
+    final lead = event.leadMinutes == null
+        ? null
+        : int.tryParse(event.leadMinutes!.trim());
+    if (event.leadMinutes != null &&
+        (lead == null || lead < 0 || lead > 1440)) {
+      emit(state.copyWith(errorCode: 'INVALID_REMINDER_LEAD'));
+      return;
+    }
     if (!blank && (minutes == null || minutes < 0 || minutes > 1440)) {
       emit(state.copyWith(errorCode: 'INVALID_REMINDER_DELAY'));
       return;
     }
     emit(state.copyWith(busy: true));
-    // The latest lead time is preserved: editing never changes ACTIVE/PAUSED state.
+    // Callers that do not edit lead time preserve it; lifecycle remains unchanged.
     final latest = await _detail(treatmentId);
     if (emit.isDone) return;
     if (latest is AppFailure<TreatmentDetail>) {
@@ -185,7 +197,7 @@ final class TreatmentManagementBloc
         scheduleText: event.scheduleText,
         instructions: event.instructions,
         followUpDelayMinutes: blank ? null : minutes,
-        reminderLeadMinutes: fresh.reminderLeadMinutes ?? 0,
+        reminderLeadMinutes: lead ?? fresh.reminderLeadMinutes ?? 0,
       ),
     );
     if (emit.isDone) return;
@@ -196,19 +208,25 @@ final class TreatmentManagementBloc
     // Reload so the screen shows exactly what the server stored.
     final reread = await _detail(treatmentId);
     if (emit.isDone) return;
+    if (reread is AppFailure<TreatmentDetail>) {
+      emit(_failed(reread.code));
+      return;
+    }
     if (reread is AppSuccess<TreatmentDetail> &&
-        reread.value.olderAdultId == olderAdultId) {
+        reread.value.id == treatmentId &&
+        reread.value.olderAdultId == olderAdultId &&
+        reread.value.medicationId == detail.medicationId) {
       emit(
         TreatmentManagementState(
           status: TreatmentManagementStatus.ready,
           detail: reread.value,
           medication: state.medication,
           activeMedicationCount: state.activeMedicationCount,
-          regimenSaved: true,
+          notice: TreatmentManagementNotice.regimenSaved,
         ),
       );
     } else {
-      emit(state.copyWith(busy: false, errorCode: 'INVALID_RESPONSE'));
+      emit(_failed('INVALID_RESPONSE'));
     }
   }
 
@@ -253,10 +271,29 @@ final class TreatmentManagementBloc
         }
         final others =
             (state.activeMedicationCount ?? 0) - (medication.active ? 1 : 0);
+        // Deactivation can pause active treatments on the server. A medication
+        // receipt alone cannot establish the resulting treatment lifecycle.
+        final refreshed = await _detail(treatmentId);
+        if (emit.isDone) return;
+        if (refreshed is AppFailure<TreatmentDetail>) {
+          emit(_failed(refreshed.code));
+          return;
+        }
+        final detail = (refreshed as AppSuccess<TreatmentDetail>).value;
+        if (detail.id != treatmentId ||
+            detail.olderAdultId != olderAdultId ||
+            detail.medicationId != value.id) {
+          emit(_failed('INVALID_RESPONSE'));
+          return;
+        }
         emit(
           state.copyWith(
             busy: false,
+            detail: detail,
             medication: value,
+            notice: expectedActive
+                ? TreatmentManagementNotice.medicationReactivated
+                : TreatmentManagementNotice.medicationDeactivated,
             activeMedicationCount: others + (value.active ? 1 : 0),
           ),
         );

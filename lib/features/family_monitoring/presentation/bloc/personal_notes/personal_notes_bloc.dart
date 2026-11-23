@@ -1,7 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../shared/common/result/app_result.dart';
-import '../../../application/usecases/note_usecases.dart';
+import '../../../application/usecases/create_personal_note.dart';
+import '../../../application/usecases/get_personal_notes.dart';
 import '../../../domain/entities/notes.dart';
 import '../../../domain/value_objects/note_values.dart';
 
@@ -61,9 +62,17 @@ final class PersonalNotesState {
       errorCode == 'SESSION_CHANGED' ||
       errorCode == 'ACCESS_DENIED';
 
-  List<PersonalNote> get visibleNotes => category == null
-      ? notes
-      : notes.where((note) => note.category == category).toList();
+  /// Newest first, without mutating repository results or hiding a new receipt.
+  List<PersonalNote> get visibleNotes {
+    final visible = notes
+        .where((note) => category == null || note.category == category)
+        .toList();
+    visible.sort((a, b) {
+      final byDate = b.recordedAt.compareTo(a.recordedAt);
+      return byDate == 0 ? b.id.compareTo(a.id) : byDate;
+    });
+    return List.unmodifiable(visible);
+  }
 
   PersonalNotesState copyWith({
     List<PersonalNote>? notes,
@@ -151,6 +160,7 @@ final class PersonalNotesBloc
             notes: [value, ...state.notes.where((note) => note.id != value.id)],
             saving: false,
             composing: false,
+            category: () => null,
           ),
         );
       case AppFailure(:final code):

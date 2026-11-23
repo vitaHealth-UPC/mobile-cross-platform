@@ -66,7 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
             constraints: const BoxConstraints(maxWidth: 440),
             child: SingleChildScrollView(
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              padding: const EdgeInsets.fromLTRB(22, 28, 22, 24),
+              padding: const EdgeInsets.fromLTRB(22, 16, 22, 24),
               child: Form(
                 key: _form,
                 child: AutofillGroup(
@@ -103,6 +103,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 12),
                       ],
                       ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          elevation: 3,
+                          shadowColor: const Color(0x291A2138),
+                        ),
                         onPressed: widget.busy ? null : _submit,
                         child: widget.busy
                             ? SizedBox(

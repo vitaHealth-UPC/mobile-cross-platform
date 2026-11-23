@@ -2,12 +2,22 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tata/features/adherence_analytics/presentation/widgets/adherence_level_card.dart';
 import 'package:tata/features/family_monitoring/application/ports/contact_launcher.dart';
-import 'package:tata/features/family_monitoring/application/ports/monitoring_ports.dart';
-import 'package:tata/features/family_monitoring/application/readmodels/monitoring_readmodels.dart';
-import 'package:tata/features/family_monitoring/application/usecases/alert_usecases.dart';
-import 'package:tata/features/family_monitoring/application/usecases/note_usecases.dart';
-import 'package:tata/features/family_monitoring/application/usecases/summary_usecases.dart';
+import 'package:tata/features/family_monitoring/application/ports/family_monitoring_repository.dart';
+import 'package:tata/features/family_monitoring/application/readmodels/alert_timeline.dart';
+import 'package:tata/features/family_monitoring/application/readmodels/family_summary.dart';
+import 'package:tata/features/family_monitoring/application/readmodels/intake_history_entry.dart';
+import 'package:tata/features/family_monitoring/application/readmodels/monitored_person.dart';
+import 'package:tata/features/family_monitoring/application/usecases/create_personal_note.dart';
+import 'package:tata/features/family_monitoring/application/usecases/get_alert_detail.dart';
+import 'package:tata/features/family_monitoring/application/usecases/get_alert_timeline.dart';
+import 'package:tata/features/family_monitoring/application/usecases/get_contact_option.dart';
+import 'package:tata/features/family_monitoring/application/usecases/get_family_summary.dart';
+import 'package:tata/features/family_monitoring/application/usecases/get_follow_up_notes.dart';
+import 'package:tata/features/family_monitoring/application/usecases/get_personal_notes.dart';
+import 'package:tata/features/family_monitoring/application/usecases/register_follow_up_note.dart';
+import 'package:tata/features/family_monitoring/application/usecases/update_alert_status.dart';
 import 'package:tata/features/family_monitoring/domain/entities/notes.dart';
 import 'package:tata/features/family_monitoring/domain/value_objects/adherence_counts.dart';
 import 'package:tata/features/family_monitoring/domain/value_objects/contact_channel.dart';
@@ -18,10 +28,19 @@ import 'package:tata/features/family_monitoring/presentation/bloc/notes/notes_bl
 import 'package:tata/features/family_monitoring/presentation/bloc/personal_notes/personal_notes_bloc.dart';
 import 'package:tata/features/family_monitoring/presentation/bloc/summary/family_summary_bloc.dart';
 import 'package:tata/features/family_monitoring/presentation/navigation/family_monitoring_navigation.dart';
+import 'package:tata/features/family_monitoring/presentation/screens/alert_detail_screen.dart';
+import 'package:tata/features/treatment_management/application/usecases/deactivate_medication.dart';
+import 'package:tata/features/treatment_management/application/usecases/list_medications.dart';
+import 'package:tata/features/treatment_management/application/usecases/reactivate_medication.dart';
+import 'package:tata/features/treatment_management/application/usecases/update_medication.dart';
+import 'package:tata/features/treatment_management/domain/entities/medication.dart';
+import 'package:tata/features/treatment_management/presentation/bloc/medication_management/medication_management_bloc.dart';
+import 'package:tata/features/treatment_management/presentation/widgets/active_medications_card.dart';
 import 'package:tata/l10n/generated/app_localizations.dart';
 import 'package:tata/shared/common/result/app_result.dart';
 import 'package:tata/shared/presentation/theme/tata_theme.dart';
 
+import '../support/fake_treatment_backend.dart';
 import '../support/visual_capture.dart';
 import 'monitoring_application_test.dart'
     show
@@ -46,6 +65,7 @@ final class _Summary implements FamilyMonitoringRepository {
   _Summary(this.result);
   AppResult<FamilySummary> result;
   int reads = 0;
+  final names = <String>[];
 
   @override
   Future<AppResult<FamilySummary>> summary(
@@ -54,6 +74,7 @@ final class _Summary implements FamilyMonitoringRepository {
     DateTime day,
   ) async {
     reads++;
+    names.add(name);
     return result;
   }
 
@@ -79,10 +100,12 @@ void main() {
   late _Summary summaries;
   late FakeAlerts alerts;
   late FakeTimeline timeline;
+  late FakePersonReader personReader;
 
   FamilyMonitoringNavigation navigation({
     DateTime? birthDate,
     List<FollowUpNote> noteList = const [],
+    FakeContact? contact,
   }) {
     summaries = _Summary(AppSuccess(summary()));
     alerts = FakeAlerts(alerts: [anAlert()]);
@@ -96,7 +119,7 @@ void main() {
         ),
       ),
     );
-    final people = FakePersonReader(
+    final people = personReader = FakePersonReader(
       AppSuccess(
         MonitoredPerson(
           id: 'adult-1',
@@ -112,7 +135,7 @@ void main() {
         launcher: _NoLauncher(),
         createSummaryBloc: (id, name) => FamilySummaryBloc(
           summary: GetFamilySummary(summaries),
-          contact: GetContactOption(FakeContact()),
+          contact: GetContactOption(contact ?? FakeContact()),
           olderAdultId: id,
           olderAdultName: name,
           clock: () => DateTime(2026, 11, 13, 10),
@@ -163,27 +186,39 @@ void main() {
     FutureOr<void> Function()? onAddMedication,
     FutureOr<void> Function(StockAttention stock)? onOpenStock,
     LinkedPersonSlots? person,
+    double scale = 1,
   }) async {
-    tester.view.physicalSize = const Size(393, 883);
+    tester.view.physicalSize = scale == 1
+        ? const Size(393, 883)
+        : const Size(360, 640);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
-      MaterialApp(
-        theme: TataTheme.light,
-        locale: const Locale('es'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: navigation.caregiverHome(
-          olderAdultId: 'adult-1',
-          olderAdultName: 'Rosa Vargas',
-          onHistory: onHistory ?? () {},
-          onAddMedication: onAddMedication ?? () {},
-          onPerson: onPerson ?? () {},
-          onMore: onMore ?? () {},
-          onSessionInvalidated: onInvalidated ?? () {},
-          onOpenStock: onOpenStock,
-          person: person,
+      RepaintBoundary(
+        key: const Key('linked-person-capture'),
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: TataTheme.light,
+          locale: const Locale('es'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: TextScaler.linear(scale)),
+            child: child!,
+          ),
+          home: navigation.caregiverHome(
+            olderAdultId: 'adult-1',
+            olderAdultName: 'Rosa Vargas',
+            onHistory: onHistory ?? () {},
+            onAddMedication: onAddMedication ?? () {},
+            onPerson: onPerson ?? () {},
+            onMore: onMore ?? () {},
+            onSessionInvalidated: onInvalidated ?? () {},
+            onOpenStock: onOpenStock,
+            person: person,
+          ),
         ),
       ),
     );
@@ -200,10 +235,7 @@ void main() {
 
     await tester.tap(find.text('Alertas'));
     await tester.pumpAndSettle();
-    expect(
-      find.text('Tomas no confirmadas que necesitan tu seguimiento.'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('Hoy,'), findsOneWidget);
 
     await tester.tap(find.text('Notas'));
     await tester.pumpAndSettle();
@@ -313,14 +345,41 @@ void main() {
     final readsBefore = timeline.reads;
     await tester.tap(find.text('Alerta pendiente'));
     await tester.pumpAndSettle();
-    expect(find.text('Detalle de la alerta'), findsOneWidget);
+    expect(find.byType(AlertDetailScreen), findsOneWidget);
     expect(find.text('Marcar como atendida'), findsOneWidget);
 
     await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
-    expect(find.text('Detalle de la alerta'), findsNothing);
+    expect(find.byType(AlertDetailScreen), findsNothing);
     expect(timeline.reads, greaterThan(readsBefore));
   });
+
+  testWidgets(
+    'detail profile and tabs return to the existing caregiver shell',
+    (tester) async {
+      var openedProfile = 0;
+      await pumpHome(tester, navigation(), onPerson: () => openedProfile++);
+      await tester.tap(find.text('Alertas'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Alerta pendiente'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Ver perfil'));
+      await tester.pumpAndSettle();
+      expect(openedProfile, 1);
+      expect(find.byType(AlertDetailScreen), findsNothing);
+
+      await tester.tap(find.text('Alerta pendiente'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Notas'));
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDetailScreen), findsNothing);
+      expect(find.text('Agregar nota'), findsOneWidget);
+      expect(
+        Navigator.of(tester.element(find.text('Agregar nota'))).canPop(),
+        isFalse,
+      );
+    },
+  );
 
   testWidgets(
     'a rejected session reaches the host once and leaves the detail',
@@ -348,12 +407,239 @@ void main() {
     expect(invalidated, 1);
   });
 
+  testWidgets(
+    'summary agenda shows every outcome, including overdue pending doses',
+    (tester) async {
+      final nav = navigation();
+      timeline.result = AppSuccess(
+        AlertTimeline(
+          alerts: const [],
+          doses: [
+            dose('pending', 'PENDING', DateTime(2026, 11, 13, 6)),
+            dose('done', 'CONFIRMED', DateTime(2026, 11, 13, 7)),
+            dose('late', 'LATE', DateTime(2026, 11, 13, 8)),
+            dose('missed', 'OMITTED', DateTime(2026, 11, 13, 9)),
+          ],
+          olderAdultName: 'Rosa Vargas',
+          day: DateTime(2026, 11, 13),
+        ),
+      );
+      await pumpHome(tester, nav);
+      await tester.ensureVisible(find.text('Ver agenda'));
+      await tester.tap(find.text('Ver agenda'));
+      await tester.pumpAndSettle();
+      expect(find.text('Agenda de hoy'), findsOneWidget);
+      for (final label in [
+        'Toma pendiente',
+        'Toma confirmada',
+        'Toma confirmada con retraso',
+        'Toma omitida',
+      ]) {
+        expect(
+          find.textContaining(RegExp('\\n${RegExp.escape(label)}\$')),
+          findsOneWidget,
+        );
+      }
+      expect(find.text('Confirmar toma'), findsNothing);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('Resumen familiar'), findsOneWidget);
+    },
+  );
+
+  testWidgets('daily agenda remains scrollable with enlarged text', (
+    tester,
+  ) async {
+    await pumpHome(tester, navigation(), scale: 1.5);
+    await tester.ensureVisible(find.text('Ver agenda'));
+    await tester.tap(find.text('Ver agenda'));
+    await tester.pumpAndSettle();
+    expect(find.text('Agenda de hoy'), findsOneWidget);
+    expect(find.textContaining('Toma confirmada'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('denied agenda does not keep a previously loaded dose', (
+    tester,
+  ) async {
+    final nav = navigation();
+    await pumpHome(tester, nav);
+    timeline.result = const AppFailure('ACCESS_DENIED');
+    await tester.ensureVisible(find.text('Ver agenda'));
+    await tester.tap(find.text('Ver agenda'));
+    await tester.pumpAndSettle();
+    expect(find.text('Agenda de hoy'), findsOneWidget);
+    expect(find.textContaining('Toma confirmada'), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('71%'), findsNothing);
+    expect(find.text('Seguimiento restringido'), findsOneWidget);
+  });
+
   group('Person tab (Figma 563:1121)', () {
     LinkedPersonSlots slots() => LinkedPersonSlots(
       linkedSince: DateTime(2025, 11, 2),
       adherence: (_) => const Text('tarjeta de adherencia'),
       treatment: (_) => const Text('tarjeta de tratamiento'),
     );
+
+    testWidgets('call and message only offer their registered channel type', (
+      tester,
+    ) async {
+      final contact = FakeContact(
+        channel: AppSuccess(
+          ContactChannel(
+            type: ContactChannelType.whatsapp,
+            value: '+51999888777',
+          ),
+        ),
+        name: const AppSuccess('Rosa Vargas'),
+      );
+      await pumpHome(tester, navigation(contact: contact), person: slots());
+      await tester.tap(find.text('Persona'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Llamar'));
+      await tester.pumpAndSettle();
+      expect(find.text('Abrir WhatsApp'), findsNothing);
+      expect(
+        find.text('No hay un canal de contacto registrado.'),
+        findsOneWidget,
+      );
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Mensajes'));
+      await tester.pumpAndSettle();
+      expect(find.text('Abrir WhatsApp'), findsOneWidget);
+      expect(find.text('Abrir teléfono'), findsNothing);
+    });
+
+    testWidgets('lost contact permission removes the protected person cards', (
+      tester,
+    ) async {
+      await pumpHome(
+        tester,
+        navigation(
+          contact: FakeContact(channel: const AppFailure('ACCESS_DENIED')),
+        ),
+        person: slots(),
+      );
+      await tester.tap(find.text('Persona'));
+      await tester.pumpAndSettle();
+      expect(find.text('tarjeta de adherencia'), findsOneWidget);
+      await tester.tap(find.text('Llamar'));
+      await tester.pumpAndSettle();
+      expect(find.text('tarjeta de adherencia'), findsNothing);
+      expect(find.text('tarjeta de tratamiento'), findsNothing);
+      expect(find.text('Vinculada'), findsNothing);
+    });
+
+    testWidgets('editing reloads the profile and updates the summary name', (
+      tester,
+    ) async {
+      await pumpHome(
+        tester,
+        navigation(),
+        person: LinkedPersonSlots(
+          linkedSince: DateTime(2025, 11, 2),
+          onEdit: (_) async {
+            personReader.result = AppSuccess(
+              MonitoredPerson(
+                id: 'adult-1',
+                fullName: 'Rosa Actualizada',
+                birthDate: DateTime(1958, 5, 12),
+              ),
+            );
+            return 'Rosa Actualizada';
+          },
+        ),
+      );
+      await tester.tap(find.text('Persona'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Editar'));
+      await tester.pumpAndSettle();
+      expect(find.text('Rosa Actualizada'), findsOneWidget);
+      expect(summaries.names.last, 'Rosa Actualizada');
+    });
+
+    testWidgets('a denied profile hides the clinical slots and linked status', (
+      tester,
+    ) async {
+      await pumpHome(tester, navigation(), person: slots());
+      personReader.result = const AppFailure('ACCESS_DENIED');
+      await tester.tap(find.text('Persona'));
+      await tester.pumpAndSettle();
+      expect(find.text('tarjeta de adherencia'), findsNothing);
+      expect(find.text('tarjeta de tratamiento'), findsNothing);
+      expect(find.text('Vinculada'), findsNothing);
+    });
+
+    for (final scale in [1.0, 1.5]) {
+      testWidgets(
+        'profile with production clinical cards renders at scale $scale',
+        (tester) async {
+          final backend = FakeBackend();
+          backend.medications.clear();
+          for (final (id, name, strength) in [
+            ('m1', 'Losartán', '50 mg'),
+            ('m2', 'Metformina', '500 mg'),
+            ('m3', 'Levotiroxina', '75 mcg'),
+          ]) {
+            backend.medications[id] = Medication(
+              id: id,
+              olderAdultId: 'adult-A',
+              name: name,
+              presentation: strength,
+              active: true,
+            );
+          }
+          await pumpHome(
+            tester,
+            navigation(
+              birthDate: DateTime(1958, 5, 12),
+              noteList: [
+                FollowUpNote(
+                  id: 1,
+                  text: 'A veces olvida la toma de la tarde cuando sale a caminar. Le ayudan los recordatorios.',
+                  recordedAt: DateTime.utc(2026, 11, 18),
+                  familiarId: 'caregiver-A',
+                ),
+              ],
+            ),
+            scale: scale,
+            person: LinkedPersonSlots(
+              linkedSince: DateTime(2024, 3, 1),
+              onEdit: (_) async => null,
+              adherence: (_) => const AdherenceLevelCard(
+                adherencePercent: 92,
+                periodDays: 30,
+                changePercent: 8,
+              ),
+              treatment: (_) => ActiveMedicationsCard(
+                createBloc: () => MedicationManagementBloc(
+                  list: ListMedications(backend),
+                  update: UpdateMedication(backend),
+                  deactivate: DeactivateMedication(backend),
+                  reactivate: ReactivateMedication(backend),
+                  olderAdultId: 'adult-A',
+                ),
+                onSessionInvalidated: () {},
+              ),
+            ),
+          );
+          await tester.tap(find.text('Persona'));
+          await tester.pumpAndSettle();
+          await captureWidget(
+            tester,
+            find.byKey(const Key('linked-person-capture')),
+            'linked_person_$scale',
+          );
+          await tester.scrollUntilVisible(find.text('Notas del cuidador'), 200);
+          expect(find.textContaining('A veces olvida'), findsOneWidget);
+          expect(tester.takeException(), isNull);
+        },
+      );
+    }
 
     testWidgets('shows who the person is, the link and the latest note', (
       tester,

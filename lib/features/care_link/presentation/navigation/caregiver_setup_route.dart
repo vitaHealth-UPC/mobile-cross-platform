@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -26,7 +28,7 @@ class CaregiverSetupRoute extends StatelessWidget {
 
   /// Lets the host open its flows for a confirmed relationship, for example
   /// the adherence history, without Care Link knowing about them.
-  final ValueChanged<CaregiverLinkSummary>? onOpenProfile;
+  final FutureOr<void> Function(CaregiverLinkSummary)? onOpenProfile;
   final VoidCallback onSignOut;
   final VoidCallback onSessionInvalidated;
 
@@ -70,7 +72,13 @@ class CaregiverSetupRoute extends StatelessWidget {
           links: state.links,
           loading: state.loading,
           errorText: error,
-          onOpenProfile: onOpenProfile,
+          onOpenProfile: switch (onOpenProfile) {
+            final open? => (link) async {
+              await open(link);
+              if (context.mounted) bloc.add(const ProfilesRequested());
+            },
+            null => null,
+          },
           onOpenSettings: onOpenSettings == null
               ? null
               : () => onOpenSettings!(context),

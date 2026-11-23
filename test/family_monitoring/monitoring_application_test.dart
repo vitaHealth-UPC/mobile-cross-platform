@@ -1,14 +1,31 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tata/features/family_monitoring/application/failure_codes.dart';
-import 'package:tata/features/family_monitoring/application/ports/monitoring_ports.dart';
-import 'package:tata/features/family_monitoring/application/readmodels/monitoring_readmodels.dart';
-import 'package:tata/features/family_monitoring/application/usecases/alert_usecases.dart';
-import 'package:tata/features/family_monitoring/application/usecases/note_usecases.dart';
-import 'package:tata/features/family_monitoring/application/usecases/summary_usecases.dart';
+import 'package:tata/features/family_monitoring/application/ports/alert_history_reader.dart';
+import 'package:tata/features/family_monitoring/application/ports/alert_timeline_reader.dart';
+import 'package:tata/features/family_monitoring/application/ports/monitored_dose_reader.dart';
+import 'package:tata/features/family_monitoring/application/ports/monitored_person_reader.dart';
+import 'package:tata/features/family_monitoring/application/readmodels/alert_timeline.dart';
+import 'package:tata/features/family_monitoring/application/readmodels/contact_option.dart';
+import 'package:tata/features/family_monitoring/application/readmodels/monitored_dose.dart';
+import 'package:tata/features/family_monitoring/application/readmodels/monitored_person.dart';
+import 'package:tata/features/family_monitoring/application/readmodels/recorded_alert_event.dart';
+import 'package:tata/features/family_monitoring/application/usecases/create_personal_note.dart';
+import 'package:tata/features/family_monitoring/application/usecases/get_alert_detail.dart';
+import 'package:tata/features/family_monitoring/application/usecases/get_alert_timeline.dart';
+import 'package:tata/features/family_monitoring/application/usecases/get_contact_option.dart';
+import 'package:tata/features/family_monitoring/application/usecases/get_follow_up_notes.dart';
+import 'package:tata/features/family_monitoring/application/usecases/get_open_alerts.dart';
+import 'package:tata/features/family_monitoring/application/usecases/get_personal_notes.dart';
+import 'package:tata/features/family_monitoring/application/usecases/register_follow_up_note.dart';
+import 'package:tata/features/family_monitoring/application/usecases/update_alert_status.dart';
 import 'package:tata/features/family_monitoring/domain/entities/caregiver_alert.dart';
 import 'package:tata/features/family_monitoring/domain/entities/notes.dart';
-import 'package:tata/features/family_monitoring/domain/repositories/monitoring_repositories.dart';
+import 'package:tata/features/family_monitoring/domain/repositories/alerts_repository.dart';
+import 'package:tata/features/family_monitoring/domain/repositories/contact_repository.dart';
+import 'package:tata/features/family_monitoring/domain/repositories/notes_repository.dart';
+import 'package:tata/features/family_monitoring/domain/repositories/personal_notes_repository.dart';
+import 'package:tata/features/family_monitoring/domain/value_objects/alert_severity.dart';
 import 'package:tata/features/family_monitoring/domain/value_objects/alert_status.dart';
 import 'package:tata/features/family_monitoring/domain/value_objects/contact_channel.dart';
 import 'package:tata/features/family_monitoring/domain/value_objects/note_values.dart';
@@ -24,6 +41,7 @@ CaregiverAlert anAlert({
   AlertStatus status = AlertStatus.open,
   DateTime? scheduledAt,
   String intakeId = 'intake-1',
+  AlertSeverity severity = AlertSeverity.standard,
 }) {
   final at = scheduledAt ?? DateTime.utc(2026, 11, 13, 12);
   return CaregiverAlert(
@@ -32,6 +50,7 @@ CaregiverAlert anAlert({
     medicationName: 'Losartán',
     scheduledAt: at,
     reason: 'No respondió',
+    severity: severity,
     status: status,
     openedAt: at.add(const Duration(minutes: 30)),
     closedAt: status == AlertStatus.closed
@@ -329,12 +348,15 @@ void main() {
         ..add(const AlertsRequested());
       await b.stream.firstWhere((s) => s.status == AlertsStatus.ready);
       expect([for (final a in b.state.visibleAlerts) a.id], [1, 2]);
-      expect([for (final d in b.state.visibleDoses) d.id], ['past', 'next']);
+      expect(
+        [for (final d in b.state.visibleDoses) d.id],
+        ['past', 'next', 'missed'],
+      );
 
       b.add(const AlertsFilterSelected(AlertFilter.pending));
       await b.stream.first;
       expect([for (final a in b.state.visibleAlerts) a.id], [1]);
-      expect(b.state.visibleDoses, isEmpty);
+      expect([for (final d in b.state.visibleDoses) d.id], ['missed']);
 
       b.add(const AlertsFilterSelected(AlertFilter.upcoming));
       await b.stream.first;
@@ -346,6 +368,39 @@ void main() {
       expect([for (final a in b.state.visibleAlerts) a.id], [2]);
       expect([for (final d in b.state.visibleDoses) d.id], ['past']);
       expect(b.state.pendingCount, 1);
+      await b.close();
+    });
+
+    test('unrepresented overdue doses remain visible without duplicating a recorded alert', () async {
+      final recorded = anAlert(id: 1);
+      final data = AlertTimeline(
+        alerts: [recorded],
+        doses: [
+          dose(
+            recorded.intakeId,
+            'PENDING',
+            now.subtract(const Duration(hours: 1)),
+          ),
+          dose(
+            'not-yet-alerted',
+            'PENDING',
+            now.subtract(const Duration(minutes: 2)),
+          ),
+          dose('omitted', 'OMITTED', now.subtract(const Duration(hours: 2))),
+        ],
+        olderAdultName: 'Rosa',
+        day: DateTime(2026, 11, 13),
+      );
+      final b = bloc(FakeTimeline(AppSuccess(data)))
+        ..add(const AlertsRequested());
+      await b.stream.firstWhere((s) => s.status == AlertsStatus.ready);
+      expect(
+        [for (final d in b.state.visibleDoses) d.id],
+        ['not-yet-alerted', 'omitted'],
+      );
+      b.add(const AlertsFilterSelected(AlertFilter.pending));
+      await b.stream.first;
+      expect([for (final d in b.state.visibleDoses) d.id], ['not-yet-alerted']);
       await b.close();
     });
 
