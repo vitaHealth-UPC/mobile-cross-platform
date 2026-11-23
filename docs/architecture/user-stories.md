@@ -63,28 +63,58 @@ La aceptación de una historia requiere comportamiento por actor, errores, permi
 | US-44 | Current subscription | `identity_subscription` | Plans and account subscription |
 | US-45 | Change subscription | `identity_subscription` | Update account plan |
 
-## Cortes de contribución revisados
+## Ramas y contribuciones
 
-Los 19 cortes siguientes identifican contribuciones auténticas del historial compartido; no sustituyen las 45 historias ni el Sprint Backlog. Su distribución por ramas se ajusta al catálogo antes de publicar. Incluyen dependencias anteriores y, cuando el commit reúne varias capacidades, no representan una implementación aislada de una sola historia. Las correcciones de integración permanecen en `temp`. Los merges a `develop` registran la integración actual; no reconstruyen fechas ni autorías pasadas.
+Las 45 ramas `feature/us-*` usan la nomenclatura del cliente Android. Referencian los commits originales que incorporan cada capacidad; no certifican por sí solas toda su aceptación en Flutter. Los ajustes posteriores se integran desde `temp`.
 
-| Rama | Commit original de cierre |
-| --- | --- |
-| `feature/us-10-caregiver-registration` | `ce70f0d` |
-| `feature/us-01-pin-access` | `b2493b3` |
-| `feature/us-24-intake-agenda` | `6d2d8ab` |
-| `feature/us-32-adherence-history` | `341810e` |
-| `feature/us-03-medication-management` | `8cce4df` |
-| `feature/us-35-accessibility-preferences` | `c9533e4` |
-| `feature/us-19-treatment-detail` | `157acea` |
-| `feature/us-07-omission-alerts` | `0d1e593` |
-| `feature/us-25-family-monitoring` | `efc6d20` |
-| `feature/us-06-voice-confirmation` | `ca0faf9` |
-| `feature/us-40-inventory` | `270a898` |
-| `feature/us-42-low-stock` | `e2c5d15` |
-| `feature/us-44-subscription` | `564466a` |
-| `feature/us-11-email-verification` | `cd772b4` |
-| `feature/offline-confirmation-cache` | `03d2c86` |
-| `feature/us-22-reinforced-reminders` | `6b336c1` |
-| `feature/public-plans` | `a439d17` |
-| `feature/us-05-scheduled-reminders` | `e604dd3` |
-| `feature/us-12-linked-person` | `a0aa276` |
+Algunas historias se implementaron juntas en un mismo commit original. En esos casos comparten el corte: se conservan los hashes y autores sin dividir artificialmente la contribución. Los merges de integración se realizan ahora; no representan un desarrollo histórico independiente de cada rama. Las tareas transversales de caché y presentación pública tienen referencias técnicas separadas.
+
+| Rama | Corte original | Autor del corte |
+| --- | --- | --- |
+| `feature/us-01-pin-access` | `b2493b3` | u202415820 |
+| `feature/us-02-care-link` | `ce70f0d` | David Joel Morales Venegas |
+| `feature/us-03-register-medication` | `8cce4df` | Eduardo |
+| `feature/us-04-update-deactivate-medication` | `8cce4df` | Eduardo |
+| `feature/us-05-dose-reminder` | `e604dd3` | u202415820 |
+| `feature/us-06-dose-confirmation` | `ca0faf9` | u202415820 |
+| `feature/us-07-missed-dose-alert` | `efc6d20` | Eduardo |
+| `feature/us-08-weekly-adherence-summary` | `911a8a2` | u20241a195-cmd |
+| `feature/us-09-recurring-omission-pattern` | `643caf1` | u20241a195-cmd |
+| `feature/us-10-caregiver-registration` | `ce70f0d` | David Joel Morales Venegas |
+| `feature/us-11-email-verification` | `cd772b4` | u202415820 |
+| `feature/us-12-older-adult-profile` | `a0aa276` | u202415820 |
+| `feature/us-13-care-consent` | `ce70f0d` | David Joel Morales Venegas |
+| `feature/us-14-create-treatment` | `8cce4df` | Eduardo |
+| `feature/us-15-dose-frequency` | `7c4b3a6` | David Joel Morales Venegas |
+| `feature/us-16-schedule-instructions` | `7c4b3a6` | David Joel Morales Venegas |
+| `feature/us-17-treatment-reminders` | `157acea` | David Joel Morales Venegas |
+| `feature/us-18-treatment-activation-pause` | `157acea` | David Joel Morales Venegas |
+| `feature/us-19-treatment-detail` | `157acea` | David Joel Morales Venegas |
+| `feature/us-20-next-dose` | `b2493b3` | u202415820 |
+| `feature/us-21-dose-detail` | `6d2d8ab` | u202415820 |
+| `feature/us-22-reinforced-reminder` | `6b336c1` | u202415820 |
+| `feature/us-23-late-dose-confirmation` | `6d2d8ab` | u202415820 |
+| `feature/us-24-daily-schedule` | `6d2d8ab` | u202415820 |
+| `feature/us-25-recent-care-status` | `efc6d20` | Eduardo |
+| `feature/us-26-intake-history` | `341810e` | u20241a195-cmd |
+| `feature/us-27-alert-detail` | `efc6d20` | Eduardo |
+| `feature/us-28-notification-preferences` | `c9533e4` | Eduardo |
+| `feature/us-29-alert-contact` | `efc6d20` | Eduardo |
+| `feature/us-30-followup-note` | `efc6d20` | Eduardo |
+| `feature/us-31-alert-followup` | `efc6d20` | Eduardo |
+| `feature/us-32-adherence-history` | `341810e` | u20241a195-cmd |
+| `feature/us-33-late-omitted-classification` | `341810e` | u20241a195-cmd |
+| `feature/us-34-adherence-recommendations` | `341810e` | u20241a195-cmd |
+| `feature/us-35-text-size` | `c9533e4` | Eduardo |
+| `feature/us-36-high-contrast` | `c9533e4` | Eduardo |
+| `feature/us-37-reduced-motion` | `c9533e4` | Eduardo |
+| `feature/us-38-reading-assistance` | `c9533e4` | Eduardo |
+| `feature/us-39-quiet-hours-channels` | `c9533e4` | Eduardo |
+| `feature/us-40-initial-inventory` | `270a898` | u202415820 |
+| `feature/us-41-stock-status` | `270a898` | u202415820 |
+| `feature/us-42-low-stock-alert` | `e2c5d15` | u202415820 |
+| `feature/us-43-restock` | `270a898` | u202415820 |
+| `feature/us-44-current-plan` | `564466a` | u202415820 |
+| `feature/us-45-change-subscription` | `564466a` | u202415820 |
+| `feature/offline-confirmation-cache` | `03d2c86` | u202415820 |
+| `feature/public-plans` | `a439d17` | u202415820 |
