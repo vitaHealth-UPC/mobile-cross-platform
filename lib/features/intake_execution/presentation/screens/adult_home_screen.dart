@@ -186,6 +186,18 @@ class _AdultHomeScreenState extends State<AdultHomeScreen> {
                 const SizedBox(height: 18),
                 const AgendaClearNotice(),
               ],
+              if (state.status == HomeStatus.ready)
+                if (state.progress?.due case final due?) ...[
+                  const SizedBox(height: 18),
+                  DueIntakeReminder(
+                    intake: due,
+                    now: now,
+                    onTap: switch (widget.onOpenDose) {
+                      final open? => () => open(due.id),
+                      null => null,
+                    },
+                  ),
+                ],
             ],
           ),
         ),

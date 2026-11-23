@@ -1353,5 +1353,14 @@
   "pfReducedMotionHint": "Disminuye animaciones",
   "pfVoiceHint": "Escucha confirmaciones",
   "pfNeedHelp": "¿Necesitas ayuda?",
-  "pfHelpSummary": "Te guiamos para configurar tu app."
+  "pfHelpSummary": "Te guiamos para configurar tu app.",
+  "homeDueTitle": "Es hora de tu toma",
+  "homeDueBody": "{medication} · Confirma cuando la hayas tomado.",
+  "@homeDueBody": {
+    "placeholders": {
+      "medication": {"type": "String"}
+    }
+  },
+  "homeReinforcedTitle": "Segundo recordatorio",
+  "homeReinforcedBody": "La toma sigue pendiente. Confírmala cuando la realices."
 }

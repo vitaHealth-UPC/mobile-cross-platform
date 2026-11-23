@@ -4,7 +4,8 @@ import '../ports/intake_reader.dart';
 import '../readmodels/daily_progress.dart';
 
 /// Counts today's taken intakes using the device's local calendar day.
-/// A dose confirmed offline counts: the adult already took it.
+/// A dose confirmed offline counts: the adult already took it, and it is never
+/// reported as due again.
 final class GetDailyProgress {
   const GetDailyProgress(this._reader, this._clock);
   final IntakeReader _reader;
@@ -27,12 +28,23 @@ final class GetDailyProgress {
                 intake.scheduledAt.isBefore(to))
               intake.id: intake,
         }.values;
+        final instant = now.toUtc();
+        final due =
+            today
+                .where(
+                  (intake) =>
+                      intake.confirmable &&
+                      !intake.scheduledAt.isAfter(instant),
+                )
+                .toList()
+              ..sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
         return AppSuccess(
           DailyProgress(
             taken: today
                 .where((intake) => intake.taken || intake.queued)
                 .length,
             total: today.length,
+            due: due.firstOrNull,
           ),
         );
     }
