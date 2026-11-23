@@ -3,7 +3,7 @@ import '../../../../shared/application/session/session_store.dart';
 import '../../../../shared/application/session/stored_session.dart';
 import '../../../../shared/common/result/app_result.dart';
 import '../../../../shared/infrastructure/session/authorized_request.dart';
-import '../../application/ports/omission_ports.dart';
+import '../../application/ports/device_token_registry.dart';
 import '../remote/push_device_api.dart';
 
 /// Registers one installation with the credentials captured for the operation and validates

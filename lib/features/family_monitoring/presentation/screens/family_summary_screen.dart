@@ -8,7 +8,7 @@ import '../../../../shared/presentation/theme/tata_typography.dart';
 import '../../../../shared/presentation/widgets/caregiver_tab_bar.dart';
 import '../../../../shared/presentation/widgets/initials_avatar.dart';
 import '../../application/ports/contact_launcher.dart';
-import '../../application/readmodels/monitoring_readmodels.dart';
+import '../../application/readmodels/family_summary.dart';
 import '../bloc/summary/family_summary_bloc.dart';
 import '../texts/monitoring_texts.dart';
 import '../widgets/family_summary_cards.dart';

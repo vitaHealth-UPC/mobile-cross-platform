@@ -7,7 +7,7 @@ import '../../features/adherence_analytics/presentation/navigation/adherence_lev
 import '../../features/care_link/application/readmodels/caregiver_link_summary.dart';
 import '../../features/care_link/presentation/bloc/profile_editor/profile_editor_cubit.dart';
 import '../../features/care_link/presentation/navigation/profile_editor_route.dart';
-import '../../features/family_monitoring/application/readmodels/monitoring_readmodels.dart';
+import '../../features/family_monitoring/application/readmodels/family_summary.dart';
 import '../../features/family_monitoring/presentation/navigation/family_monitoring_navigation.dart';
 import '../../features/identity_subscription/presentation/bloc/subscription/subscription_bloc.dart';
 import '../../features/identity_subscription/presentation/bloc/subscription/subscription_event.dart';

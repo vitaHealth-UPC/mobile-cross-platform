@@ -1,9 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../shared/common/result/app_result.dart';
-import '../../../application/ports/monitoring_ports.dart';
-import '../../../application/readmodels/monitoring_readmodels.dart';
-import '../../../application/usecases/note_usecases.dart';
+import '../../../application/ports/monitored_person_reader.dart';
+import '../../../application/readmodels/monitored_person.dart';
+import '../../../application/usecases/get_follow_up_notes.dart';
 import '../../../domain/entities/notes.dart';
 import '../../texts/monitoring_texts.dart';
 

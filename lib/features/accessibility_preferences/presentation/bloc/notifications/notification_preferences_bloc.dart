@@ -1,7 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../shared/common/result/app_result.dart';
-import '../../../application/usecases/preferences_usecases.dart';
+import '../../../application/usecases/get_notification_preferences.dart';
+import '../../../application/usecases/update_notification_policy.dart';
+import '../../../application/usecases/update_notification_preferences.dart';
 import '../../../domain/value_objects/notification_preferences.dart';
 import 'notification_preferences_event.dart';
 import 'notification_preferences_state.dart';

@@ -1,7 +1,13 @@
 import '../../../../shared/application/session/session_store.dart';
 import '../../../../shared/common/result/app_result.dart';
-import '../../application/ports/monitoring_ports.dart';
-import '../../application/readmodels/monitoring_readmodels.dart';
+import '../../application/ports/alert_history_reader.dart';
+import '../../application/ports/alert_timeline_reader.dart';
+import '../../application/ports/monitored_dose_reader.dart';
+import '../../application/ports/monitored_person_reader.dart';
+import '../../application/readmodels/alert_timeline.dart';
+import '../../application/readmodels/monitored_dose.dart';
+import '../../application/readmodels/monitored_person.dart';
+import '../../application/readmodels/recorded_alert_event.dart';
 import '../mappers/monitoring_mapper.dart';
 import '../remote/family_monitoring_api.dart';
 import 'monitoring_requests.dart';

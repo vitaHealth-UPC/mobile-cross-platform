@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tata/features/treatment_management/application/usecases/medication_usecases.dart';
+import 'package:tata/features/treatment_management/application/usecases/deactivate_medication.dart';
+import 'package:tata/features/treatment_management/application/usecases/list_medications.dart';
+import 'package:tata/features/treatment_management/application/usecases/reactivate_medication.dart';
+import 'package:tata/features/treatment_management/application/usecases/update_medication.dart';
 import 'package:tata/features/treatment_management/domain/entities/medication.dart';
 import 'package:tata/features/treatment_management/presentation/bloc/medication_management/medication_management_bloc.dart';
 import 'package:tata/features/treatment_management/presentation/widgets/active_medications_card.dart';

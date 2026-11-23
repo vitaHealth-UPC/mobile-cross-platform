@@ -1,4 +1,5 @@
-import '../../application/readmodels/treatment_readmodels.dart';
+import '../../application/readmodels/my_medications_overview.dart';
+import '../../application/readmodels/treatment_detail.dart';
 import '../../domain/entities/medication.dart';
 import '../../domain/entities/treatment.dart';
 import '../../domain/value_objects/administration_schedule.dart';

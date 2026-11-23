@@ -4,7 +4,7 @@ import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/presentation/theme/tata_colors.dart';
 import '../../../../shared/presentation/theme/tata_typography.dart';
 import '../../application/ports/contact_launcher.dart';
-import '../../application/readmodels/monitoring_readmodels.dart';
+import '../../application/readmodels/contact_option.dart';
 import '../../domain/value_objects/contact_channel.dart';
 
 /// Rounded white card shared by the follow-up screens.

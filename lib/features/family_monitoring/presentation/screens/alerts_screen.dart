@@ -8,7 +8,7 @@ import 'package:intl/intl.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/presentation/theme/tata_colors.dart';
 import '../../../../shared/presentation/widgets/caregiver_tab_bar.dart';
-import '../../application/readmodels/monitoring_readmodels.dart';
+import '../../application/readmodels/monitored_dose.dart';
 import '../../domain/entities/caregiver_alert.dart';
 import '../../domain/value_objects/alert_severity.dart';
 import '../../domain/value_objects/alert_status.dart';

@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../shared/common/result/app_result.dart';
-import '../../../application/usecases/medication_usecases.dart';
+import '../../../application/usecases/register_medication.dart';
 import '../../../domain/entities/medication.dart';
 import 'medication_registration_event.dart';
 import 'medication_registration_state.dart';

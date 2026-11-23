@@ -2,7 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../shared/common/result/app_result.dart';
 import '../../../application/failure_codes.dart';
-import '../../../application/usecases/note_usecases.dart';
+import '../../../application/usecases/register_follow_up_note.dart';
 import '../../../domain/entities/notes.dart';
 import '../../../domain/value_objects/note_values.dart';
 

@@ -4,7 +4,8 @@ import 'package:intl/intl.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/presentation/theme/tata_colors.dart';
-import '../../application/readmodels/monitoring_readmodels.dart';
+import '../../application/readmodels/monitored_dose.dart';
+import '../../application/readmodels/recorded_alert_event.dart';
 import '../../domain/entities/caregiver_alert.dart';
 import '../../domain/value_objects/alert_status.dart';
 import '../texts/monitoring_texts.dart';

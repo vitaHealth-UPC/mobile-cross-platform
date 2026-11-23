@@ -1,6 +1,6 @@
 import 'package:flutter_tts/flutter_tts.dart';
 
-import '../../application/ports/voice_confirmation.dart';
+import '../../application/ports/phrase_speaker.dart';
 
 /// Reads the suggested phrase with the device's own text-to-speech engine.
 final class DevicePhraseSpeaker implements PhraseSpeaker {

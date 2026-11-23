@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/presentation/theme/tata_colors.dart';
 import '../../../../shared/presentation/widgets/async_states.dart';
-import '../../application/readmodels/treatment_readmodels.dart';
+import '../../application/readmodels/treatment_detail.dart';
 import '../../domain/value_objects/treatment_status.dart';
 import '../bloc/treatment_management/treatment_management_bloc.dart';
 import '../bloc/treatment_management/treatment_management_event.dart';

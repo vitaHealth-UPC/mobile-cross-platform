@@ -1,8 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../shared/common/result/app_result.dart';
-import '../../../application/readmodels/treatment_readmodels.dart';
-import '../../../application/usecases/treatment_usecases.dart';
+import '../../../application/readmodels/treatment_detail.dart';
+import '../../../application/usecases/list_treatments.dart';
 import 'treatment_list_event.dart';
 import 'treatment_list_state.dart';
 

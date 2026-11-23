@@ -11,8 +11,8 @@ import 'package:tata/features/adherence_analytics/application/usecases/get_recom
 import 'package:tata/features/adherence_analytics/presentation/bloc/history/history_bloc.dart';
 import 'package:tata/features/adherence_analytics/presentation/bloc/recommendations/recommendations_bloc.dart';
 import 'package:tata/features/care_link/application/readmodels/caregiver_link_summary.dart';
-import 'package:tata/features/treatment_management/application/readmodels/treatment_readmodels.dart';
-import 'package:tata/features/treatment_management/application/usecases/treatment_usecases.dart';
+import 'package:tata/features/treatment_management/application/readmodels/treatment_detail.dart';
+import 'package:tata/features/treatment_management/application/usecases/list_treatments.dart';
 import 'package:tata/features/treatment_management/domain/value_objects/treatment_status.dart';
 import 'package:tata/features/treatment_management/presentation/bloc/treatment_list/treatment_list_bloc.dart';
 import 'package:tata/features/treatment_management/presentation/navigation/treatment_navigation.dart';

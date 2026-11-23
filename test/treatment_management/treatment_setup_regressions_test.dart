@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tata/features/treatment_management/application/readmodels/treatment_readmodels.dart';
+import 'package:tata/features/treatment_management/application/readmodels/treatment_detail.dart';
 import 'package:tata/features/treatment_management/domain/value_objects/treatment_status.dart';
 import 'package:tata/features/treatment_management/presentation/bloc/treatment_setup/treatment_setup_event.dart';
 import 'package:tata/features/treatment_management/presentation/bloc/treatment_setup/treatment_setup_state.dart';

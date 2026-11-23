@@ -1,7 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../shared/common/result/app_result.dart';
-import '../../../application/usecases/note_usecases.dart';
+import '../../../application/usecases/create_personal_note.dart';
+import '../../../application/usecases/get_personal_notes.dart';
 import '../../../domain/entities/notes.dart';
 import '../../../domain/value_objects/note_values.dart';
 

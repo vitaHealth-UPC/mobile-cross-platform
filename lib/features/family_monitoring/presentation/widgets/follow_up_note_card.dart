@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/presentation/theme/tata_colors.dart';
 import '../../../../shared/presentation/widgets/initials_avatar.dart';
-import '../../application/readmodels/monitoring_readmodels.dart';
+import '../../application/readmodels/monitored_person.dart';
 import '../../domain/entities/notes.dart';
 import 'monitoring_widgets.dart';
 

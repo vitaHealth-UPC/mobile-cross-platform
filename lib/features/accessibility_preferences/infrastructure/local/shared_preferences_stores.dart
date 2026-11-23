@@ -2,7 +2,8 @@ import 'dart:async';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../application/ports/preferences_ports.dart';
+import '../../application/ports/accessibility_local_store.dart';
+import '../../application/ports/application_language_store.dart';
 import '../../application/readmodels/accessibility_change.dart';
 import '../../domain/value_objects/accessibility_preferences.dart';
 

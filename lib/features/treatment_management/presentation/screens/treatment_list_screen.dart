@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/presentation/widgets/async_states.dart';
-import '../../application/readmodels/treatment_readmodels.dart';
+import '../../application/readmodels/treatment_detail.dart';
 import '../bloc/treatment_list/treatment_list_bloc.dart';
 import '../bloc/treatment_list/treatment_list_event.dart';
 import '../bloc/treatment_list/treatment_list_state.dart';

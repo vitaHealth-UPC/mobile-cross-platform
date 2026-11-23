@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tata/features/treatment_management/application/readmodels/treatment_readmodels.dart';
+import 'package:tata/features/treatment_management/application/readmodels/my_medications_overview.dart';
 import 'package:tata/features/treatment_management/infrastructure/mappers/treatment_mapper.dart';
 import 'package:tata/features/treatment_management/presentation/bloc/my_medications/my_medications_bloc.dart';
 import 'package:tata/features/treatment_management/presentation/screens/medication_catalog_screen.dart';

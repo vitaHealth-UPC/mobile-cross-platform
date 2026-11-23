@@ -1,4 +1,4 @@
-import '../../../application/readmodels/treatment_readmodels.dart';
+import '../../../application/readmodels/treatment_detail.dart';
 
 enum TreatmentListStatus { loading, ready, failure }
 

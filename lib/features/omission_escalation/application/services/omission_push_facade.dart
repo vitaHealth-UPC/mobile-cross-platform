@@ -3,7 +3,10 @@ import '../../domain/value_objects/omission_push.dart';
 import '../policies/omission_push_access_policy.dart';
 import '../readmodels/omission_push_payload.dart';
 import '../readmodels/push_destination.dart';
-import '../usecases/omission_usecases.dart';
+import '../usecases/follow_caregiver_alerts.dart';
+import '../usecases/follow_dose_reminders.dart';
+import '../usecases/handle_incoming_omission_push.dart';
+import '../usecases/resolve_push_destination.dart';
 import 'omission_notification_session_cleanup.dart';
 import 'push_device_registration_coordinator.dart';
 

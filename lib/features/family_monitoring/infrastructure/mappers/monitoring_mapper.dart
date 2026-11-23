@@ -1,4 +1,7 @@
-import '../../application/readmodels/monitoring_readmodels.dart';
+import '../../application/readmodels/intake_history_entry.dart';
+import '../../application/readmodels/monitored_dose.dart';
+import '../../application/readmodels/monitored_person.dart';
+import '../../application/readmodels/recorded_alert_event.dart';
 import '../../domain/entities/caregiver_alert.dart';
 import '../../domain/entities/notes.dart';
 import '../../domain/value_objects/adherence_counts.dart';

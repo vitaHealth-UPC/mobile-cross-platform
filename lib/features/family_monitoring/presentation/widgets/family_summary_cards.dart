@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/presentation/theme/tata_colors.dart';
-import '../../application/readmodels/monitoring_readmodels.dart';
+import '../../application/readmodels/family_summary.dart';
 
 /// Figma 563:727 cards built from authorized monitoring evidence.
 /// Empty and unavailable sources retain distinct messages; sample metrics are not used.

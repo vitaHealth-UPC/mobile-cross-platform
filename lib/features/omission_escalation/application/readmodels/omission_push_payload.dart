@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import '../../domain/value_objects/omission_push.dart';
-import '../usecases/omission_usecases.dart';
+import '../usecases/resolve_push_destination.dart';
 
 /// Tap payload of a local notice: the references a tap needs, nothing clinical beyond the
 /// medication name the notice already shows. It is untrusted input when it comes back, so

@@ -5,7 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../shared/presentation/widgets/caregiver_tab_bar.dart';
 import '../../application/ports/contact_launcher.dart';
-import '../../application/readmodels/monitoring_readmodels.dart';
+import '../../application/readmodels/family_summary.dart';
 import '../bloc/alert_detail/alert_detail_bloc.dart';
 import '../bloc/alerts/alerts_bloc.dart';
 import '../bloc/notes/note_composer_cubit.dart';

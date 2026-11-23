@@ -1,7 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../shared/common/result/app_result.dart';
-import '../../../application/usecases/subscription_usecases.dart';
+import '../../../application/usecases/change_subscription_plan.dart';
+import '../../../application/usecases/get_subscription_overview.dart';
 
 import 'subscription_event.dart';
 import 'subscription_state.dart';

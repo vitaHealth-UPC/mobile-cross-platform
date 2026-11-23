@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
-import '../../application/readmodels/treatment_readmodels.dart';
+import '../../application/readmodels/treatment_detail.dart';
 import '../bloc/treatment_management/treatment_management_event.dart';
 
 /// Native regimen editor; its state owns controllers through the dialog exit transition.

@@ -1,9 +1,13 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../shared/common/result/app_result.dart';
-import '../../../application/readmodels/treatment_readmodels.dart';
-import '../../../application/usecases/medication_usecases.dart';
-import '../../../application/usecases/treatment_usecases.dart';
+import '../../../application/readmodels/treatment_detail.dart';
+import '../../../application/usecases/change_treatment_status.dart';
+import '../../../application/usecases/configure_treatment.dart';
+import '../../../application/usecases/deactivate_medication.dart';
+import '../../../application/usecases/get_treatment_detail.dart';
+import '../../../application/usecases/list_medications.dart';
+import '../../../application/usecases/reactivate_medication.dart';
 import '../../../domain/entities/medication.dart';
 import '../../../domain/entities/treatment.dart';
 import 'treatment_management_event.dart';

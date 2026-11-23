@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../application/usecases/preferences_usecases.dart';
+import '../../application/usecases/observe_accessibility.dart';
+import '../../application/usecases/observe_application_language.dart';
+import '../../application/usecases/sync_user_preferences.dart';
 import '../../domain/value_objects/accessibility_preferences.dart';
 
 /// What the whole application renders with: device-applied accessibility and language.

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tata/features/accessibility_preferences/application/usecases/preferences_usecases.dart';
+import 'package:tata/features/accessibility_preferences/application/usecases/observe_accessibility.dart';
+import 'package:tata/features/accessibility_preferences/application/usecases/observe_application_language.dart';
+import 'package:tata/features/accessibility_preferences/application/usecases/sync_user_preferences.dart';
 import 'package:tata/features/accessibility_preferences/domain/value_objects/accessibility_preferences.dart';
 import 'package:tata/features/accessibility_preferences/infrastructure/repositories/offline_first_user_preferences.dart';
 import 'package:tata/features/accessibility_preferences/presentation/bloc/accessibility/accessibility_event.dart';

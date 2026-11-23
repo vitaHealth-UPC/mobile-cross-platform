@@ -8,7 +8,7 @@ import 'package:tata/features/adherence_analytics/application/usecases/get_adher
 import 'package:tata/features/adherence_analytics/presentation/bloc/level/level_bloc.dart';
 import 'package:tata/features/adherence_analytics/presentation/navigation/adherence_badge_view.dart';
 import 'package:tata/features/adherence_analytics/presentation/navigation/treatment_adherence_view.dart';
-import 'package:tata/features/treatment_management/application/readmodels/treatment_readmodels.dart';
+import 'package:tata/features/treatment_management/application/readmodels/treatment_detail.dart';
 import 'package:tata/features/treatment_management/domain/entities/medication.dart';
 import 'package:tata/features/treatment_management/domain/value_objects/treatment_status.dart';
 import 'package:tata/features/treatment_management/presentation/bloc/treatment_management/treatment_management_bloc.dart';

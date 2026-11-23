@@ -1,7 +1,10 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../shared/common/result/app_result.dart';
-import '../../../application/usecases/medication_usecases.dart';
+import '../../../application/usecases/deactivate_medication.dart';
+import '../../../application/usecases/list_medications.dart';
+import '../../../application/usecases/reactivate_medication.dart';
+import '../../../application/usecases/update_medication.dart';
 import '../../../domain/entities/medication.dart';
 import 'medication_management_event.dart';
 import 'medication_management_state.dart';

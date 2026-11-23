@@ -2,7 +2,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../shared/common/result/app_result.dart';
 import '../../../application/readmodels/accessibility_change.dart';
-import '../../../application/usecases/preferences_usecases.dart';
+import '../../../application/usecases/change_application_language.dart';
+import '../../../application/usecases/observe_accessibility.dart';
+import '../../../application/usecases/observe_application_language.dart';
+import '../../../application/usecases/sync_user_preferences.dart';
+import '../../../application/usecases/update_accessibility.dart';
 import '../../../domain/entities/user_preferences.dart';
 import '../../../domain/value_objects/accessibility_preferences.dart';
 import 'accessibility_event.dart';

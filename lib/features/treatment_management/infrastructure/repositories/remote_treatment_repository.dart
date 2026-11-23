@@ -2,7 +2,7 @@ import '../../../../shared/application/session/session_store.dart';
 import '../../../../shared/common/result/app_result.dart';
 import '../../domain/entities/medication.dart';
 import '../../domain/entities/treatment.dart';
-import '../../domain/repositories/treatment_repositories.dart';
+import '../../domain/repositories/treatment_repository.dart';
 import '../mappers/treatment_mapper.dart';
 import '../remote/treatment_api.dart';
 import 'treatment_requests.dart';

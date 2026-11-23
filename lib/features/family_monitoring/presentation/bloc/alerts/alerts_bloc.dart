@@ -2,8 +2,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../shared/application/time/clock.dart';
 import '../../../../../shared/common/result/app_result.dart';
-import '../../../application/readmodels/monitoring_readmodels.dart';
-import '../../../application/usecases/alert_usecases.dart';
+import '../../../application/readmodels/monitored_dose.dart';
+import '../../../application/usecases/get_alert_timeline.dart';
 import '../../../domain/entities/caregiver_alert.dart';
 import '../../../domain/value_objects/alert_severity.dart';
 import '../../../domain/value_objects/alert_status.dart';

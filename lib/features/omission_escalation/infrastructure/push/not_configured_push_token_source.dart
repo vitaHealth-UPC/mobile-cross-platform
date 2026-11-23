@@ -1,5 +1,6 @@
 import '../../../../shared/common/result/app_result.dart';
-import '../../application/ports/omission_ports.dart';
+import '../../application/ports/device_push_token_source.dart';
+import '../../application/ports/omission_notifier.dart';
 import '../../domain/value_objects/omission_push.dart';
 
 /// Token source of a build without a push provider: the Kotlin app behaves the same when
