@@ -692,7 +692,7 @@
   "pfTextMedium": "Medium",
   "pfTextLarge": "Large",
   "pfTextExtraLarge": "Extra large",
-  "pfHighContrast": "High contrast",
+  "pfHighContrast": "Enhanced contrast",
   "pfDarkTheme": "Dark theme",
   "pfReducedMotion": "Reduce motion",
   "pfReadingAssistance": "Reading assistance",
@@ -1241,5 +1241,16 @@
   "regVerificationExpiredTitle": "Verification expired",
   "regVerificationExpiredBody": "Request a new code to enable the account.",
   "regRequestNewCode": "Request a new code",
-  "linkFailedTitle": "Could not link"
+  "linkFailedTitle": "Could not link",
+  "pfAccessibilitySubtitle": "Adjust the experience to your needs",
+  "pfViewGroup": "Display",
+  "pfInteractionGroup": "Interaction",
+  "pfLargeTextTitle": "Large text",
+  "pfLargeTextHint": "Increase text size",
+  "pfContrastHint": "Improve readability",
+  "pfDarkThemeHint": "Reduce screen brightness",
+  "pfReducedMotionHint": "Reduce animations",
+  "pfVoiceHint": "Listen for confirmations",
+  "pfNeedHelp": "Need help?",
+  "pfHelpSummary": "We help you set up your app."
 }

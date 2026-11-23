@@ -5,5 +5,9 @@ sealed class HomeEvent {
 
 /// Loads, retries or refreshes the next intake and today's progress.
 final class HomeRequested extends HomeEvent {
-  const HomeRequested();
+  const HomeRequested({this.background = false});
+
+  /// A periodic refresh preserves the ready view and skips an in-flight read.
+  /// User-requested reloads still supersede older requests.
+  final bool background;
 }

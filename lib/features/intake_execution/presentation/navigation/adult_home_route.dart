@@ -11,8 +11,8 @@ import '../bloc/home/home_event.dart';
 import '../bloc/home/home_state.dart';
 import '../screens/adult_home_screen.dart';
 
-/// Owns the [HomeBloc], reloads when the app returns to the foreground and
-/// reports lost access so Identity can revalidate the session.
+/// Owns the [HomeBloc], refreshes the visible foreground home and reports lost
+/// access so Identity can revalidate the session. No polling runs while paused.
 class AdultHomeRoute extends StatefulWidget {
   const AdultHomeRoute({
     super.key,
@@ -55,17 +55,23 @@ class _AdultHomeRouteState extends State<AdultHomeRoute> {
   late final AppLifecycleListener _lifecycle;
   StreamSubscription<IntakeSyncStatus>? _syncChanges;
   IntakeSyncStatus? _syncStatus;
+  Timer? _refreshTimer;
+  bool _accessLost = false;
 
   @override
   void initState() {
     super.initState();
     _bloc = widget.createBloc()..add(const HomeRequested());
     _lifecycle = AppLifecycleListener(
+      onStateChange: _lifecycleChanged,
       onResume: () {
-        _bloc.add(const HomeRequested());
+        if (!_accessLost) _bloc.add(const HomeRequested());
         unawaited(widget.sync?.request());
       },
       onPause: () => widget.sync?.suspend(),
+    );
+    _lifecycleChanged(
+      WidgetsBinding.instance.lifecycleState ?? AppLifecycleState.resumed,
     );
     if (widget.sync case final sync?) {
       _syncStatus = sync.status;
@@ -74,16 +80,30 @@ class _AdultHomeRouteState extends State<AdultHomeRoute> {
     }
   }
 
+  /// One read per minute discovers remotely scheduled doses without requiring
+  /// navigation. Covered routes are skipped; returning flows already reload.
+  void _lifecycleChanged(AppLifecycleState state) {
+    _refreshTimer?.cancel();
+    _refreshTimer = null;
+    if (state != AppLifecycleState.resumed || _accessLost) return;
+    _refreshTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (mounted && ModalRoute.of(context)?.isCurrent == true) {
+        _bloc.add(const HomeRequested(background: true));
+      }
+    });
+  }
+
   /// A server answer to a queued confirmation changes what the home shows.
   void _syncChanged(IntakeSyncStatus status) {
     final answered = status.resolved > (_syncStatus?.resolved ?? 0);
     setState(() => _syncStatus = status);
-    if (answered) _bloc.add(const HomeRequested());
+    if (answered && !_accessLost) _bloc.add(const HomeRequested());
   }
 
   @override
   void dispose() {
     _lifecycle.dispose();
+    _refreshTimer?.cancel();
     _syncChanges?.cancel();
     _bloc.close();
     super.dispose();
@@ -98,7 +118,7 @@ class _AdultHomeRouteState extends State<AdultHomeRoute> {
 
   Future<void> _returnFrom(Future<void> navigation) async {
     await navigation;
-    if (mounted) _bloc.add(const HomeRequested());
+    if (mounted && !_accessLost) _bloc.add(const HomeRequested());
   }
 
   @override
@@ -113,6 +133,8 @@ class _AdultHomeRouteState extends State<AdultHomeRoute> {
           'SESSION_CHANGED',
           'ACCESS_DENIED',
         }.contains(state.errorCode)) {
+          _accessLost = true;
+          _refreshTimer?.cancel();
           widget.onSessionInvalidated();
         }
       },

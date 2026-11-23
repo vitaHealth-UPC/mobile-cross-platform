@@ -52,6 +52,7 @@ abstract final class Appearance {
           media.textScaler.scale(1) * value.textSize.scaleFactor,
         ),
         disableAnimations: media.disableAnimations || value.reducedMotion,
+        highContrast: media.highContrast || value.highContrast,
       ),
       child: child,
     );

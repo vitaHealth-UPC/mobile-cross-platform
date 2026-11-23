@@ -208,6 +208,8 @@ final class IntakeDao implements IntakeLocalStore {
         ownerId: owner.id,
         careLinkId: owner.careLinkId!,
         intakeId: intake.id,
+        medicationId: Value(intake.medicationId),
+        treatmentId: Value(intake.treatmentId),
         medicationName: intake.medicationName,
         dose: intake.dose,
         instructions: Value(intake.instructions),
@@ -221,6 +223,8 @@ final class IntakeDao implements IntakeLocalStore {
 
   Intake _intake(CachedIntakeRow row) => Intake(
     id: row.intakeId,
+    medicationId: row.medicationId,
+    treatmentId: row.treatmentId,
     olderAdultId: row.ownerId,
     medicationName: row.medicationName,
     dose: row.dose,

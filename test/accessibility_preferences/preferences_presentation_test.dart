@@ -245,13 +245,29 @@ void main() {
       await tester.pumpAndSettle();
       expect((await local.current('user-A')).darkTheme, isTrue);
       expect(bloc.state.sync, AccessibilitySyncStatus.pending);
+      await tester.scrollUntilVisible(
+        find.textContaining('se enviará cuando haya conexión'),
+        300,
+      );
       expect(
         find.textContaining('se enviará cuando haya conexión'),
         findsOneWidget,
       );
+      tester
+          .state<ScrollableState>(find.byType(Scrollable).first)
+          .position
+          .jumpTo(0);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('accessibility-text-size')));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Grande'));
       await tester.pumpAndSettle();
       expect((await local.current('user-A')).textSize, TextSizeLevel.large);
+      await tester.scrollUntilVisible(
+        find.widgetWithText(ListTile, 'Idioma'),
+        300,
+      );
+      await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(ListTile, 'Idioma'));
       await tester.pumpAndSettle();
       expect(language.values['user-A'], AppLanguage.english);

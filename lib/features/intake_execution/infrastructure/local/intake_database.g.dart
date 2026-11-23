@@ -42,6 +42,28 @@ class $CachedIntakesTable extends CachedIntakes
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _medicationIdMeta = const VerificationMeta(
+    'medicationId',
+  );
+  @override
+  late final GeneratedColumn<String> medicationId = GeneratedColumn<String>(
+    'medication_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _treatmentIdMeta = const VerificationMeta(
+    'treatmentId',
+  );
+  @override
+  late final GeneratedColumn<String> treatmentId = GeneratedColumn<String>(
+    'treatment_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _medicationNameMeta = const VerificationMeta(
     'medicationName',
   );
@@ -109,6 +131,8 @@ class $CachedIntakesTable extends CachedIntakes
     ownerId,
     careLinkId,
     intakeId,
+    medicationId,
+    treatmentId,
     medicationName,
     dose,
     instructions,
@@ -154,6 +178,24 @@ class $CachedIntakesTable extends CachedIntakes
       );
     } else if (isInserting) {
       context.missing(_intakeIdMeta);
+    }
+    if (data.containsKey('medication_id')) {
+      context.handle(
+        _medicationIdMeta,
+        medicationId.isAcceptableOrUnknown(
+          data['medication_id']!,
+          _medicationIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('treatment_id')) {
+      context.handle(
+        _treatmentIdMeta,
+        treatmentId.isAcceptableOrUnknown(
+          data['treatment_id']!,
+          _treatmentIdMeta,
+        ),
+      );
     }
     if (data.containsKey('medication_name')) {
       context.handle(
@@ -224,6 +266,14 @@ class $CachedIntakesTable extends CachedIntakes
         DriftSqlType.string,
         data['${effectivePrefix}intake_id'],
       )!,
+      medicationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}medication_id'],
+      ),
+      treatmentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}treatment_id'],
+      ),
       medicationName: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}medication_name'],
@@ -266,6 +316,11 @@ class CachedIntakeRow extends DataClass implements Insertable<CachedIntakeRow> {
   final String ownerId;
   final String careLinkId;
   final String intakeId;
+
+  /// Source references added in schema 2; rows cached by schema 1 lack them
+  /// until the next agenda refresh replaces those rows.
+  final String? medicationId;
+  final String? treatmentId;
   final String medicationName;
   final String dose;
   final String? instructions;
@@ -276,6 +331,8 @@ class CachedIntakeRow extends DataClass implements Insertable<CachedIntakeRow> {
     required this.ownerId,
     required this.careLinkId,
     required this.intakeId,
+    this.medicationId,
+    this.treatmentId,
     required this.medicationName,
     required this.dose,
     this.instructions,
@@ -289,6 +346,12 @@ class CachedIntakeRow extends DataClass implements Insertable<CachedIntakeRow> {
     map['owner_id'] = Variable<String>(ownerId);
     map['care_link_id'] = Variable<String>(careLinkId);
     map['intake_id'] = Variable<String>(intakeId);
+    if (!nullToAbsent || medicationId != null) {
+      map['medication_id'] = Variable<String>(medicationId);
+    }
+    if (!nullToAbsent || treatmentId != null) {
+      map['treatment_id'] = Variable<String>(treatmentId);
+    }
     map['medication_name'] = Variable<String>(medicationName);
     map['dose'] = Variable<String>(dose);
     if (!nullToAbsent || instructions != null) {
@@ -311,6 +374,12 @@ class CachedIntakeRow extends DataClass implements Insertable<CachedIntakeRow> {
       ownerId: Value(ownerId),
       careLinkId: Value(careLinkId),
       intakeId: Value(intakeId),
+      medicationId: medicationId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(medicationId),
+      treatmentId: treatmentId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(treatmentId),
       medicationName: Value(medicationName),
       dose: Value(dose),
       instructions: instructions == null && nullToAbsent
@@ -333,6 +402,8 @@ class CachedIntakeRow extends DataClass implements Insertable<CachedIntakeRow> {
       ownerId: serializer.fromJson<String>(json['ownerId']),
       careLinkId: serializer.fromJson<String>(json['careLinkId']),
       intakeId: serializer.fromJson<String>(json['intakeId']),
+      medicationId: serializer.fromJson<String?>(json['medicationId']),
+      treatmentId: serializer.fromJson<String?>(json['treatmentId']),
       medicationName: serializer.fromJson<String>(json['medicationName']),
       dose: serializer.fromJson<String>(json['dose']),
       instructions: serializer.fromJson<String?>(json['instructions']),
@@ -350,6 +421,8 @@ class CachedIntakeRow extends DataClass implements Insertable<CachedIntakeRow> {
       'ownerId': serializer.toJson<String>(ownerId),
       'careLinkId': serializer.toJson<String>(careLinkId),
       'intakeId': serializer.toJson<String>(intakeId),
+      'medicationId': serializer.toJson<String?>(medicationId),
+      'treatmentId': serializer.toJson<String?>(treatmentId),
       'medicationName': serializer.toJson<String>(medicationName),
       'dose': serializer.toJson<String>(dose),
       'instructions': serializer.toJson<String?>(instructions),
@@ -365,6 +438,8 @@ class CachedIntakeRow extends DataClass implements Insertable<CachedIntakeRow> {
     String? ownerId,
     String? careLinkId,
     String? intakeId,
+    Value<String?> medicationId = const Value.absent(),
+    Value<String?> treatmentId = const Value.absent(),
     String? medicationName,
     String? dose,
     Value<String?> instructions = const Value.absent(),
@@ -375,6 +450,8 @@ class CachedIntakeRow extends DataClass implements Insertable<CachedIntakeRow> {
     ownerId: ownerId ?? this.ownerId,
     careLinkId: careLinkId ?? this.careLinkId,
     intakeId: intakeId ?? this.intakeId,
+    medicationId: medicationId.present ? medicationId.value : this.medicationId,
+    treatmentId: treatmentId.present ? treatmentId.value : this.treatmentId,
     medicationName: medicationName ?? this.medicationName,
     dose: dose ?? this.dose,
     instructions: instructions.present ? instructions.value : this.instructions,
@@ -391,6 +468,12 @@ class CachedIntakeRow extends DataClass implements Insertable<CachedIntakeRow> {
           ? data.careLinkId.value
           : this.careLinkId,
       intakeId: data.intakeId.present ? data.intakeId.value : this.intakeId,
+      medicationId: data.medicationId.present
+          ? data.medicationId.value
+          : this.medicationId,
+      treatmentId: data.treatmentId.present
+          ? data.treatmentId.value
+          : this.treatmentId,
       medicationName: data.medicationName.present
           ? data.medicationName.value
           : this.medicationName,
@@ -414,6 +497,8 @@ class CachedIntakeRow extends DataClass implements Insertable<CachedIntakeRow> {
           ..write('ownerId: $ownerId, ')
           ..write('careLinkId: $careLinkId, ')
           ..write('intakeId: $intakeId, ')
+          ..write('medicationId: $medicationId, ')
+          ..write('treatmentId: $treatmentId, ')
           ..write('medicationName: $medicationName, ')
           ..write('dose: $dose, ')
           ..write('instructions: $instructions, ')
@@ -429,6 +514,8 @@ class CachedIntakeRow extends DataClass implements Insertable<CachedIntakeRow> {
     ownerId,
     careLinkId,
     intakeId,
+    medicationId,
+    treatmentId,
     medicationName,
     dose,
     instructions,
@@ -443,6 +530,8 @@ class CachedIntakeRow extends DataClass implements Insertable<CachedIntakeRow> {
           other.ownerId == this.ownerId &&
           other.careLinkId == this.careLinkId &&
           other.intakeId == this.intakeId &&
+          other.medicationId == this.medicationId &&
+          other.treatmentId == this.treatmentId &&
           other.medicationName == this.medicationName &&
           other.dose == this.dose &&
           other.instructions == this.instructions &&
@@ -455,6 +544,8 @@ class CachedIntakesCompanion extends UpdateCompanion<CachedIntakeRow> {
   final Value<String> ownerId;
   final Value<String> careLinkId;
   final Value<String> intakeId;
+  final Value<String?> medicationId;
+  final Value<String?> treatmentId;
   final Value<String> medicationName;
   final Value<String> dose;
   final Value<String?> instructions;
@@ -466,6 +557,8 @@ class CachedIntakesCompanion extends UpdateCompanion<CachedIntakeRow> {
     this.ownerId = const Value.absent(),
     this.careLinkId = const Value.absent(),
     this.intakeId = const Value.absent(),
+    this.medicationId = const Value.absent(),
+    this.treatmentId = const Value.absent(),
     this.medicationName = const Value.absent(),
     this.dose = const Value.absent(),
     this.instructions = const Value.absent(),
@@ -478,6 +571,8 @@ class CachedIntakesCompanion extends UpdateCompanion<CachedIntakeRow> {
     required String ownerId,
     required String careLinkId,
     required String intakeId,
+    this.medicationId = const Value.absent(),
+    this.treatmentId = const Value.absent(),
     required String medicationName,
     required String dose,
     this.instructions = const Value.absent(),
@@ -496,6 +591,8 @@ class CachedIntakesCompanion extends UpdateCompanion<CachedIntakeRow> {
     Expression<String>? ownerId,
     Expression<String>? careLinkId,
     Expression<String>? intakeId,
+    Expression<String>? medicationId,
+    Expression<String>? treatmentId,
     Expression<String>? medicationName,
     Expression<String>? dose,
     Expression<String>? instructions,
@@ -508,6 +605,8 @@ class CachedIntakesCompanion extends UpdateCompanion<CachedIntakeRow> {
       if (ownerId != null) 'owner_id': ownerId,
       if (careLinkId != null) 'care_link_id': careLinkId,
       if (intakeId != null) 'intake_id': intakeId,
+      if (medicationId != null) 'medication_id': medicationId,
+      if (treatmentId != null) 'treatment_id': treatmentId,
       if (medicationName != null) 'medication_name': medicationName,
       if (dose != null) 'dose': dose,
       if (instructions != null) 'instructions': instructions,
@@ -522,6 +621,8 @@ class CachedIntakesCompanion extends UpdateCompanion<CachedIntakeRow> {
     Value<String>? ownerId,
     Value<String>? careLinkId,
     Value<String>? intakeId,
+    Value<String?>? medicationId,
+    Value<String?>? treatmentId,
     Value<String>? medicationName,
     Value<String>? dose,
     Value<String?>? instructions,
@@ -534,6 +635,8 @@ class CachedIntakesCompanion extends UpdateCompanion<CachedIntakeRow> {
       ownerId: ownerId ?? this.ownerId,
       careLinkId: careLinkId ?? this.careLinkId,
       intakeId: intakeId ?? this.intakeId,
+      medicationId: medicationId ?? this.medicationId,
+      treatmentId: treatmentId ?? this.treatmentId,
       medicationName: medicationName ?? this.medicationName,
       dose: dose ?? this.dose,
       instructions: instructions ?? this.instructions,
@@ -555,6 +658,12 @@ class CachedIntakesCompanion extends UpdateCompanion<CachedIntakeRow> {
     }
     if (intakeId.present) {
       map['intake_id'] = Variable<String>(intakeId.value);
+    }
+    if (medicationId.present) {
+      map['medication_id'] = Variable<String>(medicationId.value);
+    }
+    if (treatmentId.present) {
+      map['treatment_id'] = Variable<String>(treatmentId.value);
     }
     if (medicationName.present) {
       map['medication_name'] = Variable<String>(medicationName.value);
@@ -588,6 +697,8 @@ class CachedIntakesCompanion extends UpdateCompanion<CachedIntakeRow> {
           ..write('ownerId: $ownerId, ')
           ..write('careLinkId: $careLinkId, ')
           ..write('intakeId: $intakeId, ')
+          ..write('medicationId: $medicationId, ')
+          ..write('treatmentId: $treatmentId, ')
           ..write('medicationName: $medicationName, ')
           ..write('dose: $dose, ')
           ..write('instructions: $instructions, ')
@@ -1007,6 +1118,8 @@ typedef $$CachedIntakesTableCreateCompanionBuilder =
       required String ownerId,
       required String careLinkId,
       required String intakeId,
+      Value<String?> medicationId,
+      Value<String?> treatmentId,
       required String medicationName,
       required String dose,
       Value<String?> instructions,
@@ -1020,6 +1133,8 @@ typedef $$CachedIntakesTableUpdateCompanionBuilder =
       Value<String> ownerId,
       Value<String> careLinkId,
       Value<String> intakeId,
+      Value<String?> medicationId,
+      Value<String?> treatmentId,
       Value<String> medicationName,
       Value<String> dose,
       Value<String?> instructions,
@@ -1050,6 +1165,16 @@ class $$CachedIntakesTableFilterComposer
 
   ColumnFilters<String> get intakeId => $composableBuilder(
     column: $table.intakeId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get medicationId => $composableBuilder(
+    column: $table.medicationId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get treatmentId => $composableBuilder(
+    column: $table.treatmentId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1109,6 +1234,16 @@ class $$CachedIntakesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get medicationId => $composableBuilder(
+    column: $table.medicationId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get treatmentId => $composableBuilder(
+    column: $table.treatmentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get medicationName => $composableBuilder(
     column: $table.medicationName,
     builder: (column) => ColumnOrderings(column),
@@ -1159,6 +1294,16 @@ class $$CachedIntakesTableAnnotationComposer
 
   GeneratedColumn<String> get intakeId =>
       $composableBuilder(column: $table.intakeId, builder: (column) => column);
+
+  GeneratedColumn<String> get medicationId => $composableBuilder(
+    column: $table.medicationId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get treatmentId => $composableBuilder(
+    column: $table.treatmentId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get medicationName => $composableBuilder(
     column: $table.medicationName,
@@ -1227,6 +1372,8 @@ class $$CachedIntakesTableTableManager
                 Value<String> ownerId = const Value.absent(),
                 Value<String> careLinkId = const Value.absent(),
                 Value<String> intakeId = const Value.absent(),
+                Value<String?> medicationId = const Value.absent(),
+                Value<String?> treatmentId = const Value.absent(),
                 Value<String> medicationName = const Value.absent(),
                 Value<String> dose = const Value.absent(),
                 Value<String?> instructions = const Value.absent(),
@@ -1238,6 +1385,8 @@ class $$CachedIntakesTableTableManager
                 ownerId: ownerId,
                 careLinkId: careLinkId,
                 intakeId: intakeId,
+                medicationId: medicationId,
+                treatmentId: treatmentId,
                 medicationName: medicationName,
                 dose: dose,
                 instructions: instructions,
@@ -1251,6 +1400,8 @@ class $$CachedIntakesTableTableManager
                 required String ownerId,
                 required String careLinkId,
                 required String intakeId,
+                Value<String?> medicationId = const Value.absent(),
+                Value<String?> treatmentId = const Value.absent(),
                 required String medicationName,
                 required String dose,
                 Value<String?> instructions = const Value.absent(),
@@ -1262,6 +1413,8 @@ class $$CachedIntakesTableTableManager
                 ownerId: ownerId,
                 careLinkId: careLinkId,
                 intakeId: intakeId,
+                medicationId: medicationId,
+                treatmentId: treatmentId,
                 medicationName: medicationName,
                 dose: dose,
                 instructions: instructions,

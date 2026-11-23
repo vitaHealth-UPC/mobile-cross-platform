@@ -19,16 +19,22 @@ final class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final GetNextIntake _next;
   final GetDailyProgress _progress;
   int _revision = 0;
+  bool _loading = false;
 
   Future<void> _load(HomeRequested event, Emitter<HomeState> emit) async {
+    if (event.background && _loading) return;
     final revision = ++_revision;
-    emit(const HomeState());
+    _loading = true;
+    if (!event.background || state.status != HomeStatus.ready) {
+      emit(const HomeState());
+    }
     // Both reads start before either is awaited.
     final pendingNext = _next();
     final pendingProgress = _progress();
     final next = await pendingNext;
     final progress = await pendingProgress;
     if (revision != _revision || emit.isDone) return;
+    _loading = false;
     if (progress case AppFailure(:final code)
         when const {
           'AUTHENTICATION_REQUIRED',
