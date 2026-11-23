@@ -1,6 +1,10 @@
 # User stories
 
-Flutter implementa las capacidades del mismo producto Tata y reutiliza sus identificadores de historias cuando conserva actor, objetivo y aceptación. El sprint y sus tareas técnicas se planifican por cliente; crear otro cliente no implica duplicar historias de producto.
+Flutter implementa las mismas historias de producto US-01 a US-45 del cliente Android. El Product Backlog conserva los identificadores, actores y objetivos; la aceptación identifica la plataforma cubierta. El nuevo Sprint Backlog selecciona esas historias y descompone el trabajo de Flutter en tareas verificables.
+
+El enunciado 202620 presenta un Product Backlog con estimación, prioridad y sprint (p. 16), una sección por sprint (p. 25) y un Sprint Backlog con historias seleccionadas y sus tareas (p. 28). No exige duplicar el Product Backlog ni repetir literalmente las tareas técnicas de Android. AV2 corresponde al Sprint 2 y TB2 al Sprint 3 (pp. 34-35).
+
+Las TS conservan sus identificadores cuando el catálogo establece una misma tarea aplicable a ambos clientes; las tareas específicas de plataforma describen widgets, BLoC, persistencia y pruebas Flutter. El trabajo completado en Android no acredita automáticamente aceptación en Flutter. La selección y estimación del sprint se registran con el equipo, sin inventar retrospectivamente fechas o esfuerzos.
 
 Los commits originales y sus autores se conservan. Un commit que cubre varias historias mantiene ese alcance al integrar; las ramas no se utilizan para atribuir trabajo inexistente.
 
@@ -59,9 +63,9 @@ La aceptación de una historia requiere comportamiento por actor, errores, permi
 | US-44 | Current subscription | `identity_subscription` | Plans and account subscription |
 | US-45 | Change subscription | `identity_subscription` | Update account plan |
 
-## Referencias de contribución
+## Cortes de contribución revisados
 
-Estas ramas identifican cortes auténticos del historial compartido. Incluyen dependencias anteriores y, cuando el commit reúne varias capacidades, no representan una implementación aislada de una sola historia. Las correcciones de integración permanecen en `temp`. Los merges a `develop` registran la integración actual; no reconstruyen fechas ni autorías pasadas.
+Los 19 cortes siguientes identifican contribuciones auténticas del historial compartido; no sustituyen las 45 historias ni el Sprint Backlog. Su distribución por ramas se ajusta al catálogo antes de publicar. Incluyen dependencias anteriores y, cuando el commit reúne varias capacidades, no representan una implementación aislada de una sola historia. Las correcciones de integración permanecen en `temp`. Los merges a `develop` registran la integración actual; no reconstruyen fechas ni autorías pasadas.
 
 | Rama | Commit original de cierre |
 | --- | --- |
