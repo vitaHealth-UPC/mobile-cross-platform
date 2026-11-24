@@ -15,8 +15,11 @@ void main() {
     tester,
   ) async {
     final repository = _SessionRepository();
+    final preparing = ValueNotifier(false);
+    addTearDown(preparing.dispose);
     await tester.pumpWidget(
       TataApp(
+        backendPreparing: preparing,
         createAccessBloc: () => AccessBloc(
           signIn: SignIn(repository),
           restore: RestoreSession(repository),
@@ -44,6 +47,20 @@ void main() {
       'USER@example.com',
     );
     await tester.enterText(find.byKey(const Key('login-password')), 'password');
+    preparing.value = true;
+    await tester.pump();
+    expect(find.textContaining('Preparando el servicio'), findsOneWidget);
+    expect(
+      tester
+          .widget<TextFormField>(find.byKey(const Key('login-password')))
+          .controller!
+          .text,
+      'password',
+    );
+    preparing.value = false;
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Preparando el servicio'), findsNothing);
+
     await tester.ensureVisible(find.text('Iniciar sesión'));
     await tester.tap(find.text('Iniciar sesión'));
     await tester.pumpAndSettle();

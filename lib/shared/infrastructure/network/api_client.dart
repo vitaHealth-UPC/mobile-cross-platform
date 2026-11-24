@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 
 import 'api_response.dart';
+import 'backend_readiness.dart';
 
 /// Reusable HTTP boundary. Caller passes its captured credential explicitly.
 final class ApiClient {
@@ -12,11 +13,22 @@ final class ApiClient {
     required this.baseUrl,
     required this._client,
     this.timeout = const Duration(seconds: 30),
+    this.readiness,
   });
 
   final Uri baseUrl;
   final http.Client _client;
   final Duration timeout;
+  final BackendReadiness? readiness;
+
+  /// Starts a best-effort probe without blocking the initial UI.
+  Future<void> prepareBackend() async {
+    try {
+      await readiness?.ensureReady();
+    } on ApiTransportException {
+      // The next explicit operation may try readiness again.
+    }
+  }
 
   /// Sends an API-relative [path] with an explicitly captured [token], if needed.
   /// Redirects are disabled. Transport and malformed-success failures throw
@@ -78,6 +90,7 @@ final class ApiClient {
       throw ArgumentError('Invalid bearer credential');
     }
     try {
+      await readiness?.ensureReady();
       final uri = baseUrl
           .resolve(path)
           .replace(
@@ -86,12 +99,21 @@ final class ApiClient {
       final request = build(uri)..followRedirects = false;
       request.headers['Accept'] = 'application/json';
       if (token != null) request.headers['Authorization'] = 'Bearer $token';
-      return await _exchange(request).timeout(timeout);
+      final response = await _exchange(request).timeout(timeout);
+      if (response.status < 500) {
+        readiness?.noteContact();
+      } else {
+        readiness?.invalidate();
+      }
+      return response;
     } on TimeoutException {
+      readiness?.invalidate();
       throw const ApiTransportException('NETWORK_UNAVAILABLE');
     } on http.ClientException {
+      readiness?.invalidate();
       throw const ApiTransportException('NETWORK_UNAVAILABLE');
     } on FormatException {
+      readiness?.invalidate();
       throw const ApiTransportException('INVALID_RESPONSE');
     }
   }
