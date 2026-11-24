@@ -66,6 +66,20 @@ final class RemoteMedicationManagementRepository
   );
 
   @override
+  Future<AppResult<void>> delete(String medicationId) =>
+      caregiverTreatmentRequest(
+        _store,
+        (session) => _api.deleteMedication(
+          medicationId,
+          session.owner.id,
+          session.accessToken,
+        ),
+        (response) => response.status == 204 && response.body == null
+            ? const AppSuccess<void>(null)
+            : const AppFailure<void>('INVALID_RESPONSE'),
+      );
+
+  @override
   Future<AppResult<Medication>> reactivate(String medicationId) => _change(
     medicationId,
     (session) => _api.reactivateMedication(

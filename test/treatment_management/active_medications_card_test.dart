@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tata/features/treatment_management/application/usecases/deactivate_medication.dart';
+import 'package:tata/features/treatment_management/application/usecases/delete_medication.dart';
 import 'package:tata/features/treatment_management/application/usecases/list_medications.dart';
 import 'package:tata/features/treatment_management/application/usecases/reactivate_medication.dart';
 import 'package:tata/features/treatment_management/application/usecases/update_medication.dart';
@@ -27,6 +28,7 @@ void main() {
               list: ListMedications(backend),
               update: UpdateMedication(backend),
               deactivate: DeactivateMedication(backend),
+              delete: DeleteMedication(backend),
               reactivate: ReactivateMedication(backend),
               olderAdultId: 'adult-A',
             ),

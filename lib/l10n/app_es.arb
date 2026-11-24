@@ -1724,5 +1724,10 @@
   "tmInstructionWithWater": "Con agua",
   "tmMedicationPresentationShort": "Presentación",
   "tmTimeZone": "Zona horaria",
-  "tmFixedIntervalLocked": "Este tratamiento tiene un intervalo fijo. Conserva su frecuencia y horarios al editarlo."
+  "tmFixedIntervalLocked": "Este tratamiento tiene un intervalo fijo. Conserva su frecuencia y horarios al editarlo.",
+  "tmDeleteMedication": "Eliminar",
+  "tmDeleteMedicationTitle": "¿Eliminar medicamento?",
+  "tmDeleteMedicationBody": "Se quitará de la lista definitivamente y se pausarán los tratamientos activos asociados. El historial se conservará. No podrás reactivarlo.",
+  "tmMedicationDeleted": "Medicamento eliminado.",
+  "tmMedicationUnavailableHistory": "El medicamento ya no está disponible. Puedes consultar la pauta y el historial de este tratamiento."
 }

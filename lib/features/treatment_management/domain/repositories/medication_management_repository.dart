@@ -15,6 +15,9 @@ abstract interface class MedicationManagementRepository {
   /// The medication keeps its history; it just stops producing new intakes.
   Future<AppResult<Medication>> deactivate(String medicationId);
 
+  /// Removes a medication from the catalog, preserving its history.
+  Future<AppResult<void>> delete(String medicationId);
+
   /// Restores availability without resuming any treatment.
   Future<AppResult<Medication>> reactivate(String medicationId);
 }

@@ -22,6 +22,11 @@ final class MedicationDeactivated extends MedicationManagementEvent {
   final String medicationId;
 }
 
+final class MedicationDeleted extends MedicationManagementEvent {
+  const MedicationDeleted(this.medicationId);
+  final String medicationId;
+}
+
 final class MedicationReactivated extends MedicationManagementEvent {
   const MedicationReactivated(this.medicationId);
   final String medicationId;

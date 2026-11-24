@@ -7,6 +7,7 @@ import 'package:tata/features/treatment_management/application/usecases/change_t
 import 'package:tata/features/treatment_management/application/usecases/configure_treatment.dart';
 import 'package:tata/features/treatment_management/application/usecases/create_treatment.dart';
 import 'package:tata/features/treatment_management/application/usecases/deactivate_medication.dart';
+import 'package:tata/features/treatment_management/application/usecases/delete_medication.dart';
 import 'package:tata/features/treatment_management/application/usecases/get_my_medications_overview.dart';
 import 'package:tata/features/treatment_management/application/usecases/get_treatment_detail.dart';
 import 'package:tata/features/treatment_management/application/usecases/list_medications.dart';
@@ -417,6 +418,7 @@ void main() {
           list: ListMedications(backend),
           update: UpdateMedication(backend),
           deactivate: DeactivateMedication(backend),
+          delete: DeleteMedication(backend),
           reactivate: ReactivateMedication(backend),
           olderAdultId: 'adult-A',
         );
