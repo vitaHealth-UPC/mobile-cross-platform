@@ -31,6 +31,14 @@ void main() {
     await tester.tap(find.text('Iniciar sesión'));
     await tester.pumpAndSettle();
     expect(find.text('Inicia sesión'), findsOneWidget);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('Comenzar'), findsOneWidget);
+    expect(find.byKey(const Key('login-password')), findsNothing);
+    await tester.ensureVisible(find.text('Iniciar sesión'));
+    await tester.tap(find.text('Iniciar sesión'));
+    await tester.pumpAndSettle();
+    expect(find.text('Inicia sesión'), findsOneWidget);
     await tester.enterText(
       find.byKey(const Key('login-email')),
       'USER@example.com',

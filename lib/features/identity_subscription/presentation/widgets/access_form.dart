@@ -5,7 +5,7 @@ import '../../../../shared/presentation/theme/tata_typography.dart';
 import '../../domain/value_objects/email_address.dart';
 
 /// Native Flutter form fields. Controllers belong to the enclosing route's lifetime.
-class AccessForm extends StatelessWidget {
+class AccessForm extends StatefulWidget {
   const AccessForm({
     super.key,
     required this.email,
@@ -20,7 +20,24 @@ class AccessForm extends StatelessWidget {
   final VoidCallback onSubmit;
 
   @override
+  State<AccessForm> createState() => _AccessFormState();
+}
+
+class _AccessFormState extends State<AccessForm> {
+  bool _passwordVisible = false;
+
+  @override
+  void didUpdateWidget(AccessForm oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.busy) _passwordVisible = false;
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final email = widget.email;
+    final password = widget.password;
+    final busy = widget.busy;
+    final onSubmit = widget.onSubmit;
     final text = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -56,13 +73,30 @@ class AccessForm extends StatelessWidget {
             key: const Key('login-password'),
             controller: password,
             enabled: !busy,
-            obscureText: true,
+            obscureText: !_passwordVisible,
             enableSuggestions: false,
             autocorrect: false,
             textInputAction: TextInputAction.done,
             autofillHints: const [AutofillHints.password],
             style: const TextStyle(fontSize: 14, letterSpacing: 0, height: 1.2),
-            decoration: InputDecoration(hintText: text.passwordHint),
+            decoration: InputDecoration(
+              hintText: text.passwordHint,
+              suffixIcon: IconButton(
+                tooltip: _passwordVisible
+                    ? text.hidePassword
+                    : text.showPassword,
+                onPressed: widget.busy
+                    ? null
+                    : () =>
+                          setState(() => _passwordVisible = !_passwordVisible),
+                icon: Icon(
+                  _passwordVisible
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
+                  size: 22,
+                ),
+              ),
+            ),
             validator: (value) =>
                 value == null || value.isEmpty ? text.invalidPassword : null,
             onFieldSubmitted: (_) {
