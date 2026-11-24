@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -35,6 +36,7 @@ class TataApp extends StatelessWidget {
     this.openContact,
     this.applyChosenPlan,
     this.navigatorKey,
+    this.backendPreparing,
     this.applicationObserver,
   });
 
@@ -54,6 +56,7 @@ class TataApp extends StatelessWidget {
   final Future<bool> Function(Uri uri)? openContact;
   final Future<bool> Function(String planCode)? applyChosenPlan;
   final GlobalKey<NavigatorState>? navigatorKey;
+  final ValueListenable<bool>? backendPreparing;
 
   /// Cross-context lifecycle observers remain outside the feature screen builders.
   final Widget Function(Widget child)? applicationObserver;
@@ -76,13 +79,55 @@ class TataApp extends StatelessWidget {
           : Appearance.localeFor(appearance.language),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      builder: preferences == null
-          ? null
-          : (context, child) => Appearance.wrap(
-              context,
-              preferences,
-              child ?? const SizedBox(),
+      builder: (context, child) {
+        Widget content = child ?? const SizedBox();
+        final preparing = backendPreparing;
+        if (preparing != null) {
+          final page = content;
+          content = ValueListenableBuilder<bool>(
+            valueListenable: preparing,
+            builder: (context, waiting, _) => Column(
+              children: [
+                if (waiting)
+                  Material(
+                    color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                    child: SafeArea(
+                      bottom: false,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                        child: Row(
+                          children: [
+                            const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Semantics(
+                                liveRegion: true,
+                                child: Text(
+                                  AppLocalizations.of(context).preparingBackend,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                Expanded(child: page),
+              ],
             ),
+          );
+        }
+        return preferences == null
+            ? content
+            : Appearance.wrap(context, preferences, content);
+      },
       home: AccessRoute(
         createRegistrationBloc: createRegistrationBloc,
         createRecoveryBloc: createRecoveryBloc,

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -28,7 +30,13 @@ import 'shared/presentation/widgets/caregiver_tab_bar.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   registerOmissionBackgroundHandler();
-  final dependencies = AppDependencies.production();
+  final backendPreparing = ValueNotifier(false);
+  final dependencies = AppDependencies.production(
+    onBackendPreparing: (value) => scheduleMicrotask(() {
+      backendPreparing.value = value;
+    }),
+  );
+  unawaited(dependencies.prepareBackend());
   final treatments = TreatmentNavigation(dependencies.treatmentFactories);
   final preferences = PreferencesNavigation(dependencies.preferencesFactories);
   final inventory = InventoryNavigation(dependencies.createInventoryBloc);
@@ -172,6 +180,7 @@ Future<void> main() async {
   runApp(
     TataApp(
       navigatorKey: navigatorKey,
+      backendPreparing: backendPreparing,
       applicationObserver: (child) => OmissionMessagingHost(
         delivery: delivery,
         onOpen: notificationRouter.open,
