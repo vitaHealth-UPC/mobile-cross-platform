@@ -34,3 +34,7 @@ Siete pruebas acotadas aprueban inicialización compartida, aislamiento de canal
 ## TS-06: transporte y coordinación
 
 Once pruebas acotadas aprueban el mapeo FCM y los permisos del token. Seis pruebas del coordinador aprueban restauración, autorización, cambio de actor y salida. El análisis del corte no presenta incidencias. El coordinador está compuesto mediante `AppDependencies`; el arranque y las rutas de pantalla aún requieren conexión antes de activar registro.
+
+## TS-06: host y salida
+
+Cinco pruebas aprueban observación del acceso, apertura tras frame, disposición del host, orden de retirada del dispositivo y continuidad de salida ante fallo del proveedor. Incluyen la regresión existente de acceso y salida del root. La composición de producción aún requiere el dispatcher y receptor background; registro sigue desactivado.

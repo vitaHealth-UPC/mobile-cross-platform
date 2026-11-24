@@ -662,19 +662,20 @@ final class AppDependencies {
   );
 
   /// Creates the access authority; its provider is responsible for closing it.
-  AccessBloc createAccessBloc() => AccessBloc(
-    signInWithSocial: SignInWithSocial(
-      RemoteSocialSessionRepository(
-        credentials: FirebaseSocialCredentials(),
-        api: SessionApi(_client),
-        store: _sessionStore,
-        clock: DateTime.now,
-      ),
-    ),
-    signIn: SignIn(_sessions),
-    restore: RestoreSession(_sessions),
-    signOut: SignOut(_sessions),
-  );
+  AccessBloc createAccessBloc({Future<void> Function()? beforeSignOut}) =>
+      AccessBloc(
+        signInWithSocial: SignInWithSocial(
+          RemoteSocialSessionRepository(
+            credentials: FirebaseSocialCredentials(),
+            api: SessionApi(_client),
+            store: _sessionStore,
+            clock: DateTime.now,
+          ),
+        ),
+        signIn: SignIn(_sessions),
+        restore: RestoreSession(_sessions),
+        signOut: SignOut(_sessions, beforeSignOut: beforeSignOut),
+      );
 
   /// Family Monitoring blocs; every repository shares the captured session store, and the
   /// caregiver is always the owner of that session.
