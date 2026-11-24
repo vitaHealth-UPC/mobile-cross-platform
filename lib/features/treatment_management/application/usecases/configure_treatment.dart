@@ -14,6 +14,9 @@ final class RegimenDraft {
     required this.instructions,
     this.followUpDelayMinutes,
     this.reminderLeadMinutes = 0,
+    this.recurrenceZone,
+    this.recurrenceMode,
+    this.recurrenceAnchor,
   });
 
   final String dose;
@@ -26,6 +29,9 @@ final class RegimenDraft {
   /// Null selects the system default follow-up.
   final int? followUpDelayMinutes;
   final int reminderLeadMinutes;
+  final String? recurrenceZone;
+  final String? recurrenceMode;
+  final DateTime? recurrenceAnchor;
 }
 
 /// Validates a complete regimen with the same values used by the wizard, then saves it.
@@ -60,10 +66,23 @@ final class ConfigureTreatment {
         frequency == null ||
         instructions == null ||
         schedule == null ||
+        (draft.recurrenceMode != null && draft.recurrenceZone == null) ||
+        (draft.recurrenceAnchor != null &&
+            draft.recurrenceMode != 'FIXED_INTERVAL') ||
+        (draft.recurrenceMode == 'FIXED_INTERVAL' &&
+            draft.recurrenceAnchor == null) ||
+        (draft.recurrenceMode != null &&
+            draft.recurrenceMode != 'LOCAL_TIMES' &&
+            draft.recurrenceMode != 'FIXED_INTERVAL') ||
         lead < 0 ||
         lead > 1440 ||
         (delay != null && (delay < 0 || delay > 1440))) {
       return Future.value(const AppFailure('INVALID_TREATMENT_CONFIGURATION'));
+    }
+    if (!frequency.matchesMinutes(
+      schedule.times.map((t) => t.hour * 60 + t.minute),
+    )) {
+      return Future.value(const AppFailure('SCHEDULE_FREQUENCY_MISMATCH'));
     }
     return _repository.configure(
       treatmentId.trim(),
@@ -74,6 +93,9 @@ final class ConfigureTreatment {
         schedule: schedule,
         instructions: instructions,
         reminderLeadMinutes: lead,
+        recurrenceZone: draft.recurrenceZone,
+        recurrenceMode: draft.recurrenceMode,
+        recurrenceAnchor: draft.recurrenceAnchor,
         followUpDelay: delay == null
             ? null
             : ReminderDelayMinutes.tryParse('$delay'),

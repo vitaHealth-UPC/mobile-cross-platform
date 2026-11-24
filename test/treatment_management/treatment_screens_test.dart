@@ -78,19 +78,19 @@ void main() {
       find.byKey(const Key('treatment-dose')),
       '1 tableta',
     );
-    await tester.enterText(
-      find.byKey(const Key('treatment-frequency')),
-      'cada 12 horas',
-    );
-    await tester.ensureVisible(
-      find.widgetWithText(ElevatedButton, 'Continuar'),
-    );
-    await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(ElevatedButton, 'Continuar'));
-    await tester.pumpAndSettle();
-
-    // Step 3: a malformed time shows the stable error message.
-    await tester.enterText(find.byKey(const Key('treatment-times')), '8am');
+    tester
+            .widget<TextFormField>(find.byKey(const Key('treatment-frequency')))
+            .controller!
+            .text =
+        'cada 12 horas';
+    await tester.pump();
+    // The same Pauta page validates dosage, frequency and times.
+    tester
+            .widget<TextFormField>(find.byKey(const Key('treatment-times')))
+            .controller!
+            .text =
+        '8am';
+    await tester.pump();
     await tester.ensureVisible(
       find.widgetWithText(ElevatedButton, 'Continuar'),
     );
@@ -101,10 +101,12 @@ void main() {
       find.text('Usa horarios en formato HH:mm, por ejemplo 08:00.'),
       findsOneWidget,
     );
-    await tester.enterText(
-      find.byKey(const Key('treatment-times')),
-      '20:00, 8:00',
-    );
+    tester
+            .widget<TextFormField>(find.byKey(const Key('treatment-times')))
+            .controller!
+            .text =
+        '20:00, 8:00';
+    await tester.pump();
     await tester.ensureVisible(
       find.widgetWithText(ElevatedButton, 'Continuar'),
     );

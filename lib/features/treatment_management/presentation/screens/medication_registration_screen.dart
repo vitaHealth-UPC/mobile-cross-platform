@@ -8,15 +8,13 @@ import '../../../../shared/presentation/widgets/async_states.dart';
 import '../../../../shared/presentation/widgets/status_notice.dart';
 import '../../application/policies/medication_fields.dart';
 import '../../application/readmodels/medication_registration_result.dart';
-import '../../domain/value_objects/regimen_text.dart';
 import '../bloc/medication_registration/medication_registration_bloc.dart';
 import '../bloc/medication_registration/medication_registration_event.dart';
 import '../bloc/medication_registration/medication_registration_state.dart';
 import '../texts/treatment_texts.dart';
 import '../widgets/medication_registration_art.dart';
 
-/// Registers medication identity and carries editable regimen text to the next route.
-/// Only name and presentation are persisted here; the wizard validates the regimen.
+/// Registers the medication identity. Treatment-specific data is entered only in setup.
 class MedicationRegistrationScreen extends StatefulWidget {
   const MedicationRegistrationScreen({
     super.key,
@@ -38,32 +36,15 @@ class _MedicationRegistrationScreenState
   final _form = GlobalKey<FormState>();
   final _name = TextEditingController();
   final _presentation = TextEditingController();
-  final _frequency = TextEditingController();
-  final _when = TextEditingController();
-  final _notes = TextEditingController();
   bool _showMissingFields = false;
 
   bool get _missingRequired =>
-      _name.text.trim().isEmpty ||
-      _presentation.text.trim().isEmpty ||
-      _frequency.text.trim().isEmpty;
-
-  String get _instructions => [
-    _when.text.trim(),
-    _notes.text.trim(),
-  ].where((part) => part.isNotEmpty).join('\n');
+      _name.text.trim().isEmpty || _presentation.text.trim().isEmpty;
 
   @override
   void dispose() {
-    for (final controller in [
-      _name,
-      _presentation,
-      _frequency,
-      _when,
-      _notes,
-    ]) {
-      controller.dispose();
-    }
+    _name.dispose();
+    _presentation.dispose();
     super.dispose();
   }
 
@@ -99,12 +80,12 @@ class _MedicationRegistrationScreenState
       maxLength: maxLength,
       minLines: 1,
       maxLines: maxLines,
-      style: const TextStyle(fontSize: 13, color: TataColors.ink),
+      style: const TextStyle(fontSize: 16, color: TataColors.ink),
       textCapitalization: TextCapitalization.sentences,
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        floatingLabelBehavior: FloatingLabelBehavior.always,
+        floatingLabelBehavior: FloatingLabelBehavior.auto,
         labelStyle: const TextStyle(fontSize: 14, color: TataColors.ink),
         hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF637087)),
         filled: true,
@@ -113,7 +94,7 @@ class _MedicationRegistrationScreenState
         errorMaxLines: 3,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 14,
-          vertical: 13,
+          vertical: 18,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
@@ -149,11 +130,7 @@ class _MedicationRegistrationScreenState
             context,
           ).showSnackBar(SnackBar(content: Text(text.tmMedicationRegistered)));
           widget.onRegistered(
-            MedicationRegistrationResult(
-              medication: state.medication!,
-              frequency: _frequency.text.trim(),
-              instructions: _instructions,
-            ),
+            MedicationRegistrationResult(medication: state.medication!),
           );
         }
       },
@@ -210,14 +187,6 @@ class _MedicationRegistrationScreenState
                           ],
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          text.tmMedicationDataStep,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF637087),
-                          ),
-                        ),
                         const MedicationRegistrationArt(),
                         Text(
                           text.tmMedicationBasicInfo,
@@ -227,7 +196,15 @@ class _MedicationRegistrationScreenState
                             color: TataColors.ink,
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
+                        Text(
+                          text.tmRegistrationIdentityHint,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: TataColors.muted,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
                         _field(
                           fieldKey: 'medication-name',
                           controller: _name,
@@ -237,73 +214,15 @@ class _MedicationRegistrationScreenState
                           maxLength: maxMedicationFieldLength,
                           validator: (v) => _required(v, text),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 24),
                         _field(
                           fieldKey: 'medication-presentation',
                           controller: _presentation,
-                          label: text.tmMedicationDosePresentation,
+                          label: text.tmMedicationPresentationShort,
                           hint: text.tmMedicationPresentationHint,
                           locked: locked,
                           maxLength: maxMedicationFieldLength,
                           validator: (v) => _required(v, text),
-                        ),
-                        const SizedBox(height: 12),
-                        _field(
-                          fieldKey: 'medication-frequency',
-                          controller: _frequency,
-                          label: text.tmFrequencyShort,
-                          hint: text.tmMedicationFrequencyHint,
-                          locked: locked,
-                          maxLength: 100,
-                          validator: (v) =>
-                              _required(v, text) ??
-                              (Frequency.tryParse(v!) == null
-                                  ? text.tmErrInvalidFrequency
-                                  : null),
-                          suffix: PopupMenuButton<String>(
-                            enabled: !locked,
-                            tooltip: text.tmFrequencyShort,
-                            icon: const Icon(
-                              Icons.keyboard_arrow_down,
-                              size: 20,
-                            ),
-                            onSelected: (value) => _frequency.text = value,
-                            itemBuilder: (_) => [
-                              for (final label in [
-                                text.tmFrequencyDaily,
-                                text.tmFrequencyTwelveHours,
-                                text.tmFrequencyEightHours,
-                              ])
-                                PopupMenuItem(value: label, child: Text(label)),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        _field(
-                          fieldKey: 'medication-when',
-                          controller: _when,
-                          label: text.tmMedicationWhen,
-                          hint: text.tmMedicationWhenHint,
-                          locked: locked,
-                          maxLength: 500,
-                          maxLines: 2,
-                        ),
-                        const SizedBox(height: 12),
-                        _field(
-                          fieldKey: 'medication-notes',
-                          controller: _notes,
-                          label: text.tmMedicationNotes,
-                          hint: text.tmMedicationNotesHint,
-                          locked: locked,
-                          maxLength: 500,
-                          maxLines: 2,
-                          validator: (_) =>
-                              AdministrationInstructions.tryParse(
-                                    _instructions,
-                                  ) ==
-                                  null
-                              ? text.tmErrInstructionsLong
-                              : null,
                         ),
                         if (_showMissingFields) ...[
                           const SizedBox(height: 10),
@@ -339,7 +258,7 @@ class _MedicationRegistrationScreenState
                             state.status ==
                                     MedicationRegistrationStatus.submitting
                                 ? text.processing
-                                : text.tmRegistrationNext,
+                                : text.tmRegistrationSaveMedication,
                           ),
                         ),
                         if (state.errorCode != null)
@@ -347,27 +266,6 @@ class _MedicationRegistrationScreenState
                             treatmentErrorText(text, state.errorCode)!,
                           ),
                         const SizedBox(height: 24),
-                        ExcludeSemantics(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              for (var i = 0; i < 4; i++)
-                                Container(
-                                  width: i == 0 ? 10 : 8,
-                                  height: i == 0 ? 10 : 8,
-                                  margin: const EdgeInsets.symmetric(
-                                    horizontal: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: i == 0
-                                        ? TataColors.primary
-                                        : const Color(0xFFDADFEA),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
                       ],
                     ),
                   ),

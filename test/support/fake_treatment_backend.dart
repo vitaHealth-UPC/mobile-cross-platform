@@ -136,6 +136,8 @@ final class FakeBackend
       reminderLeadMinutes: old.reminderLeadMinutes,
       followUpDelayMinutes: old.followUpDelayMinutes,
       recurrenceZone: old.recurrenceZone,
+      recurrenceMode: old.recurrenceMode,
+      recurrenceAnchor: old.recurrenceAnchor,
     );
     return Treatment(
       id: old.id,
@@ -167,7 +169,9 @@ final class FakeBackend
       instructions: regimen.instructions.value,
       reminderLeadMinutes: regimen.reminderLeadMinutes,
       followUpDelayMinutes: regimen.followUpDelay?.value,
-      recurrenceZone: old.recurrenceZone,
+      recurrenceZone: regimen.recurrenceZone ?? old.recurrenceZone,
+      recurrenceMode: regimen.recurrenceMode ?? old.recurrenceMode,
+      recurrenceAnchor: regimen.recurrenceAnchor ?? old.recurrenceAnchor,
     );
     return AppSuccess(_treatment(old.status));
   }

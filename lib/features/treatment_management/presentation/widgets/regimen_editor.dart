@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../application/readmodels/treatment_detail.dart';
 import '../bloc/treatment_management/treatment_management_event.dart';
+import 'prescription_fields.dart';
 
 /// Native regimen editor; its state owns controllers through the dialog exit transition.
 class RegimenEditor extends StatefulWidget {
@@ -36,6 +37,20 @@ class _RegimenEditorState extends State<RegimenEditor> {
     );
   }
 
+  bool _localizedFrequency = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_localizedFrequency) {
+      _localizedFrequency = true;
+      frequency.text = frequencyLabel(
+        AppLocalizations.of(context),
+        frequency.text,
+      );
+    }
+  }
+
   @override
   void dispose() {
     for (final controller in [
@@ -67,37 +82,74 @@ class _RegimenEditorState extends State<RegimenEditor> {
               TextFormField(
                 key: const Key('edit-dose'),
                 controller: dose,
-                decoration: InputDecoration(labelText: text.tmDose),
+                maxLength: 100,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                decoration: InputDecoration(
+                  labelText: text.tmDose,
+                  counterText: '',
+                  suffixIcon: prescriptionOptions(
+                    tooltip: text.tmDoseOptions,
+                    options: [
+                      text.tmDoseTablet,
+                      text.tmDoseHalfTablet,
+                      text.tmDoseCapsule,
+                      text.tmDoseTwoTablets,
+                    ],
+                    controller: dose,
+                  ),
+                ),
                 validator: required,
               ),
               const SizedBox(height: 12),
-              TextFormField(
-                key: const Key('edit-frequency'),
+              FrequencyField(
+                fieldKey: const Key('edit-frequency'),
                 controller: frequency,
-                decoration: InputDecoration(labelText: text.tmFrequency),
-                validator: required,
               ),
               const SizedBox(height: 12),
-              TextFormField(
-                key: const Key('edit-times'),
-                controller: times,
-                decoration: InputDecoration(labelText: text.tmScheduleTimes),
-                validator: required,
+              ValueListenableBuilder<TextEditingValue>(
+                valueListenable: frequency,
+                builder: (_, _, _) => ScheduleTimeField(
+                  fieldKey: const Key('edit-times'),
+                  controller: times,
+                  frequency: frequency,
+                ),
               ),
               const SizedBox(height: 12),
               TextFormField(
                 key: const Key('edit-instructions'),
                 controller: instructions,
                 maxLines: 3,
-                decoration: InputDecoration(labelText: text.tmInstructions),
+                maxLength: 500,
+                decoration: InputDecoration(
+                  labelText: text.tmInstructions,
+                  suffixIcon: prescriptionOptions(
+                    tooltip: text.tmInstructionOptions,
+                    options: [
+                      text.tmInstructionBeforeMeal,
+                      text.tmInstructionWithMeal,
+                      text.tmInstructionAfterMeal,
+                      text.tmInstructionWithWater,
+                    ],
+                    controller: instructions,
+                    append: true,
+                  ),
+                ),
               ),
               const SizedBox(height: 12),
               TextFormField(
                 key: const Key('edit-delay'),
                 controller: delay,
+                validator: (value) {
+                  final raw = value?.trim() ?? '';
+                  final n = int.tryParse(raw);
+                  return raw.isNotEmpty && (n == null || n < 0 || n > 1440)
+                      ? text.tmErrReminderDelay
+                      : null;
+                },
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
                   labelText: text.tmFollowUpShort,
+                  suffixIcon: reminderOptions(text, delay),
                   helperText: text.tmFollowUpHelp,
                   helperMaxLines: 4,
                 ),

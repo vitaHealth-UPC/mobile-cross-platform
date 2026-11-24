@@ -86,16 +86,24 @@ void main() {
             find.byKey(const Key('treatment-dose')),
             '1 comprimido',
           );
-          await tester.enterText(
-            find.byKey(const Key('treatment-frequency')),
-            'Cada día',
-          );
+          tester
+                  .widget<TextFormField>(
+                    find.byKey(const Key('treatment-frequency')),
+                  )
+                  .controller!
+                  .text =
+              'Cada día';
+          await tester.pump();
         }
         if (step == TreatmentSetupStep.schedule) {
-          await tester.enterText(
-            find.byKey(const Key('treatment-times')),
-            '08:00',
-          );
+          tester
+                  .widget<TextFormField>(
+                    find.byKey(const Key('treatment-times')),
+                  )
+                  .controller!
+                  .text =
+              '08:00';
+          await tester.pump();
           await tester.enterText(
             find.byKey(const Key('treatment-instructions')),
             'Con agua',

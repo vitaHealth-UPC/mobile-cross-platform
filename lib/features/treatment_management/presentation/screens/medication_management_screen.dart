@@ -8,6 +8,7 @@ import '../bloc/medication_management/medication_management_bloc.dart';
 import '../bloc/medication_management/medication_management_event.dart';
 import '../bloc/medication_management/medication_management_state.dart';
 import '../texts/treatment_texts.dart';
+import '../widgets/medication_registration_art.dart';
 
 /// Lists the medications of one adult with edit, deactivate/reactivate and
 /// "create treatment" actions. Navigation is delegated to the route.
@@ -97,8 +98,8 @@ class MedicationManagementScreen extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(text.tmDeactivateTitle),
-        content: Text(text.tmDeactivateBody),
+        title: Text(text.tmRemoveMedicationTitle),
+        content: Text(text.tmRemoveMedicationBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
@@ -106,7 +107,7 @@ class MedicationManagementScreen extends StatelessWidget {
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(text.tmDeactivate),
+            child: Text(text.tmRemoveMedication),
           ),
         ],
       ),
@@ -149,10 +150,10 @@ class MedicationManagementScreen extends StatelessWidget {
                   : text.tmMedicationsTitle,
             ),
           ),
-          floatingActionButton: pickingForTreatment
+          floatingActionButton: candidates.isEmpty
               ? null
               : FloatingActionButton.extended(
-                  onPressed: onRegister,
+                  onPressed: state.busy ? null : onRegister,
                   icon: const Icon(Icons.add),
                   label: Text(text.tmRegisterMedication),
                 ),
@@ -173,8 +174,57 @@ class MedicationManagementScreen extends StatelessWidget {
                     padding: const EdgeInsets.only(bottom: 12),
                     child: Text(text.tmPickMedicationHint),
                   ),
-                if (candidates.isEmpty) Text(text.tmNoMedications),
-                for (final medication in candidates)
+                if (candidates.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 28,
+                      horizontal: 12,
+                    ),
+                    child: Column(
+                      children: [
+                        const MedicationRegistrationArt(),
+                        const SizedBox(height: 12),
+                        Text(
+                          text.tmEmptyMedicationTitle,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          text.tmEmptyMedicationBody,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                        const SizedBox(height: 24),
+                        FilledButton.icon(
+                          onPressed: state.busy ? null : onRegister,
+                          icon: const Icon(Icons.add),
+                          label: Text(text.tmRegisterMedication),
+                        ),
+                      ],
+                    ),
+                  ),
+                if (!pickingForTreatment && candidates.any((m) => m.active))
+                  Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Text(
+                      text.tmActiveMedicationsSection,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                for (final medication in [
+                  ...candidates.where((m) => m.active),
+                  ...candidates.where((m) => !m.active),
+                ]) ...[
+                  if (!medication.active &&
+                      medication == candidates.where((m) => !m.active).first)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(8, 20, 8, 8),
+                      child: Text(
+                        text.tmArchivedMedications,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ),
                   Card(
                     child: Padding(
                       padding: const EdgeInsets.all(12),
@@ -227,7 +277,7 @@ class MedicationManagementScreen extends StatelessWidget {
                                         ),
                                   child: Text(
                                     medication.active
-                                        ? text.tmDeactivate
+                                        ? text.tmRemoveMedication
                                         : text.tmReactivate,
                                   ),
                                 ),
@@ -238,6 +288,7 @@ class MedicationManagementScreen extends StatelessWidget {
                       ),
                     ),
                   ),
+                ],
                 if (state.errorCode != null &&
                     !isSessionFailure(state.errorCode))
                   InlineError(treatmentErrorText(text, state.errorCode)!),

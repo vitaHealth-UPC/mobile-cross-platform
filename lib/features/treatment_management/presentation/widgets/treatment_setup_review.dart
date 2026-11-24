@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/presentation/theme/tata_colors.dart';
 import '../bloc/treatment_setup/treatment_setup_state.dart';
+import 'prescription_fields.dart';
 
 /// Review of validated regimen values; a visual preview never fabricates intake evidence.
 class TreatmentSetupReview extends StatelessWidget {
@@ -18,7 +19,7 @@ class TreatmentSetupReview extends StatelessWidget {
     final text = AppLocalizations.of(context);
     final values = [
       (text.tmDoseShort, state.dose),
-      (text.tmFrequencyShort, state.frequency),
+      (text.tmFrequencyShort, frequencyLabel(text, state.frequency)),
       (text.tmTimesShort, state.scheduledTimes.join(', ')),
       if (state.instructions.isNotEmpty)
         (text.tmInstructionsShort, state.instructions),

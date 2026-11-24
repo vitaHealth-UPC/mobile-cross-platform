@@ -211,7 +211,7 @@ final class TreatmentNavigation {
                   );
               if (!medicationsContext.mounted) return;
               medications.add(const MedicationsRequested());
-              if (result != null) {
+              if (result != null && picking) {
                 await _createFromMedication(
                   medicationsContext,
                   olderAdultId,
@@ -244,7 +244,7 @@ final class TreatmentNavigation {
     required bool picking,
     MedicationRegistrationResult? initial,
   }) async {
-    await Navigator.of(context).push<void>(
+    final activated = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (_) => BlocProvider(
           create: (_) =>
@@ -254,7 +254,7 @@ final class TreatmentNavigation {
               medicationLabel: medication.label,
               initialFrequency: initial?.frequency ?? '',
               initialInstructions: initial?.instructions ?? '',
-              onFinished: () => Navigator.of(setupContext).pop(),
+              onFinished: () => Navigator.of(setupContext).pop(true),
               onSessionInvalidated: _invalidate(
                 setupContext,
                 onSessionInvalidated,
@@ -266,7 +266,7 @@ final class TreatmentNavigation {
     );
     if (!context.mounted) return;
     context.read<MedicationManagementBloc>().add(const MedicationsRequested());
-    if (picking) Navigator.of(context).pop();
+    if (picking && activated == true) Navigator.of(context).pop();
   }
 
   /// Read-only medication catalog for the signed-in older adult.

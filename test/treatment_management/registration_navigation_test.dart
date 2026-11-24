@@ -27,12 +27,46 @@ import 'treatment_blocs_test.dart' show FakeReader;
 
 /// Exercises actual route ownership and receipts across registration and setup.
 void main() {
+  testWidgets('empty catalog can register, retire and restore medication', (
+    tester,
+  ) async {
+    final backend = FakeBackend();
+    backend.medications.clear();
+    await _openCatalog(tester, backend);
+    expect(find.text('Tu lista de medicamentos está vacía'), findsOneWidget);
+    expect(find.text('Registrar medicamento'), findsOneWidget);
+    await _register(tester);
+    expect(backend.medications.length, 1);
+    await tester.tap(find.text('Retirar'));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.text('Retirar'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(backend.medications.values.single.active, isFalse);
+    expect(find.text('Medicamentos retirados'), findsOneWidget);
+    await tester.tap(find.text('Reactivar'));
+    await tester.pumpAndSettle();
+    expect(backend.medications.values.single.active, isTrue);
+    expect(backend.medications.length, 1);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
-    'catalog registration carries the acknowledged medication into activation',
+    'catalog saves identity and explicitly opens a single treatment setup',
     (tester) async {
       final backend = FakeBackend();
       await _openCatalog(tester, backend);
       await _register(tester);
+      expect(find.byType(TreatmentSetupScreen), findsNothing);
+      expect(find.textContaining('Losartán'), findsWidgets);
+      await tester.tap(
+        find.widgetWithText(TextButton, 'Crear tratamiento').last,
+      );
+      await tester.pumpAndSettle();
       expect(find.byType(TreatmentSetupScreen), findsOneWidget);
       expect(backend.medications.length, 2);
       expect(backend.createCalls, 0);
@@ -53,13 +87,16 @@ void main() {
             .widget<TextFormField>(find.byKey(const Key('treatment-frequency')))
             .controller!
             .text,
-        'Cada 12 horas',
+        isEmpty,
       );
       await tester.enterText(
         find.byKey(const Key('treatment-dose')),
         '1 comprimido',
       );
-      await _button(tester, 'Continuar');
+      await tester.tap(find.byTooltip('Selecciona la frecuencia'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cada 12 horas').last);
+      await tester.pumpAndSettle();
       expect(
         tester
             .widget<TextFormField>(
@@ -67,11 +104,16 @@ void main() {
             )
             .controller!
             .text,
-        'Con el desayuno\nPreparar agua',
+        isEmpty,
       );
+      tester
+              .widget<TextFormField>(find.byKey(const Key('treatment-times')))
+              .controller!
+              .text =
+          '08:00,20:00';
       await tester.enterText(
-        find.byKey(const Key('treatment-times')),
-        '08:00, 20:00',
+        find.byKey(const Key('treatment-instructions')),
+        'Con el desayuno\nPreparar agua',
       );
       await _button(tester, 'Continuar');
       await _button(tester, 'Continuar');
@@ -96,6 +138,10 @@ void main() {
       final backend = FakeBackend();
       await _openCatalog(tester, backend);
       await _register(tester);
+      await tester.tap(
+        find.widgetWithText(TextButton, 'Crear tratamiento').last,
+      );
+      await tester.pumpAndSettle();
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
       expect(find.byType(MedicationManagementScreen), findsOneWidget);
@@ -172,13 +218,10 @@ Future<void> _register(WidgetTester tester) async {
   for (final entry in {
     'medication-name': 'Losartán',
     'medication-presentation': '50 mg, comprimido',
-    'medication-frequency': 'Cada 12 horas',
-    'medication-when': 'Con el desayuno',
-    'medication-notes': 'Preparar agua',
   }.entries) {
     await tester.enterText(find.byKey(Key(entry.key)), entry.value);
   }
-  await _button(tester, 'Siguiente');
+  await _button(tester, 'Guardar medicamento');
 }
 
 Future<void> _button(WidgetTester tester, String text) async {
