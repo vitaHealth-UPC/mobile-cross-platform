@@ -19,6 +19,7 @@ class _PasswordRecoveryScreenState extends State<PasswordRecoveryScreen> {
   final _email = TextEditingController();
   final _code = TextEditingController();
   final _password = TextEditingController();
+  bool _passwordVisible = false;
 
   @override
   void dispose() {
@@ -36,6 +37,7 @@ class _PasswordRecoveryScreenState extends State<PasswordRecoveryScreen> {
         if (state.status == RecoveryStatus.codeRequested &&
             state.errorCode == null) {
           _code.clear();
+          _passwordVisible = false;
         }
         if (state.status == RecoveryStatus.completed) {
           _password.clear();
@@ -121,12 +123,29 @@ class _PasswordRecoveryScreenState extends State<PasswordRecoveryScreen> {
                               key: const Key('recovery-password'),
                               controller: _password,
                               enabled: !state.busy,
-                              obscureText: true,
+                              obscureText: state.busy || !_passwordVisible,
                               autocorrect: false,
                               enableSuggestions: false,
                               autofillHints: const [AutofillHints.newPassword],
                               decoration: InputDecoration(
                                 hintText: text.registrationPasswordHint,
+                                suffixIcon: IconButton(
+                                  tooltip: _passwordVisible && !state.busy
+                                      ? text.hidePassword
+                                      : text.showPassword,
+                                  onPressed: state.busy
+                                      ? null
+                                      : () => setState(
+                                          () => _passwordVisible =
+                                              !_passwordVisible,
+                                        ),
+                                  icon: Icon(
+                                    _passwordVisible && !state.busy
+                                        ? Icons.visibility_off_outlined
+                                        : Icons.visibility_outlined,
+                                    size: 22,
+                                  ),
+                                ),
                               ),
                             ),
                           ],

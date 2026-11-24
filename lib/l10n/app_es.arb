@@ -1685,5 +1685,7 @@
   "landingExampleTime": "8:00 p. m.",
   "landingExampleAdherence": "92% adherencia",
   "socialLinkRequired": "Este correo ya tiene una cuenta. Accede con tu contraseña para vincular el proveedor de forma explícita.",
-  "socialEmailRequired": "El proveedor debe compartir un correo verificado para crear la cuenta."
+  "socialEmailRequired": "El proveedor debe compartir un correo verificado para crear la cuenta.",
+  "showPassword": "Mostrar contraseña",
+  "hidePassword": "Ocultar contraseña"
 }
