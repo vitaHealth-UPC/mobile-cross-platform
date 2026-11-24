@@ -34,8 +34,16 @@ final class FirebasePushTokenSource implements DevicePushTokenSource {
     final messaging = await _messaging();
     // Tata currently registers FCM tokens, not the SDK 17 installation-ID contract.
     // ignore: deprecated_member_use
-    yield* messaging.onTokenRefresh;
+    final rotations = messaging.onTokenRefresh;
+    await for (final token in rotations) {
+      final settings = await messaging.getNotificationSettings();
+      if (token.isNotEmpty && _permitted(settings)) yield token;
+    }
   }
+
+  static bool _permitted(NotificationSettings settings) =>
+      settings.authorizationStatus == AuthorizationStatus.authorized ||
+      settings.authorizationStatus == AuthorizationStatus.provisional;
 
   @override
   Future<AppResult<String?>> currentToken() async {
@@ -46,8 +54,7 @@ final class FirebasePushTokenSource implements DevicePushTokenSource {
       if (settings.authorizationStatus == AuthorizationStatus.notDetermined) {
         settings = await messaging.requestPermission();
       }
-      if (settings.authorizationStatus != AuthorizationStatus.authorized &&
-          settings.authorizationStatus != AuthorizationStatus.provisional) {
+      if (!_permitted(settings)) {
         return const AppSuccess(null);
       }
       // Keep the existing server token protocol until its sender supports FIDs.

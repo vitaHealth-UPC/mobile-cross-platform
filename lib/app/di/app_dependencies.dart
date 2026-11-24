@@ -30,6 +30,7 @@ import '../../features/adherence_analytics/presentation/bloc/history/history_blo
 import '../../features/adherence_analytics/presentation/bloc/level/level_bloc.dart';
 import '../../features/adherence_analytics/presentation/bloc/level/level_state.dart';
 import '../../features/adherence_analytics/presentation/bloc/recommendations/recommendations_bloc.dart';
+import '../../features/care_link/application/readmodels/caregiver_link_summary.dart';
 import '../../features/care_link/application/usecases/accept_care_link.dart';
 import '../../features/care_link/application/usecases/generate_linking_code.dart';
 import '../../features/care_link/application/usecases/register_consent.dart';
@@ -139,6 +140,7 @@ import '../../features/inventory_replenishment/infrastructure/remote/inventory_a
 import '../../features/inventory_replenishment/infrastructure/repositories/remote_inventory_repository.dart';
 import '../../features/inventory_replenishment/presentation/bloc/inventory_bloc.dart';
 import '../../features/omission_escalation/application/policies/omission_push_access_policy.dart';
+import '../../features/omission_escalation/application/services/omission_delivery_coordinator.dart';
 import '../../features/omission_escalation/application/services/omission_notification_session_cleanup.dart';
 import '../../features/omission_escalation/application/services/omission_push_facade.dart';
 import '../../features/omission_escalation/application/services/push_device_registration_coordinator.dart';
@@ -147,7 +149,9 @@ import '../../features/omission_escalation/application/usecases/follow_dose_remi
 import '../../features/omission_escalation/application/usecases/handle_incoming_omission_push.dart';
 import '../../features/omission_escalation/application/usecases/resolve_push_destination.dart';
 import '../../features/omission_escalation/infrastructure/local/push_local_stores.dart';
-import '../../features/omission_escalation/infrastructure/push/not_configured_push_token_source.dart';
+import '../../features/omission_escalation/infrastructure/push/firebase_omission_message_source.dart';
+import '../../features/omission_escalation/infrastructure/push/firebase_push_token_source.dart';
+import '../../features/omission_escalation/infrastructure/push/local_omission_notifier.dart';
 import '../../features/omission_escalation/infrastructure/remote/push_device_api.dart';
 import '../../features/omission_escalation/infrastructure/repositories/remote_device_token_registry.dart';
 import '../../features/treatment_management/application/readmodels/my_medications_overview.dart';
@@ -627,6 +631,12 @@ final class AppDependencies {
     withdraw: WithdrawConsent(_consent),
   );
 
+  /// Public metadata only; notification navigation never receives credentials.
+  int get sessionGeneration => _sessionStore.generation;
+
+  Future<AppResult<List<CaregiverLinkSummary>>> readConfirmedCareProfiles() =>
+      _careLinks.readConfirmed();
+
   /// Creates caregiver setup state sharing the application's captured session store.
   ProfilesBloc createProfilesBloc() => ProfilesBloc(
     reader: _careLinks,
@@ -659,19 +669,20 @@ final class AppDependencies {
   );
 
   /// Creates the access authority; its provider is responsible for closing it.
-  AccessBloc createAccessBloc() => AccessBloc(
-    signInWithSocial: SignInWithSocial(
-      RemoteSocialSessionRepository(
-        credentials: FirebaseSocialCredentials(),
-        api: SessionApi(_client),
-        store: _sessionStore,
-        clock: DateTime.now,
-      ),
-    ),
-    signIn: SignIn(_sessions),
-    restore: RestoreSession(_sessions),
-    signOut: SignOut(_sessions),
-  );
+  AccessBloc createAccessBloc({Future<void> Function()? beforeSignOut}) =>
+      AccessBloc(
+        signInWithSocial: SignInWithSocial(
+          RemoteSocialSessionRepository(
+            credentials: FirebaseSocialCredentials(),
+            api: SessionApi(_client),
+            store: _sessionStore,
+            clock: DateTime.now,
+          ),
+        ),
+        signIn: SignIn(_sessions),
+        restore: RestoreSession(_sessions),
+        signOut: SignOut(_sessions, beforeSignOut: beforeSignOut),
+      );
 
   /// Family Monitoring blocs; every repository shares the captured session store, and the
   /// caregiver is always the owner of that session.
@@ -730,16 +741,21 @@ final class AppDependencies {
     );
   }
 
-  /// Omission & Escalation facade. The Firebase and local-notification adapters are not
-  /// configured in this build, so the device is never registered and nothing is displayed;
-  /// the follow-up targets and the session cleanup still run. Call it once: the facade holds
-  /// the state of its coordinator.
-  OmissionPushFacade omissionPush({required String installationId}) {
+  /// Composes recipient authorization, native notices and authenticated device registration.
+  /// Registration is enabled by the host for configured Android builds.
+  OmissionPushFacade omissionPush({
+    required String installationId,
+    bool registrationEnabled = false,
+  }) {
     final targets = SharedPreferencesPushTargetStore();
-    const notifier = NotConfiguredOmissionNotifier();
     final policy = OmissionPushAccessPolicy(
       sessions: _sessionStore,
       targets: targets,
+    );
+    final notifier = LocalOmissionNotifier(
+      notifications: _notifications,
+      texts: _reminderTexts,
+      mayDisplay: policy.allows,
     );
     return OmissionPushFacade(
       policy: policy,
@@ -749,7 +765,7 @@ final class AppDependencies {
       handle: HandleIncomingOmissionPush(policy, notifier),
       registration: PushDeviceRegistrationCoordinator(
         sessions: _sessionStore,
-        tokens: const NotConfiguredPushTokenSource(),
+        tokens: FirebasePushTokenSource(),
         registry: RemoteDeviceTokenRegistry(
           api: PushDeviceApi(_client),
           store: _sessionStore,
@@ -757,9 +773,20 @@ final class AppDependencies {
         ),
       ),
       cleanup: OmissionNotificationSessionCleanup(notifier: notifier),
-      registrationEnabled: false,
+      registrationEnabled: registrationEnabled,
     );
   }
+
+  /// Connects SDK messages, token rotation and native taps to the application coordinator.
+  OmissionDeliveryCoordinator createOmissionDelivery(OmissionPushFacade push) =>
+      OmissionDeliveryCoordinator(
+        source: FirebaseOmissionMessageSource(),
+        facade: push,
+        sessions: _sessionStore,
+        rotatedTokens: FirebasePushTokenSource().refreshedTokens,
+        localTaps: _notifications.opened,
+        initialLocalPayload: _notifications.launchPayload,
+      );
 
   /// Opaque identity of this installation for the push registry.
   Future<String> readPushInstallationId() =>

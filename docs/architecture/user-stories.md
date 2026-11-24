@@ -116,5 +116,8 @@ Algunas historias se implementaron juntas en un mismo commit original. En esos c
 | `feature/us-43-restock` | `270a898` | u202415820 |
 | `feature/us-44-current-plan` | `564466a` | u202415820 |
 | `feature/us-45-change-subscription` | `564466a` | u202415820 |
-| `feature/offline-confirmation-cache` | `03d2c86` | u202415820 |
+| `feature/ts-13-offline-sync` | `03d2c86` | u202415820 |
 | `feature/public-plans` | `a439d17` | u202415820 |
+
+
+Las integraciones técnicas y sus ramas se describen en [Technical stories](technical-stories.md).
