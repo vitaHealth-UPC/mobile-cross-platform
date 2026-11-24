@@ -34,6 +34,8 @@ class TataApp extends StatelessWidget {
     this.contactUri,
     this.openContact,
     this.applyChosenPlan,
+    this.navigatorKey,
+    this.applicationObserver,
   });
 
   final AccessBloc Function() createAccessBloc;
@@ -51,6 +53,10 @@ class TataApp extends StatelessWidget {
   final Uri? contactUri;
   final Future<bool> Function(Uri uri)? openContact;
   final Future<bool> Function(String planCode)? applyChosenPlan;
+  final GlobalKey<NavigatorState>? navigatorKey;
+
+  /// Cross-context lifecycle observers remain outside the feature screen builders.
+  final Widget Function(Widget child)? applicationObserver;
 
   /// Optional app-wide appearance (accessibility and language of the signed-in owner).
   /// Without it the application keeps the default light Spanish experience.
@@ -59,6 +65,7 @@ class TataApp extends StatelessWidget {
   Widget _app(AppearanceState? appearance) {
     final preferences = appearance?.accessibility;
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'Tata',
       debugShowCheckedModeBanner: false,
       theme: preferences == null
@@ -93,6 +100,11 @@ class TataApp extends StatelessWidget {
     );
   }
 
+  Widget _observedApp(AppearanceState? appearance) {
+    final app = _app(appearance);
+    return applicationObserver?.call(app) ?? app;
+  }
+
   /// Only full caregiver and older-adult sessions own preferences.
   static String? _preferencesOwner(AccessState state) {
     final owner = state.session?.owner;
@@ -106,7 +118,7 @@ class TataApp extends StatelessWidget {
     return BlocProvider(
       create: (_) => createAccessBloc()..add(const AccessRestoreRequested()),
       child: appearance == null
-          ? _app(null)
+          ? _observedApp(null)
           : BlocProvider(
               create: (_) => appearance(),
               child: Builder(
@@ -117,7 +129,7 @@ class TataApp extends StatelessWidget {
                       .read<AppearanceCubit>()
                       .bindOwner(_preferencesOwner(state)),
                   child: BlocBuilder<AppearanceCubit, AppearanceState>(
-                    builder: (context, state) => _app(state),
+                    builder: (context, state) => _observedApp(state),
                   ),
                 ),
               ),

@@ -22,6 +22,14 @@ Display and cleanup operations are serialized. Recipient access is checked aroun
 
 The host calls `sessionChanged` after access changes, `beforeSignOut` while the credential still exists, and `dispose` when the lifecycle ends. Stream subscriptions and registration retries are released together. Permission is rechecked for each SDK token rotation without prompting again.
 
+## Host integration
+
+`OmissionMessagingHost` observes `AccessBloc`, foreground resume and authorized destination events. It waits until a frame is mounted before invoking its route callback, then releases subscriptions and the delivery coordinator when unmounted. `TataApp.applicationObserver` places lifecycle observers below the access provider; its navigator key supports the composition-owned route dispatcher.
+
+`SignOut.beforeSignOut` runs authenticated device removal before the repository discards the credential. A failed device cleanup does not prevent local invalidation and account revocation. `AppDependencies.createAccessBloc` accepts this callback from the composition root rather than importing messaging into Identity.
+
+The host and hook are validated components. Main startup, the destination dispatcher and background handler are connected as one subsequent integration before registration is enabled.
+
 ## Delivery boundary
 
 The SDK token source and native notifier are composed in production. Device registration remains disabled while the host messaging lifecycle is completed. Local adapter tests do not establish background delivery or a successful remote push. The integration also requires Firebase configuration for the target platform, permission, message reception, token rotation, authenticated cleanup and authorized tap handling.

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import '../../../../shared/application/session/session_owner.dart';
 import '../../../../shared/application/session/session_store.dart';
+import '../ports/omission_delivery.dart';
 import '../ports/omission_message_source.dart';
 import '../readmodels/omission_push_payload.dart';
 import '../readmodels/push_destination.dart';
@@ -9,7 +10,7 @@ import 'omission_push_facade.dart';
 
 /// Connects transport events to recipient policy and authenticated navigation evidence.
 /// The host decides when navigation is ready and owns the actual screen transition.
-final class OmissionDeliveryCoordinator {
+final class OmissionDeliveryCoordinator implements OmissionDelivery {
   OmissionDeliveryCoordinator({
     required this._source,
     required this._facade,
@@ -37,9 +38,11 @@ final class OmissionDeliveryCoordinator {
   bool _disposed = false;
   int _revision = 0;
 
+  @override
   Stream<PushDestination> get destinations => _destinations.stream;
 
   /// Starts once. SDK configuration failure does not disable local tap authorization.
+  @override
   Future<bool> start() => _starting ??= _start();
 
   Future<bool> _start() async {
@@ -82,6 +85,7 @@ final class OmissionDeliveryCoordinator {
   }
 
   /// Called after access restoration, sign-in, session refresh or invalidation.
+  @override
   Future<void> sessionChanged({required bool authenticated}) async {
     final revision = ++_revision;
     await _sessions.initialize();
@@ -123,6 +127,7 @@ final class OmissionDeliveryCoordinator {
   }
 
   /// Stops queued navigation before bounded authenticated device removal.
+  @override
   Future<void> beforeSignOut() async {
     _revision++;
     _canNavigate = false;
@@ -143,6 +148,7 @@ final class OmissionDeliveryCoordinator {
     }
   }
 
+  @override
   Future<void> dispose() async {
     _disposed = true;
     _revision++;
