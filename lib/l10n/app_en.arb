@@ -1513,5 +1513,6 @@
   "socialLinkRequired": "This email already has an account. Sign in with your password to explicitly link the provider.",
   "socialEmailRequired": "The provider must share a verified email to create the account.",
   "showPassword": "Show password",
-  "hidePassword": "Hide password"
+  "hidePassword": "Hide password",
+  "preparingBackend": "Preparing the service. This may take a moment."
 }

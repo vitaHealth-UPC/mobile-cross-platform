@@ -185,12 +185,15 @@ import '../../l10n/generated/app_localizations.dart';
 import '../../shared/application/session/session_store.dart';
 import '../../shared/common/result/app_result.dart';
 import '../../shared/infrastructure/network/api_client.dart';
+import '../../shared/infrastructure/network/backend_readiness.dart';
 import '../../shared/infrastructure/notifications/local_notification_platform.dart';
 import '../../shared/infrastructure/security/secure_session_store.dart';
 import '../config/app_config.dart';
 
 /// Owns process-wide adapters. Routes own and close the blocs they create.
 final class AppDependencies {
+  Future<void> prepareBackend() => _client.prepareBackend();
+
   AppDependencies._(
     this._client,
     this._sessions,
@@ -216,9 +219,22 @@ final class AppDependencies {
   );
 
   /// Composes real HTTP and secure storage using environment configuration.
-  factory AppDependencies.production() {
+  factory AppDependencies.production({
+    void Function(bool)? onBackendPreparing,
+  }) {
     final config = AppConfig.fromEnvironment();
-    final client = ApiClient(baseUrl: config.apiBaseUrl, client: http.Client());
+    final transport = http.Client();
+    final client = ApiClient(
+      baseUrl: config.apiBaseUrl,
+      client: transport,
+      readiness: config.apiBaseUrl.host.endsWith('.onrender.com')
+          ? BackendReadiness(
+              baseUrl: config.apiBaseUrl,
+              client: transport,
+              onPreparing: onBackendPreparing,
+            )
+          : null,
+    );
     final store = SecureSessionStore(
       storage: const FlutterSecureStorage(),
       clock: DateTime.now,
