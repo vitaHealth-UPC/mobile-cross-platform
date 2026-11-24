@@ -52,8 +52,13 @@ class AdultEntryRoute extends StatefulWidget {
     this.monitoring,
     this.push,
     this.reminders,
+    this.initialIntakeId,
+    this.onInitialIntakeConsumed,
   });
 
+  /// Exact dose requested by a notice; opening retains the ordinary adult flow.
+  final String? initialIntakeId;
+  final VoidCallback? onInitialIntakeConsumed;
   final String olderAdultId;
   final Future<RememberedAdult?> Function() readRemembered;
   final Future<void> Function(RememberedAdult adult) remember;
@@ -102,12 +107,37 @@ enum _Phase { loading, pinSetup, home }
 class _AdultEntryRouteState extends State<AdultEntryRoute> {
   _Phase _phase = _Phase.loading;
   String? _name;
+  String? _requestedDose;
   StreamSubscription<String>? _reminderTaps;
 
   @override
   void initState() {
     super.initState();
+    _requestedDose = widget.initialIntakeId;
     _resolve();
+  }
+
+  @override
+  void didUpdateWidget(AdultEntryRoute oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialIntakeId != null &&
+        widget.initialIntakeId != oldWidget.initialIntakeId) {
+      _requestedDose = widget.initialIntakeId;
+      _openRequestedDose();
+    }
+  }
+
+  void _openRequestedDose() {
+    if (_phase != _Phase.home || _requestedDose == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _phase != _Phase.home) return;
+      final intakeId = _requestedDose;
+      if (intakeId == null) return;
+      _requestedDose = null;
+      widget.onInitialIntakeConsumed?.call();
+      Navigator.of(context).popUntil((route) => route.isFirst);
+      unawaited(_openDose(context, intakeId));
+    });
   }
 
   @override
@@ -151,7 +181,10 @@ class _AdultEntryRouteState extends State<AdultEntryRoute> {
       _name = name;
       _phase = known ? _Phase.home : _Phase.pinSetup;
     });
-    if (known) unawaited(_followReminders());
+    if (known) {
+      unawaited(_followReminders());
+      _openRequestedDose();
+    }
   }
 
   Future<void> _pinSaved() async {
@@ -165,6 +198,7 @@ class _AdultEntryRouteState extends State<AdultEntryRoute> {
     if (!mounted) return;
     setState(() => _phase = _Phase.home);
     unawaited(_followReminders());
+    _openRequestedDose();
   }
 
   void _openMore(BuildContext context) {

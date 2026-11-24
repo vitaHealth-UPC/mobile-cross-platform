@@ -6,6 +6,7 @@ La documentación técnica se organiza por responsabilidad, con la misma separac
 | --- | --- |
 | [Arquitectura](architecture/mobile-architecture.md) | Cuatro capas, dependencias y responsabilidades |
 | [Contextos](architecture/bounded-contexts.md) | Límites de los nueve contextos |
+| [Integraciones técnicas](architecture/technical-stories.md) | TS, contratos móviles y ramas de integración |
 | [Historias](architecture/user-stories.md) | Aceptación y trazabilidad de producto |
 | [Inventario](architecture/implementation-inventory.md) | Archivos previstos, responsabilidades y pruebas |
 | [Figma](architecture/figma-frame-map.md) | Las 70 variantes y su evidencia |
@@ -13,6 +14,7 @@ La documentación técnica se organiza por responsabilidad, con la misma separac
 | [Convenciones](architecture/development-guidelines.md) | Figma, recursos, Flutter, formato y Dartdoc |
 | [Requisitos](architecture/course-requirements.md) | Enunciado y referencias del curso |
 | [Contratos API](api/contract-guidelines.md) | Transporte, autorización y recibos |
+| [Notificaciones y voz](api/notifications-and-voice.md) | Contratos push, avisos nativos y confirmación hablada |
 | [Identidad y vínculos](api/identity-and-care-links.md) | Acceso, proveedores y consentimiento |
 | [Validación](architecture/validation-status.md) | Evidencia vigente y controles de cierre |
 

@@ -38,8 +38,12 @@ class CaregiverCareRoute extends StatelessWidget {
     this.createPersonAdherenceBloc,
     this.inventory,
     this.createProfileEditorCubit,
+    this.initialTab = CaregiverTab.home,
+    this.initialIntakeId,
   });
 
+  final CaregiverTab initialTab;
+  final String? initialIntakeId;
   final CaregiverLinkSummary profile;
   final String caregiverId;
   final TreatmentNavigation treatments;
@@ -69,6 +73,8 @@ class CaregiverCareRoute extends StatelessWidget {
       builder: (inner) => monitoring.caregiverHome(
         olderAdultId: profile.olderAdultId,
         olderAdultName: profile.fullName,
+        initialTab: initialTab,
+        initialIntakeId: initialIntakeId,
         onHistory: () => onOpenAdherence(inner),
         onAddMedication: () => treatments.openMedications(
           inner,
