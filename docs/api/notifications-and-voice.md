@@ -28,11 +28,11 @@ The host calls `sessionChanged` after access changes, `beforeSignOut` while the 
 
 `SignOut.beforeSignOut` runs authenticated device removal before the repository discards the credential. A failed device cleanup does not prevent local invalidation and account revocation. `AppDependencies.createAccessBloc` accepts this callback from the composition root rather than importing messaging into Identity.
 
-Main wires the host and the sign-out hook. Caregiver taps reload confirmed profiles before opening Alerts. The detail opens only when one alert matches the exact intake reference. Adult taps use the existing dose route after local PIN enrollment. Background reception is still required before enabling registration.
+Main wires the host and the sign-out hook. Caregiver taps reload confirmed profiles before opening Alerts. The detail opens only when one alert matches the exact intake reference. Adult taps use the existing dose route after local PIN enrollment. Android registers a background receiver when built with `--dart-define=TATA_ENABLE_OMISSION_PUSH=true`.
 
 ## Delivery boundary
 
-The SDK token source and native notifier are composed in production. Device registration remains disabled while the host messaging lifecycle is completed. Local adapter tests do not establish background delivery or a successful remote push. The integration also requires Firebase configuration for the target platform, permission, message reception, token rotation, authenticated cleanup and authorized tap handling.
+The SDK token source and native notifier are composed in production. Device registration is opt-in for Android builds with Firebase configured. iOS requires APNs provisioning and remains disabled. Local adapter tests do not establish background delivery or a successful remote push. The integration also requires Firebase configuration for the target platform, permission, message reception, token rotation, authenticated cleanup and authorized tap handling.
 
 Firebase initialization is shared with social access. The current backend registry accepts FCM tokens; changing to the newer SDK installation-ID protocol requires a corresponding sender migration.
 
