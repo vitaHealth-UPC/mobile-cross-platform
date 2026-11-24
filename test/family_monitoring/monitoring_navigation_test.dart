@@ -39,6 +39,7 @@ import 'package:tata/features/treatment_management/presentation/widgets/active_m
 import 'package:tata/l10n/generated/app_localizations.dart';
 import 'package:tata/shared/common/result/app_result.dart';
 import 'package:tata/shared/presentation/theme/tata_theme.dart';
+import 'package:tata/shared/presentation/widgets/caregiver_tab_bar.dart';
 
 import '../support/fake_treatment_backend.dart';
 import '../support/visual_capture.dart';
@@ -187,6 +188,8 @@ void main() {
     FutureOr<void> Function(StockAttention stock)? onOpenStock,
     LinkedPersonSlots? person,
     double scale = 1,
+    CaregiverTab initialTab = CaregiverTab.home,
+    String? initialIntakeId,
   }) async {
     tester.view.physicalSize = scale == 1
         ? const Size(393, 883)
@@ -218,6 +221,8 @@ void main() {
             onSessionInvalidated: onInvalidated ?? () {},
             onOpenStock: onOpenStock,
             person: person,
+            initialTab: initialTab,
+            initialIntakeId: initialIntakeId,
           ),
         ),
       ),
@@ -225,6 +230,44 @@ void main() {
     await tester.pump();
     await tester.pump();
   }
+
+  testWidgets('notification opens the exact alert once and retains its tabs', (
+    tester,
+  ) async {
+    await pumpHome(
+      tester,
+      navigation(),
+      initialTab: CaregiverTab.alerts,
+      initialIntakeId: 'intake-1',
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(AlertDetailScreen), findsOneWidget);
+    final navigator = tester.state<NavigatorState>(
+      find.byType(Navigator).first,
+    );
+    navigator.pop();
+    await tester.pumpAndSettle();
+    expect(find.byType(AlertDetailScreen), findsNothing);
+    expect(find.textContaining('Hoy,'), findsOneWidget);
+    await tester.tap(find.text('Inicio'));
+    await tester.pumpAndSettle();
+    expect(find.text('Resumen familiar'), findsOneWidget);
+  });
+
+  testWidgets(
+    'unknown notification intake stays on alerts without matching medication',
+    (tester) async {
+      await pumpHome(
+        tester,
+        navigation(),
+        initialTab: CaregiverTab.alerts,
+        initialIntakeId: 'other-intake',
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDetailScreen), findsNothing);
+      expect(find.textContaining('Hoy,'), findsOneWidget);
+    },
+  );
 
   testWidgets('starts on the summary and moves between its tabs', (
     tester,

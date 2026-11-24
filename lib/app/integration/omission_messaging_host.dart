@@ -16,11 +16,15 @@ class OmissionMessagingHost extends StatefulWidget {
     required this.delivery,
     required this.onOpen,
     required this.child,
+    this.onDisposed,
+    this.onAccessUnavailable,
   });
 
   final OmissionDelivery delivery;
   final Future<void> Function(PushDestination) onOpen;
   final Widget child;
+  final VoidCallback? onDisposed;
+  final VoidCallback? onAccessUnavailable;
 
   @override
   State<OmissionMessagingHost> createState() => _OmissionMessagingHostState();
@@ -62,6 +66,10 @@ class _OmissionMessagingHostState extends State<OmissionMessagingHost>
 
   Future<void> _observe(AccessState state) async {
     if (!mounted) return;
+    if (state.status != AccessStatus.authenticated &&
+        state.status != AccessStatus.busy) {
+      widget.onAccessUnavailable?.call();
+    }
     try {
       await widget.delivery.sessionChanged(
         authenticated: state.status == AccessStatus.authenticated,
@@ -95,6 +103,7 @@ class _OmissionMessagingHostState extends State<OmissionMessagingHost>
     unawaited(_sessions?.cancel());
     unawaited(_destinations?.cancel());
     unawaited(widget.delivery.dispose());
+    widget.onDisposed?.call();
     super.dispose();
   }
 

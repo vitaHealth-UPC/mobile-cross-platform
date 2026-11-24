@@ -28,7 +28,7 @@ The host calls `sessionChanged` after access changes, `beforeSignOut` while the 
 
 `SignOut.beforeSignOut` runs authenticated device removal before the repository discards the credential. A failed device cleanup does not prevent local invalidation and account revocation. `AppDependencies.createAccessBloc` accepts this callback from the composition root rather than importing messaging into Identity.
 
-The host and hook are validated components. Main startup, the destination dispatcher and background handler are connected as one subsequent integration before registration is enabled.
+Main wires the host and the sign-out hook. Caregiver taps reload confirmed profiles before opening Alerts. The detail opens only when one alert matches the exact intake reference. Adult taps use the existing dose route after local PIN enrollment. Background reception is still required before enabling registration.
 
 ## Delivery boundary
 
