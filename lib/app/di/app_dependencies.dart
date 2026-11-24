@@ -30,6 +30,7 @@ import '../../features/adherence_analytics/presentation/bloc/history/history_blo
 import '../../features/adherence_analytics/presentation/bloc/level/level_bloc.dart';
 import '../../features/adherence_analytics/presentation/bloc/level/level_state.dart';
 import '../../features/adherence_analytics/presentation/bloc/recommendations/recommendations_bloc.dart';
+import '../../features/care_link/application/readmodels/caregiver_link_summary.dart';
 import '../../features/care_link/application/usecases/accept_care_link.dart';
 import '../../features/care_link/application/usecases/generate_linking_code.dart';
 import '../../features/care_link/application/usecases/register_consent.dart';
@@ -629,6 +630,12 @@ final class AppDependencies {
     decide: RegisterConsent(_consent),
     withdraw: WithdrawConsent(_consent),
   );
+
+  /// Public metadata only; notification navigation never receives credentials.
+  int get sessionGeneration => _sessionStore.generation;
+
+  Future<AppResult<List<CaregiverLinkSummary>>> readConfirmedCareProfiles() =>
+      _careLinks.readConfirmed();
 
   /// Creates caregiver setup state sharing the application's captured session store.
   ProfilesBloc createProfilesBloc() => ProfilesBloc(

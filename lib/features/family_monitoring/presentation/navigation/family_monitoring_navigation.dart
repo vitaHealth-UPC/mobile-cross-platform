@@ -82,6 +82,8 @@ final class FamilyMonitoringNavigation {
     required VoidCallback onSessionInvalidated,
     FutureOr<void> Function(StockAttention stock)? onOpenStock,
     LinkedPersonSlots? person,
+    CaregiverTab initialTab = CaregiverTab.home,
+    String? initialIntakeId,
   }) => _CaregiverShell(
     factories: _factories,
     olderAdultId: olderAdultId,
@@ -93,6 +95,8 @@ final class FamilyMonitoringNavigation {
     onSessionInvalidated: onSessionInvalidated,
     onOpenStock: onOpenStock,
     person: person,
+    initialTab: initialTab,
+    initialIntakeId: initialIntakeId,
   );
 
   /// The older adult's own notes, loaded when the screen appears.
@@ -128,6 +132,8 @@ class _CaregiverShell extends StatefulWidget {
     required this.onSessionInvalidated,
     this.onOpenStock,
     this.person,
+    this.initialTab = CaregiverTab.home,
+    this.initialIntakeId,
   });
 
   final FamilyMonitoringFactories factories;
@@ -140,6 +146,8 @@ class _CaregiverShell extends StatefulWidget {
   final VoidCallback onSessionInvalidated;
   final FutureOr<void> Function(StockAttention stock)? onOpenStock;
   final LinkedPersonSlots? person;
+  final CaregiverTab initialTab;
+  final String? initialIntakeId;
 
   @override
   State<_CaregiverShell> createState() => _CaregiverShellState();
@@ -148,6 +156,7 @@ class _CaregiverShell extends StatefulWidget {
 class _CaregiverShellState extends State<_CaregiverShell> {
   CaregiverTab _tab = CaregiverTab.home;
   int _personRevision = 0;
+  bool _initialAlertHandled = false;
 
   Future<void> _editPerson() async {
     final name = await widget.person?.onEdit?.call(context);
@@ -165,6 +174,13 @@ class _CaregiverShellState extends State<_CaregiverShell> {
   @override
   void initState() {
     super.initState();
+    _tab = widget.initialIntakeId == null
+        ? widget.initialTab
+        : CaregiverTab.alerts;
+    if (_tab == CaregiverTab.more ||
+        (_tab == CaregiverTab.person && widget.person == null)) {
+      _tab = CaregiverTab.home;
+    }
     final f = widget.factories;
     _summary = f.createSummaryBloc(widget.olderAdultId, widget.olderAdultName)
       ..add(const FamilySummaryRequested());
@@ -184,7 +200,31 @@ class _CaregiverShellState extends State<_CaregiverShell> {
     super.dispose();
   }
 
+  /// A notification identifies the intake, never an alert guessed from medication text.
+  void _openInitialAlert(AlertsState state) {
+    final intakeId = widget.initialIntakeId;
+    if (_initialAlertHandled ||
+        intakeId == null ||
+        state.status == AlertsStatus.loading) {
+      return;
+    }
+    _initialAlertHandled = true;
+    if (state.errorCode != null || _tab != CaregiverTab.alerts) return;
+    final matches = state.alerts
+        .where((alert) => alert.intakeId == intakeId)
+        .toList();
+    if (matches.length != 1) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted &&
+          _tab == CaregiverTab.alerts &&
+          ModalRoute.of(context)?.isCurrent == true) {
+        _openDetail(matches.single.id);
+      }
+    });
+  }
+
   void _select(CaregiverTab tab) {
+    if (tab != CaregiverTab.alerts) _initialAlertHandled = true;
     switch (tab) {
       case CaregiverTab.person when widget.person == null:
         widget.onPerson();
@@ -318,8 +358,11 @@ class _CaregiverShellState extends State<_CaregiverShell> {
           },
         ),
         BlocListener<AlertsBloc, AlertsState>(
-          listenWhen: (a, b) => a.errorCode != b.errorCode,
+          listenWhen: (a, b) =>
+              a.errorCode != b.errorCode ||
+              (!_initialAlertHandled && widget.initialIntakeId != null),
           listener: (_, state) {
+            _openInitialAlert(state);
             if (state.errorCode == 'ACCESS_DENIED') {
               _summary.add(const FamilySummaryAccessLost('ACCESS_DENIED'));
             }
