@@ -14,6 +14,7 @@ import '../widgets/managed_person_card.dart';
 import '../widgets/regimen_editor.dart';
 import '../widgets/treatment_management_card.dart';
 import '../widgets/treatment_management_receipt.dart';
+import '../widgets/treatment_visuals.dart';
 
 /// Shows one treatment and offers pause, resume, regimen editing and medication
 /// availability. A draft or inactive-medication treatment is shown read-only.
@@ -44,7 +45,10 @@ class TreatmentDetailScreen extends StatelessWidget {
     final bloc = context.read<TreatmentManagementBloc>();
     final event = await showDialog<RegimenEdited>(
       context: context,
-      builder: (_) => RegimenEditor(detail: detail),
+      builder: (dialogContext) => Theme(
+        data: treatmentDialogTheme(dialogContext),
+        child: RegimenEditor(detail: detail),
+      ),
     );
     if (event != null && context.mounted) bloc.add(event);
   }
@@ -104,37 +108,18 @@ class TreatmentDetailScreen extends StatelessWidget {
           body: SafeArea(
             bottom: navigationBar == null,
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(22, 28, 22, 24),
+              padding: const EdgeInsets.fromLTRB(22, 22, 22, 24),
               children: [
-                Row(
-                  children: [
-                    IconButton(
-                      tooltip: text.back,
-                      onPressed: state.busy
-                          ? null
-                          : () => Navigator.of(context).maybePop(),
-                      icon: const Icon(
-                        Icons.chevron_left,
-                        color: TataColors.primary,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        knownName &&
-                                state.status !=
-                                    TreatmentManagementStatus.failure
-                            ? text.tmTreatmentFor(
-                                name.split(RegExp(r'\s+')).first,
-                              )
-                            : text.tmDetailTitle,
-                        style: const TextStyle(
-                          fontFamily: 'DMSerifDisplay',
-                          fontSize: 29,
-                          color: TataColors.ink,
-                        ),
-                      ),
-                    ),
-                  ],
+                TreatmentHeader(
+                  title:
+                      knownName &&
+                          state.status != TreatmentManagementStatus.failure
+                      ? text.tmTreatmentFor(name.split(RegExp(r'\s+')).first)
+                      : text.tmDetailTitle,
+                  backLabel: text.back,
+                  onBack: state.busy
+                      ? null
+                      : () => Navigator.of(context).maybePop(),
                 ),
                 const SizedBox(height: 4),
                 Text(

@@ -9,8 +9,10 @@ import '../bloc/treatment_setup/treatment_setup_bloc.dart';
 import '../bloc/treatment_setup/treatment_setup_event.dart';
 import '../bloc/treatment_setup/treatment_setup_state.dart';
 import '../texts/treatment_texts.dart';
+import '../widgets/prescription_fields.dart';
 import '../widgets/treatment_setup_review.dart';
 import '../widgets/treatment_stepper.dart';
+import '../widgets/treatment_visuals.dart';
 
 /// Wizard from a registered medication to an active treatment: details, regimen, schedule,
 /// reminders and review. Field text lives here; validated values live in the bloc.
@@ -88,8 +90,6 @@ class _TreatmentSetupScreenState extends State<TreatmentSetupScreen> {
         if (isSessionFailure(state.errorCode)) {
           widget.onSessionInvalidated();
         } else if (state.activated) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(text.tmActivated)));
           widget.onFinished();
         }
       },
@@ -104,7 +104,7 @@ class _TreatmentSetupScreenState extends State<TreatmentSetupScreen> {
             ? text.tmErrIncomplete
             : treatmentErrorText(text, state.errorCode);
         return PopScope(
-          canPop: state.step.index == 0 || state.activated,
+          canPop: !state.loading && (state.step.index == 0 || state.activated),
           onPopInvokedWithResult: (didPop, _) {
             if (!didPop) bloc.add(const TreatmentSetupBackRequested());
           },
@@ -117,38 +117,18 @@ class _TreatmentSetupScreenState extends State<TreatmentSetupScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Row(
-                        children: [
-                          IconButton(
-                            tooltip: text.back,
-                            onPressed: state.loading
-                                ? null
-                                : () {
-                                    if (state.step ==
-                                        TreatmentSetupStep.details) {
-                                      Navigator.of(context).maybePop();
-                                    } else {
-                                      bloc.add(
-                                        const TreatmentSetupBackRequested(),
-                                      );
-                                    }
-                                  },
-                            icon: const Icon(
-                              Icons.chevron_left,
-                              color: TataColors.primary,
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              text.tmSetupTitle,
-                              style: const TextStyle(
-                                fontFamily: 'DMSerifDisplay',
-                                fontSize: 29,
-                                color: TataColors.ink,
-                              ),
-                            ),
-                          ),
-                        ],
+                      TreatmentHeader(
+                        title: text.tmSetupTitle,
+                        backLabel: text.back,
+                        onBack: state.loading
+                            ? null
+                            : () {
+                                if (state.step == TreatmentSetupStep.details) {
+                                  Navigator.of(context).maybePop();
+                                } else {
+                                  bloc.add(const TreatmentSetupBackRequested());
+                                }
+                              },
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -255,9 +235,10 @@ class _TreatmentSetupScreenState extends State<TreatmentSetupScreen> {
       case TreatmentSetupStep.details:
         return [
           TextFormField(
-            style: const TextStyle(fontSize: 14),
+            style: treatmentFieldStyle(context),
             key: const Key('treatment-name'),
             controller: _name,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
             enabled: !state.loading,
             readOnly: state.treatmentId != null,
             decoration: InputDecoration(labelText: text.tmTreatmentName),
@@ -265,51 +246,105 @@ class _TreatmentSetupScreenState extends State<TreatmentSetupScreen> {
           ),
         ];
       case TreatmentSetupStep.regimen:
-        return [
-          TextFormField(
-            style: const TextStyle(fontSize: 14),
-            key: const Key('treatment-dose'),
-            controller: _dose,
-            decoration: InputDecoration(labelText: text.tmDose),
-            validator: (value) => _required(value, text),
-          ),
-          const SizedBox(height: 16),
-          TextFormField(
-            style: const TextStyle(fontSize: 14),
-            key: const Key('treatment-frequency'),
-            controller: _frequency,
-            decoration: InputDecoration(labelText: text.tmFrequency),
-            validator: (value) => _required(value, text),
-          ),
-        ];
       case TreatmentSetupStep.schedule:
         return [
           TextFormField(
-            style: const TextStyle(fontSize: 14),
-            key: const Key('treatment-times'),
-            controller: _times,
-            keyboardType: TextInputType.datetime,
-            decoration: InputDecoration(labelText: text.tmScheduleTimes),
+            style: treatmentFieldStyle(context),
+            key: const Key('treatment-dose'),
+            controller: _dose,
+            enabled: !state.loading,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            maxLength: 100,
+            decoration: InputDecoration(
+              labelText: text.tmDoseShort,
+              hintText: text.tmDose,
+              counterText: '',
+              suffixIcon: prescriptionOptions(
+                tooltip: text.tmDoseOptions,
+                options: [
+                  text.tmDoseTablet,
+                  text.tmDoseHalfTablet,
+                  text.tmDoseCapsule,
+                  text.tmDoseTwoTablets,
+                ],
+                controller: _dose,
+                enabled: !state.loading,
+              ),
+            ),
             validator: (value) => _required(value, text),
           ),
           const SizedBox(height: 16),
+          FrequencyField(
+            fieldKey: const Key('treatment-frequency'),
+            controller: _frequency,
+            enabled: !state.loading,
+          ),
+          const SizedBox(height: 20),
+          ValueListenableBuilder<TextEditingValue>(
+            valueListenable: _frequency,
+            builder: (_, _, _) => ScheduleTimeField(
+              fieldKey: const Key('treatment-times'),
+              controller: _times,
+              frequency: _frequency,
+              enabled: !state.loading,
+            ),
+          ),
+          if (context.read<TreatmentSetupBloc>().calendarZone
+              case final zone?) ...[
+            const SizedBox(height: 8),
+            Text(
+              '${text.tmTimeZone}: $zone',
+              style: treatmentSupportingStyle(context).copyWith(fontSize: 12),
+            ),
+          ],
+          const SizedBox(height: 16),
           TextFormField(
-            style: const TextStyle(fontSize: 14),
+            style: treatmentFieldStyle(context),
             key: const Key('treatment-instructions'),
             controller: _instructions,
+            enabled: !state.loading,
+            maxLength: 500,
             maxLines: 3,
-            decoration: InputDecoration(labelText: text.tmInstructions),
+            decoration: InputDecoration(
+              labelText: text.tmInstructionsShort,
+              hintText: text.tmInstructions,
+              suffixIcon: prescriptionOptions(
+                tooltip: text.tmInstructionOptions,
+                options: [
+                  text.tmInstructionBeforeMeal,
+                  text.tmInstructionWithMeal,
+                  text.tmInstructionAfterMeal,
+                  text.tmInstructionWithWater,
+                ],
+                controller: _instructions,
+                append: true,
+              ),
+            ),
           ),
         ];
       case TreatmentSetupStep.reminders:
         return [
           TextFormField(
-            style: const TextStyle(fontSize: 14),
+            style: treatmentFieldStyle(context),
             key: const Key('treatment-delay'),
             controller: _delay,
+            enabled: !state.loading,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            validator: (value) {
+              final raw = value?.trim() ?? '';
+              final n = int.tryParse(raw);
+              return raw.isNotEmpty && (n == null || n < 0 || n > 1440)
+                  ? text.tmErrReminderDelay
+                  : null;
+            },
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
               labelText: text.tmFollowUpShort,
+              suffixIcon: reminderOptions(
+                text,
+                _delay,
+                enabled: !state.loading,
+              ),
               helperText: text.tmFollowUpHelp,
               helperMaxLines: 4,
             ),
@@ -390,11 +425,10 @@ class _TreatmentSetupScreenState extends State<TreatmentSetupScreen> {
                     TreatmentSetupStep.details => TreatmentDraftSubmitted(
                       _name.text,
                     ),
-                    TreatmentSetupStep.regimen => RegimenBasicsSubmitted(
+                    TreatmentSetupStep.regimen ||
+                    TreatmentSetupStep.schedule => TreatmentRegimenSubmitted(
                       _dose.text,
                       _frequency.text,
-                    ),
-                    TreatmentSetupStep.schedule => ScheduleSubmitted(
                       _times.text,
                       _instructions.text,
                     ),

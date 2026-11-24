@@ -21,6 +21,20 @@ final class ScheduleSubmitted extends TreatmentSetupEvent {
   final String instructions;
 }
 
+/// Validates the complete prescription in one screen.
+final class TreatmentRegimenSubmitted extends TreatmentSetupEvent {
+  const TreatmentRegimenSubmitted(
+    this.dose,
+    this.frequency,
+    this.scheduleText,
+    this.instructions,
+  );
+  final String dose;
+  final String frequency;
+  final String scheduleText;
+  final String instructions;
+}
+
 final class ReminderSubmitted extends TreatmentSetupEvent {
   const ReminderSubmitted(this.delayMinutes);
   final String delayMinutes;

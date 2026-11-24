@@ -30,10 +30,12 @@ final class TreatmentSetupBloc
     required this._changeStatus,
     required this.olderAdultId,
     required this.medicationId,
+    this.calendarZone,
   }) : super(const TreatmentSetupState()) {
     on<TreatmentDraftSubmitted>(_draft);
     on<RegimenBasicsSubmitted>(_regimen);
     on<ScheduleSubmitted>(_scheduled);
+    on<TreatmentRegimenSubmitted>(_completeRegimen);
     on<ReminderSubmitted>(_reminders);
     on<TreatmentSetupBackRequested>(_back);
     on<TreatmentActivationRequested>(_activate);
@@ -58,6 +60,7 @@ final class TreatmentSetupBloc
   final ChangeTreatmentStatus _changeStatus;
   final String olderAdultId;
   final String medicationId;
+  final String? calendarZone;
 
   Future<void> _draft(
     TreatmentDraftSubmitted event,
@@ -112,6 +115,14 @@ final class TreatmentSetupBloc
   void _scheduled(ScheduleSubmitted event, Emitter<TreatmentSetupState> emit) {
     switch (_schedule(event.scheduleText, event.instructions)) {
       case AppSuccess<ScheduleInstructions>(:final value):
+        final frequency = Frequency.tryParse(state.frequency);
+        if (frequency == null ||
+            !frequency.matchesMinutes(
+              value.schedule.times.map((t) => t.hour * 60 + t.minute),
+            )) {
+          emit(state.copyWith(errorCode: 'SCHEDULE_FREQUENCY_MISMATCH'));
+          return;
+        }
         emit(
           state.copyWith(
             scheduleText: value.schedule.times.map((t) => '$t').join(','),
@@ -122,6 +133,45 @@ final class TreatmentSetupBloc
       case AppFailure<ScheduleInstructions>(:final code):
         emit(state.copyWith(errorCode: code));
     }
+  }
+
+  void _completeRegimen(
+    TreatmentRegimenSubmitted event,
+    Emitter<TreatmentSetupState> emit,
+  ) {
+    if (state.loading ||
+        (state.step != TreatmentSetupStep.regimen &&
+            state.step != TreatmentSetupStep.schedule)) {
+      return;
+    }
+    final basics = _basics(event.dose, event.frequency);
+    if (basics case AppFailure<RegimenBasics>(:final code)) {
+      emit(state.copyWith(errorCode: code));
+      return;
+    }
+    final schedule = _schedule(event.scheduleText, event.instructions);
+    if (schedule case AppFailure<ScheduleInstructions>(:final code)) {
+      emit(state.copyWith(errorCode: code));
+      return;
+    }
+    final regimen = (basics as AppSuccess<RegimenBasics>).value;
+    final times = (schedule as AppSuccess<ScheduleInstructions>).value;
+    if (!regimen.frequency.matchesMinutes(
+      times.schedule.times.map((t) => t.hour * 60 + t.minute),
+    )) {
+      emit(state.copyWith(errorCode: 'SCHEDULE_FREQUENCY_MISMATCH'));
+      return;
+    }
+    emit(
+      state.copyWith(
+        dose: regimen.dose.value,
+        frequency: regimen.frequency.value,
+        scheduleText: times.schedule.times.join(','),
+        instructions: times.instructions.value,
+        configurationIncomplete: false,
+        step: TreatmentSetupStep.reminders,
+      ),
+    );
   }
 
   void _reminders(ReminderSubmitted event, Emitter<TreatmentSetupState> emit) {
@@ -150,7 +200,13 @@ final class TreatmentSetupBloc
     Emitter<TreatmentSetupState> emit,
   ) {
     if (state.loading || state.activated || state.step.index == 0) return;
-    emit(state.copyWith(step: TreatmentSetupStep.values[state.step.index - 1]));
+    emit(
+      state.copyWith(
+        step: state.step == TreatmentSetupStep.reminders
+            ? TreatmentSetupStep.regimen
+            : TreatmentSetupStep.values[state.step.index - 1],
+      ),
+    );
   }
 
   Future<void> _activate(
@@ -195,6 +251,7 @@ final class TreatmentSetupBloc
         scheduleText: state.scheduleText,
         instructions: state.instructions,
         followUpDelayMinutes: state.followUpDelayMinutes,
+        recurrenceZone: calendarZone,
       ),
     );
     if (emit.isDone) return;

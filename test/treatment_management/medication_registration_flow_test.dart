@@ -34,7 +34,7 @@ void main() {
       await tester.pumpAndSettle();
       await _next(tester);
       await tester.ensureVisible(
-        find.widgetWithText(ElevatedButton, 'Siguiente'),
+        find.widgetWithText(ElevatedButton, 'Guardar medicamento'),
       );
       await tester.pumpAndSettle();
       expect(find.text('Faltan datos obligatorios'), findsOneWidget);
@@ -48,7 +48,7 @@ void main() {
     });
   }
   testWidgets(
-    'frequency is required before registration and selecting it clears the notice',
+    'only medication identity is required and no regimen is created',
     (tester) async {
       final backend = FakeBackend();
       MedicationRegistrationResult? result;
@@ -61,21 +61,13 @@ void main() {
         find.byKey(const Key('medication-presentation')),
         '50 mg, comprimido',
       );
+      expect(find.byKey(const Key('medication-frequency')), findsNothing);
       await _next(tester);
-      expect(backend.medications.length, 1);
-      expect(result, isNull);
-      final frequency = find.byKey(const Key('medication-frequency'));
-      await tester.ensureVisible(frequency);
-      await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Frecuencia'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Cada 12 horas').last);
-      await tester.pumpAndSettle();
-      expect(find.byKey(const Key('medication-required-notice')), findsNothing);
-      expect(find.text('Completa este campo.'), findsNothing);
-      await _next(tester);
-      expect(result!.frequency, 'Cada 12 horas');
+      expect(result!.medication.name, 'Losartán');
+      expect(result!.frequency, isEmpty);
+      expect(result!.instructions, isEmpty);
       expect(backend.medications.length, 2);
+      expect(backend.createCalls, 0);
       expect(backend.configureCalls, 0);
     },
   );
@@ -129,7 +121,6 @@ void main() {
       find.byKey(const Key('treatment-dose')),
       '1 comprimido',
     );
-    await advance();
     expect(
       tester
           .widget<TextFormField>(
@@ -161,7 +152,7 @@ void main() {
     });
     await tester.pumpAndSettle();
     expect(find.text('Agregar medicamento: Rosa'), findsOneWidget);
-    expect(find.byType(TextFormField), findsNWidgets(5));
+    expect(find.byType(TextFormField), findsNWidgets(2));
     await captureWidget(
       tester,
       find.byKey(const Key('registration-capture')),
@@ -172,7 +163,7 @@ void main() {
     tester.view.physicalSize = const Size(360, 640);
     await tester.pumpAndSettle();
     await tester.ensureVisible(
-      find.widgetWithText(ElevatedButton, 'Siguiente'),
+      find.widgetWithText(ElevatedButton, 'Guardar medicamento'),
     );
     await tester.pumpAndSettle();
     await captureWidget(
@@ -218,13 +209,13 @@ void main() {
     final backend = FakeBackend();
     await _show(tester, backend, (_) {});
     await _next(tester);
-    expect(find.text('Completa este campo.'), findsNWidgets(3));
+    expect(find.text('Completa este campo.'), findsNWidgets(2));
     expect(find.byKey(const Key('medication-required-notice')), findsOneWidget);
     expect(backend.medications.length, 1);
   });
 
   testWidgets(
-    'retry retains regimen text and returns the acknowledged identity',
+    'retry retains identity fields and returns the acknowledged medication',
     (tester) async {
       final backend = FakeBackend()..failure = 'NETWORK';
       MedicationRegistrationResult? result;
@@ -232,9 +223,6 @@ void main() {
       for (final entry in {
         'medication-name': 'Losartán',
         'medication-presentation': '50 mg, comprimido',
-        'medication-frequency': 'Cada 12 horas',
-        'medication-when': 'Con el desayuno',
-        'medication-notes': 'Preparar un vaso de agua',
       }.entries) {
         await tester.enterText(find.byKey(Key(entry.key)), entry.value);
       }
@@ -244,17 +232,17 @@ void main() {
       expect(
         tester
             .widget<TextFormField>(
-              find.byKey(const Key('medication-frequency')),
+              find.byKey(const Key('medication-presentation')),
             )
             .controller!
             .text,
-        'Cada 12 horas',
+        '50 mg, comprimido',
       );
       backend.failure = null;
       await _next(tester);
       expect(result!.medication.id, 'med-2');
-      expect(result!.frequency, 'Cada 12 horas');
-      expect(result!.instructions, 'Con el desayuno\nPreparar un vaso de agua');
+      expect(result!.frequency, isEmpty);
+      expect(result!.instructions, isEmpty);
       expect(backend.createCalls, 0);
       expect(backend.configureCalls, 0);
     },
@@ -301,7 +289,7 @@ Future<void> _show(
 }
 
 Future<void> _next(WidgetTester tester) async {
-  final button = find.widgetWithText(ElevatedButton, 'Siguiente');
+  final button = find.widgetWithText(ElevatedButton, 'Guardar medicamento');
   await tester.ensureVisible(button);
   await tester.pumpAndSettle();
   await tester.tap(button);

@@ -231,6 +231,57 @@ void main() {
       expect(result, isA<AppSuccess>());
     });
 
+    test(
+      'local schedule uses explicit calendar zone and checks the receipt',
+      () async {
+        String responseZone = 'America/Lima';
+        final api = apiFor((request) async {
+          final body = jsonDecode(request.body) as Map<String, dynamic>;
+          expect(body['recurrenceMode'], 'LOCAL_TIMES');
+          expect(body['recurrenceZone'], 'America/Lima');
+          expect(body['frequency'], 'Cada 8 horas');
+          expect(body['scheduledTimes'], ['02:50', '10:50', '18:50']);
+          return http.Response(
+            jsonEncode(
+              treatment(
+                status: 'DRAFT',
+                extra: {
+                  'medicationId': 'med-1',
+                  'dose': '1 tablet',
+                  'frequency': 'Cada 8 horas',
+                  'scheduledTimes': ['02:50:00', '10:50:00', '18:50:00'],
+                  'instructions': '',
+                  'reminderLeadMinutes': 0,
+                  'recurrenceMode': 'LOCAL_TIMES',
+                  'recurrenceZone': responseZone,
+                },
+              ),
+            ),
+            200,
+          );
+        });
+        final configure = ConfigureTreatment(
+          RemoteTreatmentLifecycleRepository(
+            api: api,
+            store: MemorySessionStore(caregiver()),
+          ),
+        );
+        const draft = RegimenDraft(
+          dose: '1 tablet',
+          frequency: 'Every 8 hours',
+          scheduleText: '10:50,18:50,02:50',
+          instructions: '',
+          recurrenceZone: 'America/Lima',
+        );
+        expect(await configure('tr-1', 'med-1', draft), isA<AppSuccess>());
+        responseZone = 'UTC';
+        expect(
+          (await configure('tr-1', 'med-1', draft) as AppFailure).code,
+          'INVALID_RESPONSE',
+        );
+      },
+    );
+
     test('an invalid regimen is refused before any request', () async {
       var calls = 0;
       final api = apiFor((_) async {
@@ -284,7 +335,7 @@ void main() {
               extra: {
                 'medicationId': 'med-1',
                 'dose': 'OTRA',
-                'frequency': 'f',
+                'frequency': 'DAILY',
                 'scheduledTimes': ['08:00'],
                 'instructions': '',
                 'reminderLeadMinutes': 0,
@@ -305,7 +356,7 @@ void main() {
             'med-1',
             const RegimenDraft(
               dose: 'x',
-              frequency: 'f',
+              frequency: 'DAILY',
               scheduleText: '08:00',
               instructions: '',
             ),
@@ -371,7 +422,7 @@ void main() {
                   extra: {
                     'medicationId': 'med-1',
                     'dose': '1 tableta',
-                    'frequency': 'f',
+                    'frequency': 'DAILY',
                     'scheduledTimes': ['08:00:00'],
                     'instructions': '',
                   },

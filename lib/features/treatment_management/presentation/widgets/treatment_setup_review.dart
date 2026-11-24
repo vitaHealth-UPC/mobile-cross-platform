@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/presentation/theme/tata_colors.dart';
 import '../bloc/treatment_setup/treatment_setup_state.dart';
+import 'prescription_fields.dart';
+import 'treatment_visuals.dart';
 
 /// Review of validated regimen values; a visual preview never fabricates intake evidence.
 class TreatmentSetupReview extends StatelessWidget {
@@ -18,7 +20,7 @@ class TreatmentSetupReview extends StatelessWidget {
     final text = AppLocalizations.of(context);
     final values = [
       (text.tmDoseShort, state.dose),
-      (text.tmFrequencyShort, state.frequency),
+      (text.tmFrequencyShort, frequencyLabel(text, state.frequency)),
       (text.tmTimesShort, state.scheduledTimes.join(', ')),
       if (state.instructions.isNotEmpty)
         (text.tmInstructionsShort, state.instructions),
@@ -31,7 +33,7 @@ class TreatmentSetupReview extends StatelessWidget {
           style: const TextStyle(fontSize: 11, color: TataColors.muted),
         ),
         const SizedBox(height: 8),
-        _Card(
+        TreatmentSurface(
           child: Text(
             state.treatmentName,
             style: const TextStyle(fontSize: 14),
@@ -40,7 +42,7 @@ class TreatmentSetupReview extends StatelessWidget {
         const SizedBox(height: 16),
         medication,
         const SizedBox(height: 16),
-        _Card(
+        TreatmentSurface(
           child: LayoutBuilder(
             builder: (context, constraints) {
               final large = MediaQuery.textScalerOf(context).scale(14) > 18;
@@ -82,7 +84,7 @@ class TreatmentSetupReview extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        _Card(
+        TreatmentSurface(
           color: const Color(0xFFF1ECFF),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -116,7 +118,7 @@ class TreatmentSchedulePreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final text = AppLocalizations.of(context);
-    return _Card(
+    return TreatmentSurface(
       color: const Color(0xFFE8F2FA),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -154,26 +156,4 @@ class TreatmentSchedulePreview extends StatelessWidget {
       ),
     );
   }
-}
-
-class _Card extends StatelessWidget {
-  const _Card({required this.child, this.color = Colors.white});
-  final Widget child;
-  final Color color;
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: color,
-      borderRadius: BorderRadius.circular(18),
-      boxShadow: const [
-        BoxShadow(
-          color: Color(0x141A2138),
-          blurRadius: 18,
-          offset: Offset(0, 6),
-        ),
-      ],
-    ),
-    child: child,
-  );
 }

@@ -69,6 +69,8 @@ abstract final class TreatmentMapper {
       reminderLeadMinutes: _minutes(data, 'reminderLeadMinutes'),
       followUpDelayMinutes: _minutes(data, 'followUpDelayMinutes'),
       recurrenceZone: _optionalText(data, 'recurrenceZone'),
+      recurrenceMode: _optionalText(data, 'recurrenceMode'),
+      recurrenceAnchor: _instant(data, 'recurrenceAnchor'),
     );
   }
 
@@ -134,6 +136,16 @@ abstract final class TreatmentMapper {
     final parsed = value is String ? ClockTime.tryParseServer(value) : null;
     if (parsed == null) throw const FormatException('Bad time');
     return parsed.toString();
+  }
+
+  static DateTime? _instant(Map<String, dynamic> data, String key) {
+    final raw = _optionalText(data, key);
+    if (raw == null) return null;
+    final parsed = DateTime.tryParse(raw);
+    if (parsed == null || !parsed.isUtc) {
+      throw const FormatException('Bad recurrence anchor');
+    }
+    return parsed;
   }
 
   static int? _minutes(Map<String, dynamic> data, String key) {
