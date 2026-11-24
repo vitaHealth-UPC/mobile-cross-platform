@@ -148,6 +148,24 @@ void main() {
     return bloc;
   }
 
+  testWidgets(
+    'deleted medication preserves paused treatment history without actions',
+    (tester) async {
+      final backend = _backend(status: TreatmentStatus.paused)
+        ..medications.clear();
+      final bloc = await pump(tester, backend, 1.0);
+      expect(bloc.state.medicationUnavailable, isTrue);
+      expect(
+        find.textContaining('El medicamento ya no está disponible'),
+        findsOneWidget,
+      );
+      expect(find.text('Reactivar'), findsNothing);
+      expect(find.text('Editar pauta'), findsNothing);
+      expect(find.textContaining('1 comprimido'), findsWidgets);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   for (final notice in ['updated', 'deactivated']) {
     for (final scale in [1.0, 1.5]) {
       testWidgets('management receipt $notice renders at text scale $scale', (

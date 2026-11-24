@@ -127,6 +127,37 @@ class MedicationManagementScreen extends StatelessWidget {
     if (confirmed == true) bloc.add(MedicationDeactivated(medication.id));
   }
 
+  Future<void> _delete(BuildContext context, Medication medication) async {
+    final text = AppLocalizations.of(context);
+    final bloc = context.read<MedicationManagementBloc>();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => Theme(
+        data: treatmentDialogTheme(dialogContext),
+        child: AlertDialog(
+          title: Text(text.tmDeleteMedicationTitle),
+          content: Text('${medication.name}\n\n${text.tmDeleteMedicationBody}'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(text.tmCancel),
+            ),
+            TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(dialogContext).colorScheme.error,
+              ),
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(text.tmDeleteMedication),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (context.mounted && confirmed == true) {
+      bloc.add(MedicationDeleted(medication.id));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final text = AppLocalizations.of(context);
@@ -197,12 +228,16 @@ class MedicationManagementScreen extends StatelessWidget {
                                   text.tmMedicationUpdated,
                                 MedicationNotice.deactivated =>
                                   text.tmMedicationDeactivated,
+                                MedicationNotice.deleted =>
+                                  text.tmMedicationDeleted,
                                 MedicationNotice.reactivated =>
                                   text.tmMedicationReactivated,
                                 MedicationNotice.treatmentActivated =>
                                   text.tmActivated,
                               },
-                              warning: notice == MedicationNotice.deactivated,
+                              warning:
+                                  notice == MedicationNotice.deactivated ||
+                                  notice == MedicationNotice.deleted,
                               body: switch (notice) {
                                 MedicationNotice.deactivated =>
                                   text.tmDeactivationReceipt,
@@ -449,6 +484,28 @@ class MedicationManagementScreen extends StatelessWidget {
                                               medication.active
                                                   ? text.tmRemoveMedication
                                                   : text.tmReactivate,
+                                            ),
+                                          ),
+                                          OutlinedButton(
+                                            style:
+                                                treatmentSecondaryStyle(
+                                                  context,
+                                                ).copyWith(
+                                                  foregroundColor:
+                                                      WidgetStatePropertyAll(
+                                                        Theme.of(context)
+                                                            .colorScheme
+                                                            .error,
+                                                      ),
+                                                ),
+                                            onPressed: state.busy
+                                                ? null
+                                                : () => _delete(
+                                                    context,
+                                                    medication,
+                                                  ),
+                                            child: Text(
+                                              text.tmDeleteMedication,
                                             ),
                                           ),
                                         ],

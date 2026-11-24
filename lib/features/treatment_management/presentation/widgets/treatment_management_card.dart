@@ -138,14 +138,21 @@ class TreatmentManagementCard extends StatelessWidget {
               style: const TextStyle(fontSize: 12, color: TataColors.muted),
             ),
           ],
-          if (!state.manageable) ...[
+          if (state.medicationUnavailable) ...[
+            const SizedBox(height: 12),
+            Text(
+              text.tmMedicationUnavailableHistory,
+              style: const TextStyle(fontSize: 14, color: TataColors.muted),
+            ),
+          ] else if (!state.manageable) ...[
             const SizedBox(height: 12),
             Text(
               text.tmDraftIncomplete,
               style: const TextStyle(fontSize: 12, color: TataColors.muted),
             ),
           ],
-          if (state.manageable || state.medicationInactive) ...[
+          if (!state.medicationUnavailable &&
+              (state.manageable || state.medicationInactive)) ...[
             const SizedBox(height: 16),
             if (MediaQuery.textScalerOf(context).scale(14) > 18) ...[
               for (final action in actions) ...[

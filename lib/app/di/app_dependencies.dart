@@ -159,6 +159,7 @@ import '../../features/treatment_management/application/usecases/change_treatmen
 import '../../features/treatment_management/application/usecases/configure_treatment.dart';
 import '../../features/treatment_management/application/usecases/create_treatment.dart';
 import '../../features/treatment_management/application/usecases/deactivate_medication.dart';
+import '../../features/treatment_management/application/usecases/delete_medication.dart';
 import '../../features/treatment_management/application/usecases/get_my_medications_overview.dart';
 import '../../features/treatment_management/application/usecases/get_treatment_detail.dart';
 import '../../features/treatment_management/application/usecases/list_medications.dart';
@@ -418,6 +419,7 @@ final class AppDependencies {
         list: list,
         update: UpdateMedication(medications),
         deactivate: DeactivateMedication(medications),
+        delete: DeleteMedication(medications),
         reactivate: ReactivateMedication(medications),
         olderAdultId: olderAdultId,
       ),

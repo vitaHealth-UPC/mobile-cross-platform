@@ -118,6 +118,17 @@ final class FakeBackend
   }
 
   @override
+  Future<AppResult<void>> delete(String medicationId) async {
+    if (failure != null) return _fail();
+    if (!medications.containsKey(medicationId)) {
+      return const AppFailure('RESOURCE_NOT_FOUND');
+    }
+    await deactivate(medicationId);
+    medications.remove(medicationId);
+    return const AppSuccess<void>(null);
+  }
+
+  @override
   Future<AppResult<Medication>> reactivate(String medicationId) async =>
       failure != null ? _fail() : AppSuccess(_availability(medicationId, true));
 

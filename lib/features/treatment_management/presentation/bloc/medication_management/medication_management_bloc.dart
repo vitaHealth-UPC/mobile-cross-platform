@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../shared/common/result/app_result.dart';
 import '../../../application/usecases/deactivate_medication.dart';
+import '../../../application/usecases/delete_medication.dart';
 import '../../../application/usecases/list_medications.dart';
 import '../../../application/usecases/reactivate_medication.dart';
 import '../../../application/usecases/update_medication.dart';
@@ -17,10 +18,12 @@ final class MedicationManagementBloc
     required this._list,
     required this._update,
     required this._deactivate,
+    required this._delete,
     required this._reactivate,
     required this.olderAdultId,
   }) : super(const MedicationManagementState()) {
     on<MedicationsRequested>(_load);
+    on<MedicationDeleted>(_remove);
     on<MedicationEdited>(
       (event, emit) => _change(
         emit,
@@ -47,6 +50,7 @@ final class MedicationManagementBloc
   final ListMedications _list;
   final UpdateMedication _update;
   final DeactivateMedication _deactivate;
+  final DeleteMedication _delete;
   final ReactivateMedication _reactivate;
   final String olderAdultId;
 
@@ -70,6 +74,36 @@ final class MedicationManagementBloc
         errorCode: code,
       ),
     });
+  }
+
+  Future<void> _remove(
+    MedicationDeleted event,
+    Emitter<MedicationManagementState> emit,
+  ) async {
+    if (state.busy ||
+        state.status != MedicationManagementStatus.ready ||
+        !state.medications.any(
+          (m) => m.id == event.medicationId && m.olderAdultId == olderAdultId,
+        )) {
+      return;
+    }
+    emit(state.copyWith(busy: true));
+    final result = await _delete(event.medicationId);
+    if (emit.isDone) return;
+    switch (result) {
+      case AppSuccess<void>():
+        emit(
+          state.copyWith(
+            busy: false,
+            notice: MedicationNotice.deleted,
+            medications: state.medications
+                .where((m) => m.id != event.medicationId)
+                .toList(),
+          ),
+        );
+      case AppFailure<void>(:final code):
+        emit(state.copyWith(busy: false, errorCode: code));
+    }
   }
 
   Future<void> _change(
