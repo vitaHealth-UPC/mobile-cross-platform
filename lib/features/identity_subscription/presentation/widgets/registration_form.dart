@@ -7,7 +7,7 @@ import '../../../../shared/presentation/theme/tata_typography.dart';
 import '../../domain/value_objects/email_address.dart';
 
 /// Native account fields with local validation and parent-owned controllers.
-class RegistrationForm extends StatelessWidget {
+class RegistrationForm extends StatefulWidget {
   const RegistrationForm({
     super.key,
     required this.name,
@@ -23,7 +23,25 @@ class RegistrationForm extends StatelessWidget {
   final VoidCallback onSubmit;
 
   @override
+  State<RegistrationForm> createState() => _RegistrationFormState();
+}
+
+class _RegistrationFormState extends State<RegistrationForm> {
+  bool _passwordVisible = false;
+
+  @override
+  void didUpdateWidget(RegistrationForm oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!widget.enabled) _passwordVisible = false;
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final name = widget.name;
+    final email = widget.email;
+    final password = widget.password;
+    final enabled = widget.enabled;
+    final onSubmit = widget.onSubmit;
     final text = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -78,13 +96,29 @@ class RegistrationForm extends StatelessWidget {
             key: const Key('registration-password'),
             controller: password,
             enabled: enabled,
-            obscureText: true,
+            obscureText: !_passwordVisible,
             autocorrect: false,
             enableSuggestions: false,
             autofillHints: const [AutofillHints.newPassword],
             textInputAction: TextInputAction.done,
             style: const TextStyle(fontSize: 14, letterSpacing: 0, height: 1.2),
-            decoration: _decoration(text.registrationPasswordHint),
+            decoration: _decoration(text.registrationPasswordHint).copyWith(
+              suffixIcon: IconButton(
+                tooltip: _passwordVisible
+                    ? text.hidePassword
+                    : text.showPassword,
+                onPressed: !widget.enabled
+                    ? null
+                    : () =>
+                          setState(() => _passwordVisible = !_passwordVisible),
+                icon: Icon(
+                  _passwordVisible
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
+                  size: 22,
+                ),
+              ),
+            ),
             validator: (value) =>
                 value == null ||
                     value.trim().isEmpty ||

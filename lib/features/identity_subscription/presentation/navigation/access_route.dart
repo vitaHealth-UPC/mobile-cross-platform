@@ -231,55 +231,66 @@ class _AccessRouteState extends State<AccessRoute> {
           );
         }
 
-        if (state.status == AccessStatus.anonymous && _showOnboarding) {
+        if ((state.status == AccessStatus.anonymous ||
+                state.status == AccessStatus.failure) &&
+            _showOnboarding) {
           return OnboardingScreen(
             onStart: () => _start(context),
             onSignIn: () => setState(() => _showOnboarding = false),
           );
         }
 
-        return LoginScreen(
-          onInvitation: widget.invitationBuilder == null
-              ? null
-              : () async {
-                  await Navigator.of(context).push<bool>(
-                    MaterialPageRoute(builder: widget.invitationBuilder!),
-                  );
-                  if (context.mounted) {
-                    context.read<AccessBloc>().add(
-                      const AccessRestoreRequested(),
+        return PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, _) {
+            if (didPop || state.status == AccessStatus.busy) return;
+            FocusScope.of(context).unfocus();
+            setState(() => _showOnboarding = true);
+          },
+          child: LoginScreen(
+            onInvitation: widget.invitationBuilder == null
+                ? null
+                : () async {
+                    await Navigator.of(context).push<bool>(
+                      MaterialPageRoute(builder: widget.invitationBuilder!),
                     );
-                  }
-                },
-          busy: state.status == AccessStatus.busy,
-          errorText: _error(text, state.errorCode),
-          onSignIn: (email, password) => context.read<AccessBloc>().add(
-            AccessSignInSubmitted(email, password),
-          ),
-          onRecover: widget.createRecoveryBloc == null
-              ? unavailable
-              : () {
-                  Navigator.of(context).push<void>(
-                    MaterialPageRoute(
-                      builder: (_) => BlocProvider(
-                        create: (_) => widget.createRecoveryBloc!(),
-                        child: const PasswordRecoveryScreen(),
+                    if (context.mounted) {
+                      context.read<AccessBloc>().add(
+                        const AccessRestoreRequested(),
+                      );
+                    }
+                  },
+            busy: state.status == AccessStatus.busy,
+            errorText: _error(text, state.errorCode),
+            onSignIn: (email, password) => context.read<AccessBloc>().add(
+              AccessSignInSubmitted(email, password),
+            ),
+            onRecover: widget.createRecoveryBloc == null
+                ? unavailable
+                : () {
+                    Navigator.of(context).push<void>(
+                      MaterialPageRoute(
+                        builder: (_) => BlocProvider(
+                          create: (_) => widget.createRecoveryBloc!(),
+                          child: const PasswordRecoveryScreen(),
+                        ),
                       ),
-                    ),
-                  );
-                },
-          onRegister: widget.createRegistrationBloc == null
-              ? unavailable
-              : () => _register(context),
-          onGoogle: () => context.read<AccessBloc>().add(
-            const AccessSocialSignInRequested(SocialProvider.google),
+                    );
+                  },
+            onRegister: widget.createRegistrationBloc == null
+                ? unavailable
+                : () => _register(context),
+            onGoogle: () => context.read<AccessBloc>().add(
+              const AccessSocialSignInRequested(SocialProvider.google),
+            ),
+            onFacebook: () => context.read<AccessBloc>().add(
+              const AccessSocialSignInRequested(SocialProvider.facebook),
+            ),
+            onPinAccess:
+                _remembered == null || widget.createPinAccessBloc == null
+                ? null
+                : () => _pinAccess(context, _remembered!),
           ),
-          onFacebook: () => context.read<AccessBloc>().add(
-            const AccessSocialSignInRequested(SocialProvider.facebook),
-          ),
-          onPinAccess: _remembered == null || widget.createPinAccessBloc == null
-              ? null
-              : () => _pinAccess(context, _remembered!),
         );
       },
     );

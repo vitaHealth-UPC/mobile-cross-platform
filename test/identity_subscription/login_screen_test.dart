@@ -118,6 +118,25 @@ void main() {
         find.byKey(const Key('login-capture')),
         'login-es',
       );
+      final password = find.byKey(const Key('login-password'));
+      final editable = find.descendant(
+        of: password,
+        matching: find.byType(EditableText),
+      );
+      expect(tester.widget<EditableText>(editable).obscureText, isTrue);
+      await tester.tap(find.byTooltip('Mostrar contraseña'));
+      await tester.pumpAndSettle();
+      expect(tester.widget<EditableText>(editable).obscureText, isFalse);
+      expect(tester.widget<EditableText>(editable).controller.text, '12345678');
+      await captureWidget(
+        tester,
+        find.byKey(const Key('login-capture')),
+        'login-es-visible',
+      );
+      await tester.tap(find.byTooltip('Ocultar contraseña'));
+      await tester.pumpAndSettle();
+      expect(tester.widget<EditableText>(editable).obscureText, isTrue);
+
       tester.view.physicalSize = const Size(360, 640);
       await tester.pumpWidget(host(screen(), scale: 1.5));
       await tester.pumpAndSettle();
