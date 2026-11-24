@@ -6,6 +6,7 @@ import 'app/integration/adult_entry_route.dart';
 import 'app/integration/caregiver_adherence_entry.dart';
 import 'app/integration/caregiver_care_route.dart';
 import 'app/integration/caregiver_treatment_entry.dart';
+import 'app/integration/omission_background_handler.dart';
 import 'app/integration/omission_destination_router.dart';
 import 'app/integration/omission_messaging_host.dart';
 import 'app/tata_app.dart';
@@ -26,6 +27,7 @@ import 'shared/presentation/widgets/caregiver_tab_bar.dart';
 /// Initializes Flutter platform bindings and composes production dependencies.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  registerOmissionBackgroundHandler();
   final dependencies = AppDependencies.production();
   final treatments = TreatmentNavigation(dependencies.treatmentFactories);
   final preferences = PreferencesNavigation(dependencies.preferencesFactories);
@@ -35,6 +37,7 @@ Future<void> main() async {
   );
   final push = dependencies.omissionPush(
     installationId: await dependencies.readPushInstallationId(),
+    registrationEnabled: omissionPushEnabled,
   );
 
   final delivery = dependencies.createOmissionDelivery(push);

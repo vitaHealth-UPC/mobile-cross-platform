@@ -742,8 +742,11 @@ final class AppDependencies {
   }
 
   /// Composes recipient authorization, native notices and authenticated device registration.
-  /// Registration remains disabled until the host connects the complete messaging lifecycle.
-  OmissionPushFacade omissionPush({required String installationId}) {
+  /// Registration is enabled by the host for configured Android builds.
+  OmissionPushFacade omissionPush({
+    required String installationId,
+    bool registrationEnabled = false,
+  }) {
     final targets = SharedPreferencesPushTargetStore();
     final policy = OmissionPushAccessPolicy(
       sessions: _sessionStore,
@@ -770,7 +773,7 @@ final class AppDependencies {
         ),
       ),
       cleanup: OmissionNotificationSessionCleanup(notifier: notifier),
-      registrationEnabled: false,
+      registrationEnabled: registrationEnabled,
     );
   }
 
