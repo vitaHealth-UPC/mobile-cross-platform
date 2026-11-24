@@ -5,6 +5,7 @@ import '../../application/readmodels/medication_registration_result.dart';
 import '../../domain/entities/medication.dart';
 import '../bloc/medication_management/medication_management_bloc.dart';
 import '../bloc/medication_management/medication_management_event.dart';
+import '../bloc/medication_management/medication_management_state.dart';
 import '../bloc/medication_registration/medication_registration_bloc.dart';
 import '../bloc/my_medications/my_medications_bloc.dart';
 import '../bloc/treatment_list/treatment_list_bloc.dart';
@@ -119,14 +120,16 @@ final class TreatmentNavigation {
             },
             onNew: () async {
               final list = listContext.read<TreatmentListBloc>();
-              await _openMedicationManagement(
+              final activated = await _openMedicationManagement(
                 listContext,
                 olderAdultId,
                 onSessionInvalidated,
                 picking: true,
                 personName: personName,
               );
-              if (listContext.mounted) list.add(const TreatmentListRequested());
+              if (listContext.mounted) {
+                list.add(TreatmentListRequested(activated: activated == true));
+              }
             },
           ),
         ),
@@ -151,23 +154,25 @@ final class TreatmentNavigation {
     VoidCallback onSessionInvalidated, {
     String? personName,
     void Function(BuildContext context, Medication medication)? onOpenInventory,
-  }) => _openMedicationManagement(
-    context,
-    olderAdultId,
-    onSessionInvalidated,
-    picking: false,
-    onOpenInventory: onOpenInventory,
-    personName: personName,
-  );
+  }) async {
+    await _openMedicationManagement(
+      context,
+      olderAdultId,
+      onSessionInvalidated,
+      picking: false,
+      onOpenInventory: onOpenInventory,
+      personName: personName,
+    );
+  }
 
-  Future<void> _openMedicationManagement(
+  Future<bool?> _openMedicationManagement(
     BuildContext context,
     String olderAdultId,
     VoidCallback onSessionInvalidated, {
     required bool picking,
     String? personName,
     void Function(BuildContext context, Medication medication)? onOpenInventory,
-  }) => Navigator.of(context).push<void>(
+  }) => Navigator.of(context).push<bool>(
     MaterialPageRoute(
       builder: (_) => BlocProvider(
         create: (_) =>
@@ -210,7 +215,11 @@ final class TreatmentNavigation {
                     ),
                   );
               if (!medicationsContext.mounted) return;
-              medications.add(const MedicationsRequested());
+              medications.add(
+                MedicationsRequested(
+                  notice: result == null ? null : MedicationNotice.registered,
+                ),
+              );
               if (result != null && picking) {
                 await _createFromMedication(
                   medicationsContext,
@@ -265,8 +274,17 @@ final class TreatmentNavigation {
       ),
     );
     if (!context.mounted) return;
-    context.read<MedicationManagementBloc>().add(const MedicationsRequested());
-    if (picking && activated == true) Navigator.of(context).pop();
+    if (picking && activated == true) {
+      Navigator.of(context).pop(true);
+    } else {
+      context.read<MedicationManagementBloc>().add(
+        MedicationsRequested(
+          notice: activated == true
+              ? MedicationNotice.treatmentActivated
+              : null,
+        ),
+      );
+    }
   }
 
   /// Read-only medication catalog for the signed-in older adult.

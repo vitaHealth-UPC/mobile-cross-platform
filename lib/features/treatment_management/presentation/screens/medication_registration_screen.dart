@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/presentation/theme/tata_colors.dart';
-import '../../../../shared/presentation/theme/tata_typography.dart';
 import '../../../../shared/presentation/widgets/async_states.dart';
 import '../../../../shared/presentation/widgets/status_notice.dart';
 import '../../application/policies/medication_fields.dart';
@@ -13,6 +12,7 @@ import '../bloc/medication_registration/medication_registration_event.dart';
 import '../bloc/medication_registration/medication_registration_state.dart';
 import '../texts/treatment_texts.dart';
 import '../widgets/medication_registration_art.dart';
+import '../widgets/treatment_visuals.dart';
 
 /// Registers the medication identity. Treatment-specific data is entered only in setup.
 class MedicationRegistrationScreen extends StatefulWidget {
@@ -126,9 +126,6 @@ class _MedicationRegistrationScreenState
           widget.onSessionInvalidated();
         } else if (state.status == MedicationRegistrationStatus.registered &&
             state.medication != null) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(text.tmMedicationRegistered)));
           widget.onRegistered(
             MedicationRegistrationResult(medication: state.medication!),
           );
@@ -144,7 +141,8 @@ class _MedicationRegistrationScreenState
           canPop: !submitting,
           child: Scaffold(
             backgroundColor: TataColors.background,
-            body: DecoratedBox(
+            body: Container(
+              constraints: const BoxConstraints.expand(),
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -156,7 +154,7 @@ class _MedicationRegistrationScreenState
               ),
               child: SafeArea(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(22, 16, 22, 28),
+                  padding: const EdgeInsets.fromLTRB(22, 22, 22, 28),
                   child: Form(
                     key: _form,
                     onChanged: () {
@@ -167,24 +165,12 @@ class _MedicationRegistrationScreenState
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Row(
-                          children: [
-                            IconButton(
-                              tooltip: text.back,
-                              icon: const Icon(Icons.chevron_left),
-                              onPressed: submitting
-                                  ? null
-                                  : () => Navigator.of(context).maybePop(),
-                            ),
-                            Expanded(
-                              child: Text(
-                                title,
-                                style: TataTypography.heading.copyWith(
-                                  fontSize: 20,
-                                ),
-                              ),
-                            ),
-                          ],
+                        TreatmentHeader(
+                          title: title,
+                          backLabel: text.back,
+                          onBack: submitting
+                              ? null
+                              : () => Navigator.of(context).maybePop(),
                         ),
                         const SizedBox(height: 4),
                         const MedicationRegistrationArt(),

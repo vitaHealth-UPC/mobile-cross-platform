@@ -1,10 +1,13 @@
+import 'medication_management_state.dart';
+
 /// Intents of the medication list: reload, edit, deactivate or reactivate.
 sealed class MedicationManagementEvent {
   const MedicationManagementEvent();
 }
 
 final class MedicationsRequested extends MedicationManagementEvent {
-  const MedicationsRequested();
+  const MedicationsRequested({this.notice});
+  final MedicationNotice? notice;
 }
 
 final class MedicationEdited extends MedicationManagementEvent {

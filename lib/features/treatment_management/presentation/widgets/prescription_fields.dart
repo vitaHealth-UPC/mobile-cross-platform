@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../domain/value_objects/administration_schedule.dart';
 import '../../domain/value_objects/regimen_text.dart';
+import 'treatment_visuals.dart';
 
 String frequencyLabel(AppLocalizations text, String raw) =>
     switch (Frequency.tryParse(raw)?.kind) {
@@ -40,21 +41,25 @@ class FrequencyField extends StatelessWidget {
     return TextFormField(
       key: fieldKey,
       controller: controller,
+      style: treatmentFieldStyle(context),
       readOnly: true,
       enabled: enabled,
       autovalidateMode: AutovalidateMode.onUserInteraction,
       decoration: InputDecoration(
         labelText: text.tmFrequencyShort,
         hintText: text.tmFrequencySelect,
-        suffixIcon: PopupMenuButton<String>(
-          enabled: enabled,
-          tooltip: text.tmFrequencySelect,
-          icon: const Icon(Icons.keyboard_arrow_down),
-          onSelected: choose,
-          itemBuilder: (_) => [
-            for (final label in labels)
-              PopupMenuItem(value: label, child: Text(label)),
-          ],
+        suffixIcon: Theme(
+          data: treatmentDialogTheme(context),
+          child: PopupMenuButton<String>(
+            enabled: enabled,
+            tooltip: text.tmFrequencySelect,
+            icon: const Icon(Icons.keyboard_arrow_down),
+            onSelected: choose,
+            itemBuilder: (_) => [
+              for (final label in labels)
+                PopupMenuItem(value: label, child: Text(label)),
+            ],
+          ),
         ),
       ),
       onTap: enabled
@@ -62,6 +67,10 @@ class FrequencyField extends StatelessWidget {
               final selected = await showModalBottomSheet<String>(
                 context: context,
                 showDragHandle: true,
+                backgroundColor: Theme.of(context).colorScheme.surface,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                ),
                 builder: (context) => SafeArea(
                   child: ListView(
                     shrinkWrap: true,
@@ -70,12 +79,15 @@ class FrequencyField extends StatelessWidget {
                         padding: const EdgeInsets.all(16),
                         child: Text(
                           text.tmFrequencySelect,
-                          style: Theme.of(context).textTheme.titleLarge,
+                          style: treatmentDialogTitle(context),
                         ),
                       ),
                       for (final label in labels)
                         ListTile(
-                          title: Text(label),
+                          title: Text(
+                            label,
+                            style: treatmentFieldStyle(context),
+                          ),
                           onTap: () => Navigator.pop(context, label),
                         ),
                     ],
@@ -137,7 +149,26 @@ class ScheduleTimeField extends StatelessWidget {
             builder: (context, child) => MediaQuery(
               data: MediaQuery.of(context)
                   .copyWith(alwaysUse24HourFormat: true),
-              child: child!,
+              child: Theme(
+                data: treatmentDialogTheme(context).copyWith(
+                  timePickerTheme: TimePickerThemeData(
+                    backgroundColor: Theme.of(context).colorScheme.surface,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    dialBackgroundColor: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerLow,
+                    dialHandColor: Theme.of(context).colorScheme.primary,
+                    hourMinuteShape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    helpTextStyle: treatmentDialogTitle(context)
+                        .copyWith(fontSize: 20),
+                  ),
+                ),
+                child: child!,
+              ),
             ),
           );
           if (!context.mounted || selected == null) return;
@@ -154,6 +185,7 @@ class ScheduleTimeField extends StatelessWidget {
             TextFormField(
               key: fieldKey,
               controller: controller,
+              style: treatmentFieldStyle(context),
               readOnly: true,
               enabled: enabled,
               autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -193,7 +225,13 @@ class ScheduleTimeField extends StatelessWidget {
                 children: [
                   for (final time in times)
                     InputChip(
-                      label: Text('$time'),
+                      label: Text('$time', style: treatmentFieldStyle(context)),
+                      backgroundColor: Theme.of(context).colorScheme.surface,
+                      shape: const StadiumBorder(),
+                      side: BorderSide(
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                      ),
+                      deleteIconColor: Theme.of(context).colorScheme.primary,
                       deleteButtonTooltipMessage:
                           '${text.tmScheduleRemoveTime} $time',
                       onDeleted: enabled
@@ -207,6 +245,7 @@ class ScheduleTimeField extends StatelessWidget {
             ],
             const SizedBox(height: 8),
             OutlinedButton.icon(
+              style: treatmentSecondaryStyle(context),
               onPressed: enabled ? add : null,
               icon: const Icon(Icons.add),
               label: Text(text.tmScheduleAddTime),
@@ -225,40 +264,51 @@ Widget prescriptionOptions({
   required TextEditingController controller,
   bool enabled = true,
   bool append = false,
-}) => PopupMenuButton<String>(
-  tooltip: tooltip,
-  enabled: enabled,
-  icon: const Icon(Icons.arrow_drop_down),
-  itemBuilder: (_) => [
-    for (final option in options)
-      PopupMenuItem(value: option, child: Text(option)),
-  ],
-  onSelected: (value) {
-    if (append && controller.text.trim().isNotEmpty) {
-      final current = controller.text.trim();
-      if (!current.split('\n').contains(value)) {
-        controller.text = '$current\n$value';
-      }
-    } else {
-      controller.text = value;
-    }
-  },
+}) => Builder(
+  builder: (context) => Theme(
+    data: treatmentDialogTheme(context),
+    child: PopupMenuButton<String>(
+      tooltip: tooltip,
+      enabled: enabled,
+      icon: const Icon(Icons.keyboard_arrow_down),
+      itemBuilder: (_) => [
+        for (final option in options)
+          PopupMenuItem(value: option, child: Text(option)),
+      ],
+      onSelected: (value) {
+        if (append && controller.text.trim().isNotEmpty) {
+          final current = controller.text.trim();
+          if (!current.split('\n').contains(value)) {
+            controller.text = '$current\n$value';
+          }
+        } else {
+          controller.text = value;
+        }
+      },
+    ),
+  ),
 );
 
 Widget reminderOptions(
   AppLocalizations text,
   TextEditingController controller, {
   bool enabled = true,
-}) => PopupMenuButton<String>(
-  tooltip: text.tmChooseReminder,
-  enabled: enabled,
-  onSelected: (value) => controller.text = value,
-  itemBuilder: (_) => [
-    PopupMenuItem(value: '', child: Text(text.tmDefaultFollowUp)),
-    for (final minutes in [0, 5, 10, 15, 30, 60, 120])
-      PopupMenuItem(
-        value: '$minutes',
-        child: Text('$minutes ${text.tmMinutesLabel}'),
-      ),
-  ],
+}) => Builder(
+  builder: (context) => Theme(
+    data: treatmentDialogTheme(context),
+    child: PopupMenuButton<String>(
+      tooltip: text.tmChooseReminder,
+      icon: const Icon(Icons.keyboard_arrow_down),
+      enabled: enabled,
+      onSelected: (value) => controller.text = value,
+      itemBuilder: (_) => [
+        PopupMenuItem(value: '', child: Text(text.tmDefaultFollowUp)),
+        for (final minutes in [0, 5, 10, 15, 30, 60, 120])
+          PopupMenuItem(
+            value: '$minutes',
+            child: Text('$minutes ${text.tmMinutesLabel}'),
+          ),
+      ],
+    ),
+  ),
 );

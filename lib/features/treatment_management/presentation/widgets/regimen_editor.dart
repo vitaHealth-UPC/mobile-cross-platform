@@ -4,6 +4,7 @@ import '../../../../l10n/generated/app_localizations.dart';
 import '../../application/readmodels/treatment_detail.dart';
 import '../bloc/treatment_management/treatment_management_event.dart';
 import 'prescription_fields.dart';
+import 'treatment_visuals.dart';
 
 /// Native regimen editor; its state owns controllers through the dialog exit transition.
 class RegimenEditor extends StatefulWidget {
@@ -72,7 +73,7 @@ class _RegimenEditorState extends State<RegimenEditor> {
     String? required(String? value) =>
         value == null || value.trim().isEmpty ? text.tmRequiredField : null;
     return AlertDialog(
-      title: Text(text.tmEditRegimen),
+      title: Text(text.tmEditRegimen, style: treatmentDialogTitle(context)),
       content: SingleChildScrollView(
         child: Form(
           key: form,
@@ -82,10 +83,12 @@ class _RegimenEditorState extends State<RegimenEditor> {
               TextFormField(
                 key: const Key('edit-dose'),
                 controller: dose,
+                style: treatmentFieldStyle(context),
                 maxLength: 100,
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 decoration: InputDecoration(
-                  labelText: text.tmDose,
+                  labelText: text.tmDoseShort,
+                  hintText: text.tmDose,
                   counterText: '',
                   suffixIcon: prescriptionOptions(
                     tooltip: text.tmDoseOptions,
@@ -100,12 +103,12 @@ class _RegimenEditorState extends State<RegimenEditor> {
                 ),
                 validator: required,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 18),
               FrequencyField(
                 fieldKey: const Key('edit-frequency'),
                 controller: frequency,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 18),
               ValueListenableBuilder<TextEditingValue>(
                 valueListenable: frequency,
                 builder: (_, _, _) => ScheduleTimeField(
@@ -114,14 +117,16 @@ class _RegimenEditorState extends State<RegimenEditor> {
                   frequency: frequency,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 18),
               TextFormField(
                 key: const Key('edit-instructions'),
                 controller: instructions,
+                style: treatmentFieldStyle(context),
                 maxLines: 3,
                 maxLength: 500,
                 decoration: InputDecoration(
-                  labelText: text.tmInstructions,
+                  labelText: text.tmInstructionsShort,
+                  hintText: text.tmInstructions,
                   suffixIcon: prescriptionOptions(
                     tooltip: text.tmInstructionOptions,
                     options: [
@@ -135,10 +140,11 @@ class _RegimenEditorState extends State<RegimenEditor> {
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 18),
               TextFormField(
                 key: const Key('edit-delay'),
                 controller: delay,
+                style: treatmentFieldStyle(context),
                 validator: (value) {
                   final raw = value?.trim() ?? '';
                   final n = int.tryParse(raw);
@@ -154,10 +160,11 @@ class _RegimenEditorState extends State<RegimenEditor> {
                   helperMaxLines: 4,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 18),
               TextFormField(
                 key: const Key('edit-lead'),
                 controller: lead,
+                style: treatmentFieldStyle(context),
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
                   labelText: text.tmReminderLead,
