@@ -10,6 +10,8 @@ import '../../../application/usecases/list_medications.dart';
 import '../../../application/usecases/reactivate_medication.dart';
 import '../../../domain/entities/medication.dart';
 import '../../../domain/entities/treatment.dart';
+import '../../../domain/value_objects/administration_schedule.dart';
+import '../../../domain/value_objects/regimen_text.dart';
 import 'treatment_management_event.dart';
 import 'treatment_management_state.dart';
 
@@ -141,6 +143,8 @@ final class TreatmentManagementBloc
               reminderLeadMinutes: detail.reminderLeadMinutes,
               followUpDelayMinutes: detail.followUpDelayMinutes,
               recurrenceZone: detail.recurrenceZone,
+              recurrenceMode: detail.recurrenceMode,
+              recurrenceAnchor: detail.recurrenceAnchor,
             ),
           ),
         );
@@ -188,6 +192,22 @@ final class TreatmentManagementBloc
       emit(_failed('INVALID_RESPONSE'));
       return;
     }
+    if (fresh.recurrenceMode == 'FIXED_INTERVAL') {
+      final requested = event.scheduleText
+          .split(',')
+          .map(ClockTime.tryParse)
+          .toList();
+      final times = requested.whereType<ClockTime>().toSet().toList()..sort();
+      if (fresh.recurrenceZone == null ||
+          fresh.recurrenceAnchor == null ||
+          requested.contains(null) ||
+          times.join(',') != fresh.scheduledTimes.join(',') ||
+          Frequency.tryParse(event.frequency)?.kind !=
+              Frequency.tryParse(fresh.frequency ?? '')?.kind) {
+        _fail(emit, 'FIXED_INTERVAL_SCHEDULE_LOCKED');
+        return;
+      }
+    }
     final result = await _configure(
       treatmentId,
       detail.medicationId!,
@@ -198,6 +218,9 @@ final class TreatmentManagementBloc
         instructions: event.instructions,
         followUpDelayMinutes: blank ? null : minutes,
         reminderLeadMinutes: lead ?? fresh.reminderLeadMinutes ?? 0,
+        recurrenceZone: fresh.recurrenceZone,
+        recurrenceMode: fresh.recurrenceMode,
+        recurrenceAnchor: fresh.recurrenceAnchor,
       ),
     );
     if (emit.isDone) return;

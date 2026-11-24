@@ -62,6 +62,7 @@ final class MedicationManagementBloc
       AppSuccess<List<Medication>>(:final value) => MedicationManagementState(
         status: MedicationManagementStatus.ready,
         medications: value,
+        notice: event.notice,
       ),
       AppFailure<List<Medication>>(:final code) => MedicationManagementState(
         status: MedicationManagementStatus.failure,

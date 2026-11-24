@@ -155,6 +155,9 @@ void main() {
       expect(bloc.state.step, TreatmentSetupStep.regimen);
       expect(bloc.state.errorCode, 'INVALID_DOSAGE');
       bloc.add(const RegimenBasicsSubmitted('1', 'x'));
+      await settle();
+      expect(bloc.state.errorCode, 'INVALID_FREQUENCY');
+      bloc.add(const RegimenBasicsSubmitted('1', 'Cada día'));
       bloc.add(const ScheduleSubmitted('99:99', ''));
       await settle();
       expect(bloc.state.step, TreatmentSetupStep.schedule);
@@ -181,7 +184,7 @@ void main() {
       addTearDown(bloc.close);
       bloc.add(const TreatmentDraftSubmitted('Diabetes'));
       await settle();
-      bloc.add(const RegimenBasicsSubmitted('1', 'x'));
+      bloc.add(const RegimenBasicsSubmitted('1', 'Cada día'));
       bloc.add(const ScheduleSubmitted('08:00', ''));
       bloc.add(const ReminderSubmitted('10'));
       await settle();
@@ -202,7 +205,7 @@ void main() {
       setup.add(const TreatmentDraftSubmitted('Diabetes'));
       await settle();
       setup.add(const RegimenBasicsSubmitted('1 tableta', 'cada 12 horas'));
-      setup.add(const ScheduleSubmitted('08:00', ''));
+      setup.add(const ScheduleSubmitted('08:00,20:00', ''));
       setup.add(const ReminderSubmitted('15'));
       await settle();
       setup.add(const TreatmentActivationRequested());

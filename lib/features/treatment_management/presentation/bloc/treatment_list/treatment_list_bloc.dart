@@ -31,6 +31,7 @@ final class TreatmentListBloc
       AppSuccess<List<TreatmentDetail>>(:final value) => TreatmentListState(
         status: TreatmentListStatus.ready,
         treatments: value,
+        activated: event.activated,
       ),
       AppFailure<List<TreatmentDetail>>(:final code) => TreatmentListState(
         status: TreatmentListStatus.failure,

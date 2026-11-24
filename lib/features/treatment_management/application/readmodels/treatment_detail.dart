@@ -16,6 +16,8 @@ final class TreatmentDetail {
     this.reminderLeadMinutes,
     this.followUpDelayMinutes,
     this.recurrenceZone,
+    this.recurrenceMode,
+    this.recurrenceAnchor,
   });
 
   final String id;
@@ -34,6 +36,8 @@ final class TreatmentDetail {
   /// Null when the system default follow-up applies.
   final int? followUpDelayMinutes;
   final String? recurrenceZone;
+  final String? recurrenceMode;
+  final DateTime? recurrenceAnchor;
 
   bool get isDraft => status == TreatmentStatus.draft;
 

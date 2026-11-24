@@ -34,10 +34,18 @@ final class RemoteTreatmentLifecycleRepository
         'caregiverId': session.owner.id,
         'medicationId': medicationId,
         'dose': regimen.dose.value,
-        'frequency': regimen.frequency.value,
+        'frequency': regimen.frequency.backendValue,
         'scheduledTimes': times,
         'instructions': regimen.instructions.value,
         'reminderLeadMinutes': regimen.reminderLeadMinutes,
+        if (regimen.recurrenceZone != null) ...{
+          'recurrenceMode': regimen.recurrenceMode ?? 'LOCAL_TIMES',
+          'recurrenceZone': regimen.recurrenceZone,
+          if (regimen.recurrenceAnchor != null)
+            'recurrenceAnchor': regimen.recurrenceAnchor!
+                .toUtc()
+                .toIso8601String(),
+        },
         if (regimen.followUpDelay != null)
           'followUpDelayMinutes': regimen.followUpDelay!.value,
       }, session.accessToken),
@@ -47,11 +55,16 @@ final class RemoteTreatmentLifecycleRepository
             detail.id == treatmentId &&
             detail.medicationId == medicationId &&
             detail.dose == regimen.dose.value &&
-            detail.frequency == regimen.frequency.value &&
+            detail.frequency == regimen.frequency.backendValue &&
             detail.instructions == regimen.instructions.value &&
             detail.reminderLeadMinutes == regimen.reminderLeadMinutes &&
             detail.followUpDelayMinutes == regimen.followUpDelay?.value &&
-            detail.scheduledTimes.join(',') == times.join(',');
+            detail.scheduledTimes.join(',') == times.join(',') &&
+            (regimen.recurrenceZone == null ||
+                (detail.recurrenceZone == regimen.recurrenceZone &&
+                    detail.recurrenceMode ==
+                        (regimen.recurrenceMode ?? 'LOCAL_TIMES') &&
+                    detail.recurrenceAnchor == regimen.recurrenceAnchor));
         return acknowledged
             ? AppSuccess(TreatmentMapper.treatment(response.body))
             : const AppFailure('INVALID_RESPONSE');

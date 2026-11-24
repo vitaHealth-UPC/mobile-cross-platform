@@ -10,6 +10,9 @@ final class TreatmentRegimen {
     required this.instructions,
     this.reminderLeadMinutes = 0,
     this.followUpDelay,
+    this.recurrenceZone,
+    this.recurrenceMode,
+    this.recurrenceAnchor,
   });
 
   final Dosage dose;
@@ -22,4 +25,7 @@ final class TreatmentRegimen {
 
   /// Null means the system default follow-up is used.
   final ReminderDelayMinutes? followUpDelay;
+  final String? recurrenceZone;
+  final String? recurrenceMode;
+  final DateTime? recurrenceAnchor;
 }

@@ -8,9 +8,11 @@ final class TreatmentListState {
     this.status = TreatmentListStatus.loading,
     this.treatments = const [],
     this.errorCode,
+    this.activated = false,
   });
 
   final TreatmentListStatus status;
   final List<TreatmentDetail> treatments;
   final String? errorCode;
+  final bool activated;
 }

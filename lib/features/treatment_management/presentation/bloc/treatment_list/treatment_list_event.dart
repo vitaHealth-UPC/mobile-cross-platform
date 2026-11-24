@@ -4,5 +4,6 @@ sealed class TreatmentListEvent {
 }
 
 final class TreatmentListRequested extends TreatmentListEvent {
-  const TreatmentListRequested();
+  const TreatmentListRequested({this.activated = false});
+  final bool activated;
 }

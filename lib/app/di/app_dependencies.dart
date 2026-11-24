@@ -216,6 +216,7 @@ final class AppDependencies {
     this._accessibilityStore,
     this._languageStore,
     this._contactUri,
+    this._calendarZone,
   );
 
   /// Composes real HTTP and secure storage using environment configuration.
@@ -304,6 +305,7 @@ final class AppDependencies {
       SharedPreferencesAccessibilityStore(),
       SharedPreferencesLanguageStore(),
       config.contactUri,
+      config.calendarZone,
     );
   }
 
@@ -333,6 +335,7 @@ final class AppDependencies {
   final ApplicationLanguageStore _languageStore;
 
   final Uri? _contactUri;
+  final String _calendarZone;
 
   /// Where a visitor reaches the team; null shows the contact as unavailable.
   Uri? get contactUri => _contactUri;
@@ -430,6 +433,7 @@ final class AppDependencies {
         changeStatus: changeStatus,
         olderAdultId: olderAdultId,
         medicationId: medicationId,
+        calendarZone: _calendarZone,
       ),
       createManagementBloc: (treatmentId, olderAdultId) =>
           TreatmentManagementBloc(

@@ -3,7 +3,13 @@ import '../../../domain/entities/medication.dart';
 enum MedicationManagementStatus { loading, ready, failure }
 
 /// Outcome of the last successful change, shown once as a notice.
-enum MedicationNotice { updated, deactivated, reactivated }
+enum MedicationNotice {
+  registered,
+  updated,
+  deactivated,
+  reactivated,
+  treatmentActivated,
+}
 
 /// Medications of one adult with the pending operation and the last outcome.
 final class MedicationManagementState {
