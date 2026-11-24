@@ -30,11 +30,19 @@ final class TreatmentManagementState {
   final TreatmentManagementNotice? notice;
   final String? errorCode;
 
-  bool get medicationInactive => medication?.active == false;
+  bool get medicationUnavailable =>
+      detail?.configured == true &&
+      !(detail?.isDraft ?? true) &&
+      medication == null;
+
+  bool get medicationInactive =>
+      medication?.active == false || medicationUnavailable;
 
   /// Only a configured, non-draft treatment can be paused, resumed or edited.
   bool get manageable =>
-      detail?.configured == true && !(detail?.isDraft ?? true);
+      detail?.configured == true &&
+      !(detail?.isDraft ?? true) &&
+      !medicationUnavailable;
 
   TreatmentManagementState copyWith({
     TreatmentManagementStatus? status,

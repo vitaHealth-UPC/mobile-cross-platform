@@ -7,6 +7,7 @@ import 'package:tata/features/treatment_management/application/usecases/change_t
 import 'package:tata/features/treatment_management/application/usecases/configure_treatment.dart';
 import 'package:tata/features/treatment_management/application/usecases/create_treatment.dart';
 import 'package:tata/features/treatment_management/application/usecases/deactivate_medication.dart';
+import 'package:tata/features/treatment_management/application/usecases/delete_medication.dart';
 import 'package:tata/features/treatment_management/application/usecases/list_medications.dart';
 import 'package:tata/features/treatment_management/application/usecases/register_medication.dart';
 import 'package:tata/features/treatment_management/domain/value_objects/treatment_status.dart';
@@ -133,6 +134,27 @@ void main() {
         ),
       )('adult-A', 'Metformina', '500 mg');
       expect((result as AppFailure).code, 'INVALID_RESPONSE');
+    });
+
+    test('delete requires authenticated empty 204 receipt', () async {
+      for (final status in [204, 200, 409]) {
+        final api = apiFor((request) async {
+          expect(request.method, 'DELETE');
+          expect(request.url.path, '/api/v1/medications/med-1');
+          expect(request.url.queryParameters, {'caregiverId': 'caregiver-A'});
+          return http.Response('', status);
+        });
+        final result = await DeleteMedication(
+          RemoteMedicationManagementRepository(
+            api: api,
+            store: MemorySessionStore(caregiver()),
+          ),
+        )('med-1');
+        expect(
+          result,
+          status == 204 ? isA<AppSuccess<void>>() : isA<AppFailure<void>>(),
+        );
+      }
     });
 
     test('deactivation must be acknowledged as inactive', () async {

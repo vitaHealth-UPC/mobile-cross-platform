@@ -1550,5 +1550,10 @@
   "tmInstructionWithWater": "With water",
   "tmMedicationPresentationShort": "Strength and form",
   "tmTimeZone": "Time zone",
-  "tmFixedIntervalLocked": "This treatment has a fixed interval. Keep its frequency and times when editing it."
+  "tmFixedIntervalLocked": "This treatment has a fixed interval. Keep its frequency and times when editing it.",
+  "tmDeleteMedication": "Delete",
+  "tmDeleteMedicationTitle": "Delete medication?",
+  "tmDeleteMedicationBody": "This permanently removes the medication from the list and pauses associated active treatments. History is retained. It cannot be reactivated.",
+  "tmMedicationDeleted": "Medication deleted.",
+  "tmMedicationUnavailableHistory": "The medication is no longer available. You can still view this treatment’s regimen and history."
 }

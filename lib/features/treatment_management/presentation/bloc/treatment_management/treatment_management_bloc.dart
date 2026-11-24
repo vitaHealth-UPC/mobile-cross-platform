@@ -12,6 +12,7 @@ import '../../../domain/entities/medication.dart';
 import '../../../domain/entities/treatment.dart';
 import '../../../domain/value_objects/administration_schedule.dart';
 import '../../../domain/value_objects/regimen_text.dart';
+import '../../../domain/value_objects/treatment_status.dart';
 import 'treatment_management_event.dart';
 import 'treatment_management_state.dart';
 
@@ -102,7 +103,10 @@ final class TreatmentManagementBloc
     final medication = entries
         .where((item) => item.id == detail.medicationId)
         .firstOrNull;
-    if (medication == null) {
+    // A deleted medication is omitted from the catalog, but its paused
+    // treatment remains readable for history. Active treatment without a
+    // medication is still an inconsistent server response.
+    if (medication == null && detail.status != TreatmentStatus.paused) {
       emit(_failed('INVALID_RESPONSE'));
       return;
     }

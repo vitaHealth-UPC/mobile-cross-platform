@@ -4,6 +4,7 @@ import 'package:tata/features/treatment_management/application/usecases/change_t
 import 'package:tata/features/treatment_management/application/usecases/configure_treatment.dart';
 import 'package:tata/features/treatment_management/application/usecases/create_treatment.dart';
 import 'package:tata/features/treatment_management/application/usecases/deactivate_medication.dart';
+import 'package:tata/features/treatment_management/application/usecases/delete_medication.dart';
 import 'package:tata/features/treatment_management/application/usecases/get_treatment_detail.dart';
 import 'package:tata/features/treatment_management/application/usecases/list_medications.dart';
 import 'package:tata/features/treatment_management/application/usecases/reactivate_medication.dart';
@@ -27,6 +28,58 @@ import 'treatment_blocs_test.dart' show FakeReader;
 
 /// Exercises actual route ownership and receipts across registration and setup.
 void main() {
+  testWidgets(
+    'delete is available for active and retired medications and waits for acknowledgement',
+    (tester) async {
+      final backend = FakeBackend();
+      await _openCatalog(tester, backend);
+      final delete = find.widgetWithText(OutlinedButton, 'Eliminar');
+      final confirm = find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.text('Eliminar'),
+      );
+      await tester.ensureVisible(delete);
+      await tester.tap(delete);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cancelar'));
+      await tester.pumpAndSettle();
+      expect(backend.medications.length, 1);
+      await tester.tap(delete);
+      await tester.pumpAndSettle();
+      backend.failure = 'REQUEST_FAILED';
+      await tester.tap(confirm);
+      await tester.pumpAndSettle();
+      expect(backend.medications.length, 1);
+      expect(find.text('Medicamento eliminado.'), findsNothing);
+      backend.failure = null;
+      await tester.tap(find.text('Retirar'));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.text('Retirar'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Medicamentos retirados'), findsOneWidget);
+      await tester.tap(delete);
+      await tester.pumpAndSettle();
+      await tester.tap(confirm);
+      await tester.pumpAndSettle();
+      expect(backend.medications, isEmpty);
+      expect(find.text('Medicamento eliminado.'), findsOneWidget);
+      expect(find.byType(SnackBar), findsNothing);
+      await _register(tester);
+      await tester.tap(delete);
+      await tester.pumpAndSettle();
+      await tester.tap(confirm);
+      await tester.pumpAndSettle();
+      expect(backend.medications, isEmpty);
+      expect(find.text('Medicamento eliminado.'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('catalog and retirement receipt fit 150 percent text', (
     tester,
   ) async {
@@ -216,6 +269,7 @@ Future<void> _openCatalog(
         list: ListMedications(backend),
         update: UpdateMedication(backend),
         deactivate: DeactivateMedication(backend),
+        delete: DeleteMedication(backend),
         reactivate: ReactivateMedication(backend),
         olderAdultId: adult,
       ),

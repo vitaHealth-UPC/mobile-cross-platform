@@ -7,6 +7,7 @@ enum MedicationNotice {
   registered,
   updated,
   deactivated,
+  deleted,
   reactivated,
   treatmentActivated,
 }

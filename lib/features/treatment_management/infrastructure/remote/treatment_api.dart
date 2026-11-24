@@ -68,6 +68,17 @@ final class TreatmentApi {
     queryParameters: {'caregiverId': caregiverId},
   );
 
+  Future<ApiResponse> deleteMedication(
+    String medicationId,
+    String caregiverId,
+    String token,
+  ) => _client.request(
+    'DELETE',
+    'api/v1/medications/${_id(medicationId)}',
+    token: token,
+    queryParameters: {'caregiverId': caregiverId},
+  );
+
   Future<ApiResponse> reactivateMedication(
     String medicationId,
     String caregiverId,
