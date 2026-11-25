@@ -109,6 +109,24 @@ class _AccessRouteState extends State<AccessRoute> {
     }
   }
 
+  /// The older adult's entry: a first invitation or a caregiver-issued
+  /// access code. A code for an adult who has a PIN asks for it right away.
+  Future<void> _openInvitation(BuildContext context) async {
+    final result = await Navigator.of(context)
+        .push<Object?>(MaterialPageRoute(builder: widget.invitationBuilder!));
+    if (!context.mounted) return;
+    if (result == 'pin') {
+      await _loadRemembered();
+      if (!context.mounted) return;
+      if (_remembered case final adult?
+          when widget.createPinAccessBloc != null) {
+        await _pinAccess(context, adult);
+        return;
+      }
+    }
+    context.read<AccessBloc>().add(const AccessRestoreRequested());
+  }
+
   /// Start: compare plans first when they are available (US-48, US-49).
   Future<void> _start(BuildContext context) async {
     final plans = widget.createPlanChoiceCubit;
@@ -235,6 +253,9 @@ class _AccessRouteState extends State<AccessRoute> {
                 state.status == AccessStatus.failure) &&
             _showOnboarding) {
           return OnboardingScreen(
+            onAdult: widget.invitationBuilder == null
+                ? null
+                : () => _openInvitation(context),
             onStart: () => _start(context),
             onSignIn: () => setState(() => _showOnboarding = false),
           );
@@ -250,26 +271,7 @@ class _AccessRouteState extends State<AccessRoute> {
           child: LoginScreen(
             onInvitation: widget.invitationBuilder == null
                 ? null
-                : () async {
-                    final result = await Navigator.of(context).push<Object?>(
-                      MaterialPageRoute(builder: widget.invitationBuilder!),
-                    );
-                    if (!context.mounted) return;
-                    // An access code identified an adult who already has a
-                    // PIN: it is remembered now, so ask for it right away.
-                    if (result == 'pin') {
-                      await _loadRemembered();
-                      if (!context.mounted) return;
-                      if (_remembered case final adult?
-                          when widget.createPinAccessBloc != null) {
-                        await _pinAccess(context, adult);
-                        return;
-                      }
-                    }
-                    context.read<AccessBloc>().add(
-                      const AccessRestoreRequested(),
-                    );
-                  },
+                : () => _openInvitation(context),
             busy: state.status == AccessStatus.busy,
             errorText: _error(text, state.errorCode),
             onSignIn: (email, password) => context.read<AccessBloc>().add(

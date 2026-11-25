@@ -158,8 +158,10 @@ void main() {
           find.byKey(const Key('care-invitation')),
           invitation.encode(),
         );
-        await tester.ensureVisible(find.text('Revisar invitación'));
-        await tester.tap(find.text('Revisar invitación'));
+        await tester.ensureVisible(
+          find.widgetWithText(ElevatedButton, 'Ingresar'),
+        );
+        await tester.tap(find.widgetWithText(ElevatedButton, 'Ingresar'));
         await tester.pumpAndSettle();
         expect(store.current?.owner.role, SessionRole.linkSetup);
         expect(find.text('Sesión iniciada'), findsNothing);

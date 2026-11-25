@@ -7,6 +7,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/presentation/theme/tata_colors.dart';
 import '../widgets/onboarding_illustration.dart';
+import '../widgets/social_access_button.dart';
 
 /// Introduces Tata with responsive native text and actions from Figma 563:5.
 /// The operating system supplies status/navigation bars rather than painted mocks.
@@ -15,9 +16,13 @@ class OnboardingScreen extends StatelessWidget {
     super.key,
     required this.onStart,
     required this.onSignIn,
+    this.onAdult,
   });
   final VoidCallback onStart;
   final VoidCallback onSignIn;
+
+  /// The older adult's own entry (invitation or access code); null hides it.
+  final VoidCallback? onAdult;
 
   @override
   Widget build(BuildContext context) {
@@ -170,6 +175,22 @@ class OnboardingScreen extends StatelessWidget {
                                   ),
                                 ),
                               ),
+                              if (onAdult != null) ...[
+                                const SizedBox(height: 12),
+                                OutlinedButton.icon(
+                                  key: const Key('onboarding-adult-entry'),
+                                  style: secondaryAccessStyle(),
+                                  onPressed: onAdult,
+                                  icon: const Icon(Icons.elderly, size: 22),
+                                  label: Text(
+                                    text.adultStartButton,
+                                    style: const TextStyle(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
                               const SizedBox(height: 8),
                               Center(
                                 child: Wrap(

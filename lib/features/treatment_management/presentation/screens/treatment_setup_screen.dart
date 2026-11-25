@@ -357,30 +357,10 @@ class _TreatmentSetupScreenState extends State<TreatmentSetupScreen> {
         ];
       case TreatmentSetupStep.reminders:
         return [
-          TextFormField(
-            style: treatmentFieldStyle(context),
-            key: const Key('treatment-delay'),
+          FollowUpField(
+            fieldKey: const Key('treatment-delay'),
             controller: _delay,
             enabled: !state.loading,
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            validator: (value) {
-              final raw = value?.trim() ?? '';
-              final n = int.tryParse(raw);
-              return raw.isNotEmpty && (n == null || n < 0 || n > 1440)
-                  ? text.tmErrReminderDelay
-                  : null;
-            },
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(
-              labelText: text.tmFollowUpShort,
-              suffixIcon: reminderOptions(
-                text,
-                _delay,
-                enabled: !state.loading,
-              ),
-              helperText: text.tmFollowUpHelp,
-              helperMaxLines: 4,
-            ),
           ),
         ];
       case TreatmentSetupStep.review:

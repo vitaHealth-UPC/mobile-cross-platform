@@ -131,8 +131,9 @@ class TreatmentManagementCard extends StatelessWidget {
                 if (detail.instructions.trim().isNotEmpty) detail.instructions,
                 if ((detail.reminderLeadMinutes ?? 0) > 0)
                   text.tmReminderLeadCompact(detail.reminderLeadMinutes!),
+                // Say what the default refers to; alone it was ambiguous.
                 detail.followUpDelayMinutes == null
-                    ? text.tmDefaultFollowUp
+                    ? '${text.tmFollowUpShort}: ${text.tmDefaultFollowUp}'
                     : text.tmFollowUpCompact(detail.followUpDelayMinutes!),
               ].join(', '),
               style: const TextStyle(fontSize: 12, color: TataColors.muted),

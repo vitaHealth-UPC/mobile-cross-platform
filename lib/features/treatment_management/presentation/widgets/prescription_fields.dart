@@ -982,26 +982,65 @@ class _RegimenFieldsState extends State<RegimenFields> {
   }
 }
 
-Widget reminderOptions(
-  AppLocalizations text,
-  TextEditingController controller, {
-  bool enabled = true,
-}) => Builder(
-  builder: (context) => Theme(
-    data: treatmentDialogTheme(context),
-    child: PopupMenuButton<String>(
-      tooltip: text.tmChooseReminder,
-      icon: const Icon(Icons.keyboard_arrow_down),
-      enabled: enabled,
-      onSelected: (value) => controller.text = value,
-      itemBuilder: (_) => [
-        PopupMenuItem(value: '', child: Text(text.tmDefaultFollowUp)),
-        for (final minutes in [0, 5, 10, 15, 30, 60, 120])
-          PopupMenuItem(
-            value: '$minutes',
-            child: Text('$minutes ${text.tmMinutesLabel}'),
+/// Minutes to wait before alerting the family about an unconfirmed dose,
+/// chosen in the same kind of sheet as the rest of the regimen. Empty keeps
+/// the system default.
+class FollowUpField extends StatelessWidget {
+  const FollowUpField({
+    super.key,
+    required this.controller,
+    required this.fieldKey,
+    this.enabled = true,
+  });
+  final TextEditingController controller;
+  final Key fieldKey;
+  final bool enabled;
+
+  static const options = [5, 10, 15, 30, 60, 120];
+
+  @override
+  Widget build(BuildContext context) {
+    final text = AppLocalizations.of(context);
+    String label(String value) => value.isEmpty
+        ? text.tmDefaultFollowUp
+        : text.tmFollowUpMinutes(int.tryParse(value) ?? 0);
+    return ValueListenableBuilder(
+      valueListenable: controller,
+      builder: (context, value, _) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _PickerField(
+            fieldKey: fieldKey,
+            value: value.text,
+            label: text.tmFollowUpShort,
+            hint: text.tmDefaultFollowUp,
+            enabled: enabled,
+            icon: Icons.notifications_none,
+            display: label,
+            onPick: () async {
+              final choice = await showRegimenSheet<String>(
+                context,
+                title: text.tmFollowUpShort,
+                body: (sheet) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (final option in ['', for (final m in options) '$m'])
+                      _option(sheet, label(option), () {
+                        Navigator.pop(sheet, option);
+                      }),
+                  ],
+                ),
+              );
+              if (choice != null) controller.text = choice;
+            },
           ),
-      ],
-    ),
-  ),
-);
+          const SizedBox(height: 8),
+          Text(
+            text.tmFollowUpHelp,
+            style: treatmentSupportingStyle(context).copyWith(fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+}

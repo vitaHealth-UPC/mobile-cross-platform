@@ -87,24 +87,9 @@ class _RegimenEditorState extends State<RegimenEditor> {
                 timeZone: widget.detail.recurrenceZone,
               ),
               const SizedBox(height: 18),
-              TextFormField(
-                key: const Key('edit-delay'),
+              FollowUpField(
+                fieldKey: const Key('edit-delay'),
                 controller: delay,
-                style: treatmentFieldStyle(context),
-                validator: (value) {
-                  final raw = value?.trim() ?? '';
-                  final n = int.tryParse(raw);
-                  return raw.isNotEmpty && (n == null || n < 0 || n > 1440)
-                      ? text.tmErrReminderDelay
-                      : null;
-                },
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: text.tmFollowUpShort,
-                  suffixIcon: reminderOptions(text, delay),
-                  helperText: text.tmFollowUpHelp,
-                  helperMaxLines: 4,
-                ),
               ),
               const SizedBox(height: 18),
               TextFormField(
