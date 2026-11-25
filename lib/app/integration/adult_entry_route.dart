@@ -25,6 +25,7 @@ import '../../features/omission_escalation/presentation/widgets/follow_omission_
 import '../../features/treatment_management/presentation/navigation/treatment_navigation.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../shared/presentation/widgets/adult_navigation_bar.dart';
+import '../../shared/presentation/widgets/motion_aware_routes.dart';
 
 /// Entry for a validated full adult session, composing three contexts:
 /// Identity enrolls the PIN once per device, Intake shows the home and
@@ -243,22 +244,16 @@ class _AdultEntryRouteState extends State<AdultEntryRoute> {
                           Navigator.of(settingsContext)
                               .popUntil((route) => route.isFirst),
                       onAgenda: () {
-                        Navigator.of(settingsContext)
-                            .popUntil((route) => route.isFirst);
                         _openAgenda(this.context);
                       },
                       onMedications: widget.treatments == null
                           ? null
                           : () {
-                              Navigator.of(settingsContext)
-                                  .popUntil((route) => route.isFirst);
                               _openMedications(this.context);
                             },
                       onNotes: widget.monitoring == null
                           ? null
                           : () {
-                              Navigator.of(settingsContext)
-                                  .popUntil((route) => route.isFirst);
                               _openNotes(this.context);
                             },
                     ),
@@ -300,10 +295,10 @@ class _AdultEntryRouteState extends State<AdultEntryRoute> {
     void home() => navigator.popUntil((route) => route.isFirst);
     await treatments.openMyMedications(
       context,
+      asTab: true,
       widget.onSessionChanged,
       onHome: home,
       onAgenda: () {
-        home();
         _openAgenda(this.context);
       },
       onMore: () {
@@ -339,12 +334,9 @@ class _AdultEntryRouteState extends State<AdultEntryRoute> {
             onMedications: widget.treatments == null
                 ? null
                 : () {
-                    Navigator.of(routeContext)
-                        .popUntil((route) => route.isFirst);
                     _openMedications(this.context);
                   },
             onAgenda: () {
-              Navigator.of(routeContext).popUntil((route) => route.isFirst);
               _openAgenda(this.context);
             },
             onBack: () => Navigator.of(routeContext).pop(),
@@ -363,61 +355,50 @@ class _AdultEntryRouteState extends State<AdultEntryRoute> {
   Future<void> _openNotes(BuildContext context) {
     final monitoring = widget.monitoring;
     if (monitoring == null) return Future<void>.value();
-    return Navigator.of(context).push<void>(
-      MaterialPageRoute(
-        builder: (routeContext) {
-          void home() =>
-              Navigator.of(routeContext).popUntil((route) => route.isFirst);
-          return monitoring.personalNotes(
-            onHome: home,
-            onMedications: widget.treatments == null
-                ? null
-                : () {
-                    home();
-                    _openMedications(this.context);
-                  },
-            onAgenda: () {
-              home();
-              _openAgenda(this.context);
-            },
-            onMore: () {
-              home();
-              _openMore(this.context);
-            },
-            onSignIn: () => _leaveForRevalidation(routeContext),
-          );
+    return TabPageRoute.replaceTab<void>(context, (routeContext) {
+      void home() =>
+          Navigator.of(routeContext).popUntil((route) => route.isFirst);
+      return monitoring.personalNotes(
+        onHome: home,
+        onMedications: widget.treatments == null
+            ? null
+            : () {
+                _openMedications(this.context);
+              },
+        onAgenda: () {
+          _openAgenda(this.context);
         },
-      ),
-    );
+        onMore: () {
+          home();
+          _openMore(this.context);
+        },
+        onSignIn: () => _leaveForRevalidation(routeContext),
+      );
+    });
   }
 
   Future<void> _openAgenda(BuildContext context) =>
-      Navigator.of(context).push<void>(
-        MaterialPageRoute(
-          builder: (routeContext) => AgendaRoute(
-            createBloc: widget.createAgendaBloc,
-            onNotes: widget.monitoring == null
-                ? null
-                : () {
-                    Navigator.of(routeContext)
-                        .popUntil((route) => route.isFirst);
-                    _openNotes(this.context);
-                  },
-            onMedications: widget.treatments == null
-                ? null
-                : () {
-                    Navigator.of(routeContext)
-                        .popUntil((route) => route.isFirst);
-                    _openMedications(this.context);
-                  },
-            onOpenDose: (intakeId) => _openDose(routeContext, intakeId),
-            onBack: () => Navigator.of(routeContext).pop(),
-            onSessionInvalidated: () => _leaveForRevalidation(routeContext),
-            onMore: () {
-              Navigator.of(routeContext).popUntil((route) => route.isFirst);
-              _openMore(this.context);
-            },
-          ),
+      TabPageRoute.replaceTab<void>(
+        context,
+        (routeContext) => AgendaRoute(
+          createBloc: widget.createAgendaBloc,
+          onNotes: widget.monitoring == null
+              ? null
+              : () {
+                  _openNotes(this.context);
+                },
+          onMedications: widget.treatments == null
+              ? null
+              : () {
+                  _openMedications(this.context);
+                },
+          onOpenDose: (intakeId) => _openDose(routeContext, intakeId),
+          onBack: () => Navigator.of(routeContext).pop(),
+          onSessionInvalidated: () => _leaveForRevalidation(routeContext),
+          onMore: () {
+            Navigator.of(routeContext).popUntil((route) => route.isFirst);
+            _openMore(this.context);
+          },
         ),
       );
 

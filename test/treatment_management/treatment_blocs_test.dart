@@ -42,7 +42,7 @@ final class FakeReader implements TreatmentReader {
 
   @override
   Future<AppResult<List<TreatmentDetail>>> list(String olderAdultId) async =>
-      AppSuccess([?backend.stored]);
+      AppSuccess(backend.treatments.values.toList());
 
   @override
   Future<AppResult<TreatmentDetail>> detail(String treatmentId) async {
@@ -54,9 +54,9 @@ final class FakeReader implements TreatmentReader {
         : backend.failure;
     return failure != null
         ? AppFailure(failure)
-        : backend.stored == null
+        : (backend.treatments[treatmentId] ?? backend.stored) == null
         ? const AppFailure('RESOURCE_NOT_FOUND')
-        : AppSuccess(backend.stored!);
+        : AppSuccess(backend.treatments[treatmentId] ?? backend.stored!);
   }
 }
 
@@ -69,7 +69,7 @@ TreatmentSetupBloc setupBloc(FakeBackend backend) => TreatmentSetupBloc(
   configure: ConfigureTreatment(backend),
   changeStatus: ChangeTreatmentStatus(backend),
   olderAdultId: 'adult-A',
-  medicationId: 'med-1',
+  medications: const [SetupMedication('med-1', 'Metformina 500 mg')],
 );
 
 TreatmentManagementBloc managementBloc(
@@ -131,7 +131,9 @@ void main() {
       bloc.add(const TreatmentDraftSubmitted('Diabetes'));
       await settle();
       expect(bloc.state.step, TreatmentSetupStep.regimen);
-      expect(bloc.state.treatmentId, 'tr-1');
+      // Nothing reaches the server before activation.
+      expect(bloc.state.treatmentId, isNull);
+      expect(backend.createCalls, 0);
       bloc.add(const RegimenBasicsSubmitted('1 tableta', 'cada 12 horas'));
       bloc.add(const ScheduleSubmitted('20:00, 8:00', 'Con comida'));
       bloc.add(const ReminderSubmitted(''));
@@ -142,8 +144,83 @@ void main() {
       bloc.add(const TreatmentActivationRequested());
       await settle();
       expect(bloc.state.activated, isTrue);
+      expect(bloc.state.treatmentId, 'tr-1');
       expect(backend.stored!.status, TreatmentStatus.active);
       expect(backend.configureCalls, 1);
+    });
+
+    test('one treatment holds several medications sharing a plan', () async {
+      final backend = FakeBackend();
+      await backend.registerMedication('adult-A', 'Glibenclamida', '5 mg');
+      final bloc = setupBloc(backend);
+      addTearDown(bloc.close);
+      bloc.add(
+        const TreatmentMedicationsChanged([
+          SetupMedication('med-1', 'Metformina 500 mg'),
+          SetupMedication('med-2', 'Glibenclamida 5 mg'),
+        ]),
+      );
+      bloc.add(const TreatmentDraftSubmitted('Diabetes'));
+      bloc.add(
+        const TreatmentRegimensSubmitted({
+          'med-1': RegimenInput(
+            '1 tableta',
+            'Cada 12 horas',
+            '08:00,20:00',
+            '',
+          ),
+          'med-2': RegimenInput(
+            '1 tableta',
+            'Una vez al día',
+            '07:30',
+            'Antes del desayuno',
+          ),
+        }),
+      );
+      bloc.add(const ReminderSubmitted(''));
+      await settle();
+      expect(bloc.state.step, TreatmentSetupStep.review);
+      bloc.add(const TreatmentActivationRequested());
+      await settle();
+      expect(bloc.state.activated, isTrue);
+      expect(backend.createCalls, 2);
+      expect(backend.configureCalls, 2);
+      final stored = backend.treatments.values.toList();
+      expect(stored.map((t) => t.planId).toSet(), {'tr-1'});
+      expect(stored.map((t) => t.medicationId), ['med-1', 'med-2']);
+      expect(stored.every((t) => t.status == TreatmentStatus.active), isTrue);
+    });
+
+    test('a regimen error names the medication that caused it', () async {
+      final bloc = setupBloc(FakeBackend());
+      addTearDown(bloc.close);
+      bloc.add(
+        const TreatmentMedicationsChanged([
+          SetupMedication('med-1', 'Metformina 500 mg'),
+          SetupMedication('med-2', 'Glibenclamida 5 mg'),
+        ]),
+      );
+      bloc.add(const TreatmentDraftSubmitted('Diabetes'));
+      bloc.add(
+        const TreatmentRegimensSubmitted({
+          'med-1': RegimenInput('1 tableta', 'Cada 8 horas', '08:00,16:00', ''),
+          'med-2': RegimenInput('1 tableta', 'Una vez al día', '07:30', ''),
+        }),
+      );
+      await settle();
+      expect(bloc.state.errorCode, 'SCHEDULE_FREQUENCY_MISMATCH');
+      expect(bloc.state.errorMedicationId, 'med-1');
+      expect(bloc.state.step, TreatmentSetupStep.regimen);
+    });
+
+    test('a treatment needs at least one medication', () async {
+      final bloc = setupBloc(FakeBackend())
+        ..add(const TreatmentMedicationsChanged([]));
+      addTearDown(bloc.close);
+      bloc.add(const TreatmentDraftSubmitted('Diabetes'));
+      await settle();
+      expect(bloc.state.errorCode, 'MEDICATION_REQUIRED');
+      expect(bloc.state.step, TreatmentSetupStep.details);
     });
 
     test('invalid steps stay put and report a stable code', () async {
@@ -165,7 +242,7 @@ void main() {
       expect(bloc.state.errorCode, 'INVALID_SCHEDULE_TIME');
     });
 
-    test('going back keeps the draft and never creates a second one', () async {
+    test('going back and retrying never creates a second draft', () async {
       final backend = FakeBackend();
       final bloc = setupBloc(backend);
       addTearDown(bloc.close);
@@ -175,8 +252,21 @@ void main() {
       await settle();
       bloc.add(const TreatmentDraftSubmitted('Diabetes'));
       await settle();
-      expect(backend.createCalls, 1);
+      expect(backend.createCalls, 0);
       expect(bloc.state.step, TreatmentSetupStep.regimen);
+      bloc.add(const RegimenBasicsSubmitted('1', 'Cada día'));
+      bloc.add(const ScheduleSubmitted('08:00', ''));
+      bloc.add(const ReminderSubmitted(''));
+      await settle();
+      backend.configureFailure = 'REQUEST_FAILED';
+      bloc.add(const TreatmentActivationRequested());
+      await settle();
+      expect(bloc.state.activated, isFalse);
+      backend.configureFailure = null;
+      bloc.add(const TreatmentActivationRequested());
+      await settle();
+      expect(bloc.state.activated, isTrue);
+      expect(backend.createCalls, 1);
     });
 
     test('a rejected activation reports the code and stops loading', () async {

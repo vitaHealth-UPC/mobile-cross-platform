@@ -37,6 +37,7 @@ import 'package:tata/features/omission_escalation/application/usecases/follow_ca
 import 'package:tata/features/omission_escalation/application/usecases/follow_dose_reminders.dart';
 import 'package:tata/features/omission_escalation/application/usecases/handle_incoming_omission_push.dart';
 import 'package:tata/features/omission_escalation/application/usecases/resolve_push_destination.dart';
+import 'package:tata/features/treatment_management/presentation/bloc/treatment_setup/treatment_setup_state.dart';
 import 'package:tata/features/treatment_management/presentation/navigation/treatment_navigation.dart';
 import 'package:tata/l10n/generated/app_localizations.dart';
 import 'package:tata/shared/application/session/session_owner.dart';
@@ -155,7 +156,7 @@ void main() {
       createListBloc: _unavailable,
       createRegistrationBloc: _unavailable,
       createMedicationsBloc: _unavailable,
-      createSetupBloc: _unavailable2,
+      createSetupBloc: _unavailableSetup,
       createManagementBloc: _unavailable2,
       createMyMedicationsBloc: _unavailable0,
     ),
@@ -250,6 +251,8 @@ void main() {
 Never _unavailable(String _) => throw UnimplementedError();
 Never _unavailable2(String a, String b) => throw UnimplementedError();
 Never _unavailable0() => throw UnimplementedError();
+Never _unavailableSetup(String a, List<SetupMedication> b) =>
+    throw UnimplementedError();
 
 final class _NoLauncher implements ContactLauncher {
   @override

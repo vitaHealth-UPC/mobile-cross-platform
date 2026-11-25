@@ -11,8 +11,10 @@ abstract interface class TreatmentRepository {
     String presentation,
   );
 
+  /// Creates a draft; [planId] adds it as another medication of that treatment.
   Future<AppResult<Treatment>> createTreatment(
     String olderAdultId,
-    String name,
-  );
+    String name, {
+    String? planId,
+  });
 }

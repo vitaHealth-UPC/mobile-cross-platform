@@ -20,7 +20,17 @@ void main() {
       isFalse,
     );
     expect(Frequency.tryParse('Según indicación médica'), isNotNull);
-    expect(Frequency.tryParse('cada 6 horas'), isNull);
+    // Any whole-hour interval that completes the day is accepted, as the
+    // server does; other intervals are not.
+    expect(Frequency.tryParse('cada 6 horas')!.expectedCount, 4);
+    expect(Frequency.tryParse('Every 6 hours')!.backendValue, 'Cada 6 horas');
+    expect(Frequency.tryParse('cada 7 horas'), isNull);
+    expect(Frequency.tryParse('Cada 6 horas')!.minutesFrom(480), [
+      120,
+      480,
+      840,
+      1200,
+    ]);
   });
   test(
     'tester schedule is rejected before sending configure and can be corrected',
@@ -76,17 +86,25 @@ void main() {
       await settle();
       bloc.add(const ReminderSubmitted(''));
       await settle();
+      // The first attempt leaves a draft behind (the network failed while
+      // saving its regimen); meanwhile the treatment changed elsewhere.
+      backend.configureFailure = 'NETWORK_UNAVAILABLE';
+      bloc.add(const TreatmentActivationRequested());
+      await settle();
+      expect(bloc.state.treatmentId, 'tr-1');
+      backend.configureFailure = null;
       backend.stored = const TreatmentDetail(
         id: 'tr-1',
         olderAdultId: 'adult-A',
         name: 'Control',
         status: TreatmentStatus.paused,
       );
+      final configured = backend.configureCalls;
       bloc.add(const TreatmentActivationRequested());
       await settle();
       expect(bloc.state.activated, isFalse);
       expect(bloc.state.errorCode, 'CONFLICT');
-      expect(backend.configureCalls, 0);
+      expect(backend.configureCalls, configured);
     },
   );
   test('rejected configuration returns to the regimen without recreating the draft', () async {

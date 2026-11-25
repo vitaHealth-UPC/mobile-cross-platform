@@ -10,12 +10,20 @@ final class ProfilesState {
     this.profile,
     this.link,
     this.errorCode,
+    this.ended = false,
+    this.joined = false,
   });
   final bool loading;
   final List<CaregiverLinkSummary> links;
   final OlderAdultProfile? profile;
   final CareLink? link;
   final String? errorCode;
+
+  /// The last request removed a person from the list.
+  final bool ended;
+
+  /// The last request asked to care for another caregiver's relative.
+  final bool joined;
 
   /// Whether the server's refreshed consented list includes the current profile.
   bool get confirmed =>

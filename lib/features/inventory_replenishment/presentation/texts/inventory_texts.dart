@@ -12,6 +12,7 @@ String inventoryErrorText(AppLocalizations text, String code) => switch (code) {
   'MEDICATION_NOT_FOUND' => text.invErrMedicationNotFound,
   'MEDICATION_INACTIVE' => text.invErrMedicationInactive,
   'CONCURRENT_UPDATE' => text.invErrConcurrent,
+  'RECEIPT_NOT_CORRECTABLE' => text.invErrNotCorrectable,
   'INVALID_RESPONSE' => text.invErrInvalidResponse,
   'NETWORK_UNAVAILABLE' => text.networkUnavailable,
   'ACCESS_DENIED' => text.accessDenied,

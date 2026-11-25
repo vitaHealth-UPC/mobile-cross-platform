@@ -17,6 +17,7 @@ import 'features/care_link/application/readmodels/caregiver_link_summary.dart';
 import 'features/care_link/presentation/navigation/caregiver_setup_route.dart';
 import 'features/care_link/presentation/navigation/consent_route.dart';
 import 'features/family_monitoring/presentation/navigation/family_monitoring_navigation.dart';
+import 'features/identity_subscription/application/readmodels/remembered_adult.dart';
 import 'features/identity_subscription/presentation/bloc/access/access_bloc.dart';
 import 'features/identity_subscription/presentation/bloc/access/access_event.dart';
 import 'features/identity_subscription/presentation/bloc/access/access_state.dart';
@@ -39,7 +40,11 @@ Future<void> main() async {
   unawaited(dependencies.prepareBackend());
   final treatments = TreatmentNavigation(dependencies.treatmentFactories);
   final preferences = PreferencesNavigation(dependencies.preferencesFactories);
-  final inventory = InventoryNavigation(dependencies.createInventoryBloc);
+  final inventory = InventoryNavigation(
+    dependencies.createInventoryBloc,
+    read: dependencies.readInventory,
+    registerInitial: dependencies.registerInitialInventory,
+  );
   final monitoring = FamilyMonitoringNavigation(
     dependencies.familyMonitoringFactories,
   );
@@ -101,6 +106,8 @@ Future<void> main() async {
           monitoring: monitoring,
           push: push,
           inventory: inventory,
+          issueAccessCode: dependencies.issueAdultAccessCode.call,
+          inviteCaregiver: dependencies.inviteCaregiver.call,
           createProfileEditorCubit: dependencies.createProfileEditorCubit,
           createPersonAdherenceBloc: dependencies.createAdherenceWeekBloc,
           createTreatmentAdherenceBloc:
@@ -255,6 +262,20 @@ Future<void> main() async {
       invitationBuilder: (context) => ConsentRoute(
         createBloc: dependencies.createConsentBloc,
         invitationEntry: true,
+        // An access code identifies the adult: remember them on this device so
+        // the PIN (or its creation) follows without the caregiver present.
+        onAdultIdentified: (adult) async {
+          try {
+            await dependencies.rememberAdult(
+              RememberedAdult(
+                id: adult.olderAdultId,
+                name: adult.olderAdultName,
+              ),
+            );
+          } on Exception {
+            // Without the shortcut the adult can still use a new code.
+          }
+        },
         onSessionChanged: () => Navigator.of(context).pop(false),
         onSignOut: () => Navigator.of(context).pop(false),
       ),

@@ -282,7 +282,7 @@ void main() {
       );
       await tester.scrollUntilVisible(find.text('Es hora de tu toma'), 200);
       expect(
-        find.text('Losartán 50 mg · Confirma cuando la hayas tomado.'),
+        find.text('Losartán 50 mg. Confirma cuando la hayas tomado.'),
         findsOneWidget,
       );
       expect(find.text('Segundo recordatorio'), findsNothing);

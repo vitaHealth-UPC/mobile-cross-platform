@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
 
 import '../../../../shared/presentation/theme/tata_theme.dart';
+import '../../../../shared/presentation/widgets/motion_aware_routes.dart';
 import '../../domain/value_objects/accessibility_preferences.dart';
 
 /// Translates accessibility preferences into what Flutter renders.
 abstract final class Appearance {
   static ThemeData themeFor(AccessibilityPreferences preferences) {
-    final base = switch ((preferences.darkTheme, preferences.highContrast)) {
+    final themed = switch ((preferences.darkTheme, preferences.highContrast)) {
       (false, false) => TataTheme.light,
       (true, false) => TataTheme.dark,
       (false, true) => TataTheme.lightHighContrast,
       (true, true) => TataTheme.darkHighContrast,
     };
+    // Page transitions read the reduce-motion flag applied by [wrap].
+    final base = themed.copyWith(
+      pageTransitionsTheme: MotionAwarePageTransitionsBuilder.theme,
+    );
     if (!preferences.readingAssistance) return base;
     // Reading assistance: looser lines and letters on body text.
     return base.copyWith(

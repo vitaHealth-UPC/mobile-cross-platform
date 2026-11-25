@@ -26,3 +26,20 @@ final class ConsentDecisionSubmitted extends ConsentEvent {
   const ConsentDecisionSubmitted(this.accepted);
   final bool accepted;
 }
+
+/// Loads other caregivers waiting for the adult's decision.
+final class CaregiverRequestsRequested extends ConsentEvent {
+  const CaregiverRequestsRequested();
+}
+
+/// The adult accepts or rejects another caregiver.
+final class CaregiverRequestDecided extends ConsentEvent {
+  const CaregiverRequestDecided(this.careLinkId, this.accepted);
+  final String careLinkId;
+  final bool accepted;
+}
+
+/// The adult removes their account after explicit confirmation.
+final class AccountRemovalRequested extends ConsentEvent {
+  const AccountRemovalRequested();
+}

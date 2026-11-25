@@ -314,11 +314,11 @@ void main() {
         expect(find.text('S/ 9.90 / mes'), findsOneWidget);
         expect(find.text('Plan actual'), findsOneWidget);
         expect(find.text('S/ 19.90'), findsOneWidget);
-        expect(find.text('✓ Alertas'), findsOneWidget);
+        expect(find.text('Alertas'), findsOneWidget);
         // Product order, even though the server sends an unordered set.
         expect(
-          tester.getTopLeft(find.text('✓ Recordatorios')).dx,
-          lessThan(tester.getTopLeft(find.text('✓ Agenda')).dx),
+          tester.getTopLeft(find.text('Recordatorios')).dx,
+          lessThan(tester.getTopLeft(find.text('Agenda')).dx),
         );
         expect(find.text('Próxima renovación'), findsOneWidget);
         final change = tester.widget<ElevatedButton>(

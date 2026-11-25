@@ -29,6 +29,25 @@ final class InventoryApi {
     },
   );
 
+  Future<ApiResponse> correctLatest(
+    String medicationId,
+    String batchId,
+    int quantity,
+    String? lot,
+    int? threshold,
+    String token,
+  ) => _client.request(
+    'PUT',
+    'api/v1/inventories/${Uri.encodeComponent(medicationId)}'
+        '/batches/${Uri.encodeComponent(batchId)}',
+    token: token,
+    body: {
+      'quantity': quantity,
+      'lot': ?lot,
+      'replenishmentThreshold': ?threshold,
+    },
+  );
+
   Future<ApiResponse> replenish(
     String medicationId,
     int quantity,

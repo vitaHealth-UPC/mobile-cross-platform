@@ -315,14 +315,14 @@ void main() {
       await pump(tester, backend, 1);
       await tester.tap(find.text('Editar pauta'));
       await tester.pumpAndSettle();
-      await tester.enterText(
-        find.byKey(const Key('edit-dose')),
-        '2 comprimidos',
-      );
+      await tester.tap(find.byKey(const Key('edit-dose')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('2 tabletas').last);
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Guardar'));
       await tester.pumpAndSettle();
-      expect(backend.stored!.dose, '2 comprimidos');
-      expect(find.textContaining('2 comprimidos'), findsOneWidget);
+      expect(backend.stored!.dose, '2 tabletas');
+      expect(find.textContaining('2 tabletas'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );

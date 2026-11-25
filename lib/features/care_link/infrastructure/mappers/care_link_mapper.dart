@@ -85,6 +85,10 @@ abstract final class CareLinkMapper {
           olderAdultId: adult,
           fullName: _text(data, 'olderAdultName'),
           confirmedAt: _instant(data, 'confirmedAt'),
+          adultSignedIn: switch (data['adultSignedIn']) {
+            final bool value => value,
+            _ => null,
+          },
         );
       }),
     );

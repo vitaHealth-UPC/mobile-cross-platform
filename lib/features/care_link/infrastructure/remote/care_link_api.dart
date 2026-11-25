@@ -85,6 +85,83 @@ final class CareLinkApi {
     },
   );
 
+  /// Ends the caregiver's own relationship.
+  Future<ApiResponse> end(String id, String caregiverId, String token) =>
+      _client.request(
+        'DELETE',
+        'api/v1/care-links/${Uri.encodeComponent(id)}',
+        token: token,
+        queryParameters: {'caregiverId': caregiverId},
+      );
+
+  /// New single-use sign-in code for the adult of a confirmed relationship.
+  Future<ApiResponse> issueAccessCode(
+    String id,
+    String caregiverId,
+    String token,
+  ) => _client.request(
+    'POST',
+    'api/v1/care-links/${Uri.encodeComponent(id)}/access-codes',
+    token: token,
+    body: {'caregiverId': caregiverId},
+  );
+
+  /// Code another caregiver uses to request caring for the same adult.
+  Future<ApiResponse> inviteCaregiver(
+    String id,
+    String caregiverId,
+    String token,
+  ) => _client.request(
+    'POST',
+    'api/v1/care-links/${Uri.encodeComponent(id)}/caregiver-invitations',
+    token: token,
+    body: {'caregiverId': caregiverId},
+  );
+
+  /// Joins an adult with another caregiver's code; the adult must accept.
+  Future<ApiResponse> joinAsCaregiver(
+    String caregiverId,
+    String code,
+    String token,
+  ) => _client.request(
+    'POST',
+    'api/v1/care-links/caregiver-joins',
+    token: token,
+    body: {'caregiverId': caregiverId, 'code': code},
+  );
+
+  /// Caregivers waiting for the signed-in adult's decision.
+  Future<ApiResponse> caregiverRequests(String token) => _client.request(
+    'GET',
+    'api/v1/care-links/caregiver-requests',
+    token: token,
+  );
+
+  Future<ApiResponse> decideCaregiverRequest(
+    String id,
+    bool accepted,
+    String token,
+  ) => _client.request(
+    'POST',
+    'api/v1/care-links/caregiver-requests/${Uri.encodeComponent(id)}/decision',
+    token: token,
+    body: {'accepted': accepted},
+  );
+
+  /// Removes the signed-in adult's account.
+  Future<ApiResponse> removeAdultAccount(String token) => _client.request(
+    'DELETE',
+    'api/v1/care-links/adult-account',
+    token: token,
+  );
+
+  /// Anonymous: the code itself identifies the adult on a new device.
+  Future<ApiResponse> redeemAccessCode(String code) => _client.request(
+    'POST',
+    'api/v1/care-links/access-code-redemptions',
+    body: {'code': code},
+  );
+
   Future<ApiResponse> generate(
     String caregiverId,
     String olderAdultId,

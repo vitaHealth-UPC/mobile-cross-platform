@@ -7,6 +7,7 @@ import '../../../../shared/infrastructure/network/api_response.dart';
 import '../../application/ports/care_link_writer.dart';
 import '../../application/ports/caregiver_profile_editor.dart';
 import '../../application/ports/caregiver_profiles_reader.dart';
+import '../../application/readmodels/adult_access_code.dart';
 import '../../application/readmodels/caregiver_link_summary.dart';
 import '../../application/readmodels/older_adult_profile.dart';
 import '../../domain/entities/care_link.dart';
@@ -90,6 +91,73 @@ final class RemoteCareLinkRepository
       return const AppFailure('INVALID_RESPONSE');
     }
     return AppSuccess(profile);
+  });
+
+  @override
+  Future<AppResult<void>> endLink(String careLinkId) =>
+      _authorized((session) async {
+        final response = await _api.end(
+          careLinkId,
+          session.owner.id,
+          session.accessToken,
+        );
+        if (response.status != 204) return _failure(response);
+        return const AppSuccess<void>(null);
+      });
+
+  @override
+  Future<AppResult<AdultAccessCode>> inviteCaregiver(String careLinkId) =>
+      _code(
+        careLinkId,
+        (session) => _api.inviteCaregiver(
+          careLinkId,
+          session.owner.id,
+          session.accessToken,
+        ),
+      );
+
+  @override
+  Future<AppResult<void>> joinAsCaregiver(String code) =>
+      _authorized((session) async {
+        final response = await _api.joinAsCaregiver(
+          session.owner.id,
+          code.trim().toUpperCase(),
+          session.accessToken,
+        );
+        if (response.status != 201) return _failure(response);
+        return const AppSuccess<void>(null);
+      });
+
+  @override
+  Future<AppResult<AdultAccessCode>> issueAccessCode(String careLinkId) =>
+      _code(
+        careLinkId,
+        (session) => _api.issueAccessCode(
+          careLinkId,
+          session.owner.id,
+          session.accessToken,
+        ),
+      );
+
+  Future<AppResult<AdultAccessCode>> _code(
+    String careLinkId,
+    Future<ApiResponse> Function(StoredSession) request,
+  ) => _authorized((session) async {
+    final response = await request(session);
+    if (response.status != 201) return _failure(response);
+    final body = response.body;
+    if (body is! Map<String, dynamic> ||
+        body['careLinkId'] != careLinkId ||
+        body['code'] is! String ||
+        body['expiresAt'] is! String) {
+      return const AppFailure('INVALID_RESPONSE');
+    }
+    return AppSuccess(
+      AdultAccessCode(
+        code: body['code'] as String,
+        expiresAt: DateTime.parse(body['expiresAt'] as String),
+      ),
+    );
   });
 
   @override

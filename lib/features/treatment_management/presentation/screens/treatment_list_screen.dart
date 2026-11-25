@@ -85,31 +85,13 @@ class TreatmentListScreen extends StatelessWidget {
                             TreatmentNotice(message: text.tmActivated),
                             const SizedBox(height: 16),
                           ],
-                          for (final treatment in state.treatments)
+                          for (final plan in state.plans)
                             Padding(
                               padding: const EdgeInsets.only(bottom: 16),
-                              child: TreatmentSurface(
-                                padding: EdgeInsets.zero,
-                                child: Material(
-                                  type: MaterialType.transparency,
-                                  borderRadius: BorderRadius.circular(18),
-                                  clipBehavior: Clip.antiAlias,
-                                  child: ListTile(
-                                    title: Text(
-                                      treatment.name,
-                                      style: treatmentSectionStyle(context),
-                                    ),
-                                    subtitle: Text(
-                                      treatmentStatusText(
-                                        text,
-                                        treatment.status,
-                                      ),
-                                      style: treatmentSupportingStyle(context),
-                                    ),
-                                    trailing: const Icon(Icons.chevron_right),
-                                    onTap: () => onOpen(treatment),
-                                  ),
-                                ),
+                              child: _PlanCard(
+                                plan: plan,
+                                labels: state.medicationLabels,
+                                onOpen: onOpen,
                               ),
                             ),
                         ],
@@ -121,6 +103,97 @@ class TreatmentListScreen extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// One treatment: its name and status, and one row per medication regimen
+/// that opens that regimen's detail.
+class _PlanCard extends StatelessWidget {
+  const _PlanCard({
+    required this.plan,
+    required this.labels,
+    required this.onOpen,
+  });
+
+  final List<TreatmentDetail> plan;
+  final Map<String, String> labels;
+  final void Function(TreatmentDetail treatment) onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = AppLocalizations.of(context);
+    final first = plan.first;
+    final statuses = {
+      for (final treatment in plan) treatmentStatusText(text, treatment.status),
+    };
+    if (plan.length == 1) {
+      final label = labels[first.medicationId];
+      return TreatmentSurface(
+        padding: EdgeInsets.zero,
+        child: Material(
+          type: MaterialType.transparency,
+          borderRadius: BorderRadius.circular(18),
+          clipBehavior: Clip.antiAlias,
+          child: ListTile(
+            title: Text(first.name, style: treatmentSectionStyle(context)),
+            subtitle: Text(
+              [?label, treatmentStatusText(text, first.status)].join(', '),
+              style: treatmentSupportingStyle(context),
+            ),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => onOpen(first),
+          ),
+        ),
+      );
+    }
+    return TreatmentSurface(
+      padding: const EdgeInsets.fromLTRB(0, 14, 0, 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(first.name, style: treatmentSectionStyle(context)),
+          ),
+          const SizedBox(height: 4),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              '${text.tmMedicationCount(plan.length)}, ${statuses.join(', ')}',
+              style: treatmentSupportingStyle(context),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Material(
+            type: MaterialType.transparency,
+            child: Column(
+              children: [
+                for (final treatment in plan)
+                  ListTile(
+                    key: Key('plan-${treatment.id}'),
+                    dense: true,
+                    leading: const Icon(Icons.medication_outlined),
+                    title: Text(
+                      labels[treatment.medicationId] ??
+                          treatment.dose ??
+                          treatment.name,
+                      style: treatmentFieldStyle(context),
+                    ),
+                    subtitle: treatment.scheduledTimes.isEmpty
+                        ? null
+                        : Text(
+                            treatment.scheduledTimes.join(', '),
+                            style: treatmentSupportingStyle(context),
+                          ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => onOpen(treatment),
+                  ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

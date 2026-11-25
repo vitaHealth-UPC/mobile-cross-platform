@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
+import '../../application/readmodels/adult_access_redemption.dart';
 import '../../domain/entities/care_link.dart';
 import '../bloc/consent/consent_bloc.dart';
 import '../bloc/consent/consent_event.dart';
@@ -17,11 +18,17 @@ class ConsentRoute extends StatelessWidget {
     this.invitationEntry = false,
     required this.onSessionChanged,
     required this.onSignOut,
+    this.onAdultIdentified,
   });
   final ConsentBloc Function() createBloc;
   final bool invitationEntry;
   final VoidCallback onSessionChanged;
   final VoidCallback onSignOut;
+
+  /// The host remembers the adult on this device; the route then closes with
+  /// `'pin'` when the PIN must be entered or `true` when a session exists.
+  final Future<void> Function(AdultAccessRedemption redemption)?
+  onAdultIdentified;
 
   @override
   Widget build(BuildContext context) => BlocProvider(
@@ -31,7 +38,13 @@ class ConsentRoute extends StatelessWidget {
       return bloc;
     },
     child: BlocConsumer<ConsentBloc, ConsentState>(
-      listener: (context, state) {
+      listener: (context, state) async {
+        if (state.redemption case final redemption?) {
+          final navigator = Navigator.of(context);
+          await onAdultIdentified?.call(redemption);
+          navigator.pop(redemption.pinRegistered ? 'pin' : true);
+          return;
+        }
         if (state.errorCode == 'AUTHENTICATION_REQUIRED' ||
             state.errorCode == 'SESSION_CHANGED') {
           onSessionChanged();

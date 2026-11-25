@@ -88,6 +88,8 @@ void main() {
                 expect(jsonDecode(request.body), {'accepted': accepted});
                 decided = true;
                 return http.Response(jsonEncode(body()), 200);
+              case '/api/v1/care-links/caregiver-requests':
+                return http.Response('[]', 200);
               default:
                 throw StateError('Unexpected endpoint');
             }
@@ -145,8 +147,8 @@ void main() {
         await tester.ensureVisible(find.text('Iniciar sesión'));
         await tester.tap(find.text('Iniciar sesión'));
         await tester.pumpAndSettle();
-        await tester.ensureVisible(find.text('Tengo una invitación'));
-        await tester.tap(find.text('Tengo una invitación'));
+        await tester.ensureVisible(find.byKey(const Key('login-adult-entry')));
+        await tester.tap(find.byKey(const Key('login-adult-entry')));
         await tester.pumpAndSettle();
         final invitation = CareLinkInvitation(
           caregiverId: 'caregiver-A',

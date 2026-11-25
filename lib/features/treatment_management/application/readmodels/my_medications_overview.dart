@@ -27,9 +27,8 @@ final class MyMedication {
   final List<String> scheduledTimes;
 
   /// Instructions when present, otherwise the scheduled times.
-  String get scheduleLabel => instructions.trim().isNotEmpty
-      ? instructions
-      : scheduledTimes.join(' · ');
+  String get scheduleLabel =>
+      instructions.trim().isNotEmpty ? instructions : scheduledTimes.join(', ');
 
   @override
   String toString() => 'MyMedication[clinicalData=REDACTED]';

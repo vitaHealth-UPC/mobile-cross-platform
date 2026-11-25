@@ -5,6 +5,9 @@ enum MedicationManagementStatus { loading, ready, failure }
 /// Outcome of the last successful change, shown once as a notice.
 enum MedicationNotice {
   registered,
+
+  /// Registered, but the typed initial stock was not saved.
+  registeredWithoutStock,
   updated,
   deactivated,
   deleted,

@@ -194,7 +194,7 @@ class MedicationDetailsScreen extends StatelessWidget {
                             .join(', '),
                         if (treatment.recurrenceZone != null)
                           treatment.recurrenceZone!,
-                      ].join(' · '),
+                      ].join(', '),
                     ),
                     if (treatment.instructions.trim().isNotEmpty)
                       _Row(

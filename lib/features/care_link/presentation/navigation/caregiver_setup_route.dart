@@ -52,6 +52,8 @@ class CaregiverSetupRoute extends StatelessWidget {
           'ACCESS_DENIED' => text.accessDenied,
           'RATE_LIMITED' => text.rateLimited,
           'CARE_LINK_ALREADY_EXISTS' => text.linkAlreadyExists,
+          'END_CARE_LINK_FAILED' => text.removeFamilyFailed,
+          'JOIN_FAILED' => text.joinCaregiverFailed,
           _ => text.genericLinkError,
         };
         final bloc = context.read<ProfilesBloc>();
@@ -82,6 +84,13 @@ class CaregiverSetupRoute extends StatelessWidget {
           onOpenSettings: onOpenSettings == null
               ? null
               : () => onOpenSettings!(context),
+          notice: state.ended
+              ? text.removeFamilyDone
+              : state.joined
+              ? text.joinCaregiverSent
+              : null,
+          onJoin: (code) => bloc.add(CaregiverJoinRequested(code)),
+          onRemove: (link) => bloc.add(CareLinkEndRequested(link.id)),
           onRegister: (name, date) => bloc.add(OlderAdultSubmitted(name, date)),
           onRefresh: () => bloc.add(const ProfilesRequested()),
           onSignOut: onSignOut,

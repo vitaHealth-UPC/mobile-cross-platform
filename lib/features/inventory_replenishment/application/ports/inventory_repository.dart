@@ -14,6 +14,15 @@ abstract interface class InventoryRepository {
     required int threshold,
   });
 
+  /// Corrects the newest receipt once (initial stock or last replenishment).
+  Future<AppResult<Inventory>> correctLatest(
+    String medicationId, {
+    required String batchId,
+    required int quantity,
+    String? lot,
+    int? threshold,
+  });
+
   Future<AppResult<Inventory>> replenish(
     String medicationId, {
     required int quantity,

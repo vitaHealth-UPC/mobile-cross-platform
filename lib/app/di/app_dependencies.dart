@@ -32,7 +32,11 @@ import '../../features/adherence_analytics/presentation/bloc/level/level_state.d
 import '../../features/adherence_analytics/presentation/bloc/recommendations/recommendations_bloc.dart';
 import '../../features/care_link/application/readmodels/caregiver_link_summary.dart';
 import '../../features/care_link/application/usecases/accept_care_link.dart';
+import '../../features/care_link/application/usecases/end_care_link.dart';
 import '../../features/care_link/application/usecases/generate_linking_code.dart';
+import '../../features/care_link/application/usecases/invite_caregiver.dart';
+import '../../features/care_link/application/usecases/issue_adult_access_code.dart';
+import '../../features/care_link/application/usecases/join_as_caregiver.dart';
 import '../../features/care_link/application/usecases/register_consent.dart';
 import '../../features/care_link/application/usecases/register_older_adult.dart';
 import '../../features/care_link/application/usecases/update_caregiver_profile.dart';
@@ -133,6 +137,7 @@ import '../../features/intake_execution/presentation/bloc/agenda/agenda_bloc.dar
 import '../../features/intake_execution/presentation/bloc/dose/dose_bloc.dart';
 import '../../features/intake_execution/presentation/bloc/home/home_bloc.dart';
 import '../../features/intake_execution/presentation/bloc/voice/voice_bloc.dart';
+import '../../features/inventory_replenishment/application/usecases/correct_latest_receipt.dart';
 import '../../features/inventory_replenishment/application/usecases/get_inventory.dart';
 import '../../features/inventory_replenishment/application/usecases/register_initial_inventory.dart';
 import '../../features/inventory_replenishment/application/usecases/register_replenishment.dart';
@@ -372,6 +377,19 @@ final class AppDependencies {
     );
   }
 
+  RemoteInventoryRepository get _inventoryRepository =>
+      RemoteInventoryRepository(
+        api: InventoryApi(_client),
+        store: _sessionStore,
+      );
+
+  /// Stock reads for the medication catalog (Inventory & Replenishment).
+  GetInventory get readInventory => GetInventory(_inventoryRepository);
+
+  /// Initial stock captured together with a new medication.
+  RegisterInitialInventory get registerInitialInventory =>
+      RegisterInitialInventory(_inventoryRepository);
+
   /// Stock of one medication for the caregiver (Inventory & Replenishment).
   InventoryBloc createInventoryBloc(String medicationId) {
     final repository = RemoteInventoryRepository(
@@ -383,6 +401,7 @@ final class AppDependencies {
       read: GetInventory(repository),
       registerInitial: RegisterInitialInventory(repository),
       replenish: RegisterReplenishment(repository),
+      correct: CorrectLatestReceipt(repository),
     );
   }
 
@@ -407,6 +426,7 @@ final class AppDependencies {
     return TreatmentFactories(
       createListBloc: (olderAdultId) => TreatmentListBloc(
         list: ListTreatments(treatmentReader),
+        medications: list,
         olderAdultId: olderAdultId,
       ),
       createRegistrationBloc: (olderAdultId) => MedicationRegistrationBloc(
@@ -423,7 +443,7 @@ final class AppDependencies {
         reactivate: ReactivateMedication(medications),
         olderAdultId: olderAdultId,
       ),
-      createSetupBloc: (olderAdultId, medicationId) => TreatmentSetupBloc(
+      createSetupBloc: (olderAdultId, medications) => TreatmentSetupBloc(
         create: CreateTreatment(
           RemoteTreatmentRepository(api: _treatmentApi, store: _sessionStore),
         ),
@@ -434,7 +454,7 @@ final class AppDependencies {
         configure: configure,
         changeStatus: changeStatus,
         olderAdultId: olderAdultId,
-        medicationId: medicationId,
+        medications: medications,
         calendarZone: _calendarZone,
       ),
       createManagementBloc: (treatmentId, olderAdultId) =>
@@ -664,7 +684,16 @@ final class AppDependencies {
     reader: _careLinks,
     register: RegisterOlderAdult(_careLinks, DateTime.now),
     generate: GenerateLinkingCode(_careLinks),
+    end: EndCareLink(_careLinks),
+    join: JoinAsCaregiver(_careLinks),
   );
+
+  /// Invitation code for another caregiver of the same adult.
+  InviteCaregiver get inviteCaregiver => InviteCaregiver(_careLinks);
+
+  /// New sign-in code for the adult of a confirmed relationship.
+  IssueAdultAccessCode get issueAdultAccessCode =>
+      IssueAdultAccessCode(_careLinks);
 
   /// Care Link owns the basic profile form and its server-validated update.
   ProfileEditorCubit createProfileEditorCubit(String olderAdultId) =>

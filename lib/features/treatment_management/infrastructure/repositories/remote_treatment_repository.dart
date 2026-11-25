@@ -41,19 +41,22 @@ final class RemoteTreatmentRepository implements TreatmentRepository {
   @override
   Future<AppResult<Treatment>> createTreatment(
     String olderAdultId,
-    String name,
-  ) => caregiverTreatmentRequest(
+    String name, {
+    String? planId,
+  }) => caregiverTreatmentRequest(
     _store,
     (session) => _api.createTreatment(
       olderAdultId,
       session.owner.id,
       name,
       session.accessToken,
+      planId: planId,
     ),
     (response) {
       final treatment = TreatmentMapper.treatment(response.body);
       if (treatment.olderAdultId != olderAdultId ||
-          treatment.name != name.trim()) {
+          treatment.name != name.trim() ||
+          (planId != null && treatment.planId != planId)) {
         return const AppFailure('INVALID_RESPONSE');
       }
       return AppSuccess(treatment);

@@ -37,6 +37,13 @@ class LinkPersonScreen extends StatelessWidget {
     final text = AppLocalizations.of(context);
     final code = link?.code;
     final today = DateTime.now();
+    final expired = code != null && !code.isValidAt(today.toUtc());
+    final invitation = code == null || link == null
+        ? null
+        : CareLinkInvitation(
+            caregiverId: link!.caregiverId,
+            code: code.value,
+          ).encode();
     final birthday = profile.birthDate;
     final birthdayPending =
         today.month < birthday.month ||
@@ -89,14 +96,47 @@ class LinkPersonScreen extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(text.temporaryCode, style: TataTypography.label),
                   const SizedBox(height: 8),
+                  // The invitation itself is what the adult needs: it is shown
+                  // in full, with its expiry, instead of a bare code.
                   Container(
+                    key: const Key('link-invitation'),
                     width: double.infinity,
                     padding: const EdgeInsets.all(18),
                     decoration: _panel(Colors.white),
-                    child: SelectableText(
-                      code?.value ?? text.codeNotIssued,
-                      style: const TextStyle(fontSize: 14),
-                    ),
+                    child: invitation == null
+                        ? Text(
+                            text.codeNotIssued,
+                            style: const TextStyle(fontSize: 14),
+                          )
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SelectableText(
+                                invitation,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  height: 1.35,
+                                  color: TataColors.ink,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                expired
+                                    ? text.invitationExpired
+                                    : text.invitationValidUntil(
+                                        TimeOfDay.fromDateTime(
+                                          code!.expiresAt.toLocal(),
+                                        ).format(context),
+                                      ),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: expired
+                                      ? Theme.of(context).colorScheme.error
+                                      : TataColors.muted,
+                                ),
+                              ),
+                            ],
+                          ),
                   ),
                   const SizedBox(height: 12),
                   Container(
@@ -168,28 +208,16 @@ class LinkPersonScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 22),
-                  if (!confirmed)
-                    ElevatedButton(
-                      onPressed: loading ? null : onGenerate,
-                      child: Text(
-                        loading
-                            ? text.processing
-                            : code == null
-                            ? text.generateCode
-                            : text.renewCode,
-                      ),
-                    ),
-                  if (code != null && !confirmed)
-                    TextButton.icon(
+                  // Copying is the main action once an invitation exists;
+                  // renewing becomes secondary.
+                  if (!confirmed && invitation != null && !expired)
+                    ElevatedButton.icon(
+                      key: const Key('copy-invitation'),
                       onPressed: loading
                           ? null
                           : () async {
-                              final invitation = CareLinkInvitation(
-                                caregiverId: link!.caregiverId,
-                                code: code.value,
-                              );
                               await Clipboard.setData(
-                                ClipboardData(text: invitation.encode()),
+                                ClipboardData(text: invitation),
                               );
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
@@ -201,6 +229,25 @@ class LinkPersonScreen extends StatelessWidget {
                             },
                       icon: const Icon(Icons.copy),
                       label: Text(text.copyInvitation),
+                    ),
+                  if (!confirmed && (invitation == null || expired))
+                    ElevatedButton(
+                      onPressed: loading ? null : onGenerate,
+                      child: Text(
+                        loading
+                            ? text.processing
+                            : code == null
+                            ? text.generateCode
+                            : text.renewCode,
+                      ),
+                    )
+                  else if (!confirmed)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: OutlinedButton(
+                        onPressed: loading ? null : onGenerate,
+                        child: Text(loading ? text.processing : text.renewCode),
+                      ),
                     ),
                   if (errorText != null)
                     Padding(
