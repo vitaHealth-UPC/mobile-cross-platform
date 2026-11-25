@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../shared/common/result/app_result.dart';
+import '../../application/usecases/correct_latest_receipt.dart';
 import '../../application/usecases/get_inventory.dart';
 import '../../application/usecases/register_initial_inventory.dart';
 import '../../application/usecases/register_replenishment.dart';
@@ -16,10 +17,12 @@ final class InventoryBloc extends Bloc<InventoryEvent, InventoryState> {
     required this._read,
     required this._registerInitial,
     required this._replenish,
+    required this._correct,
   }) : super(const InventoryState()) {
     on<InventoryRequested>(_load);
     on<InitialStockSubmitted>(_initial);
     on<ReplenishmentSubmitted>(_replenishment);
+    on<ReceiptCorrectionSubmitted>(_correction);
     on<InventoryInputChanged>(_changed);
   }
 
@@ -27,6 +30,7 @@ final class InventoryBloc extends Bloc<InventoryEvent, InventoryState> {
   final GetInventory _read;
   final RegisterInitialInventory _registerInitial;
   final RegisterReplenishment _replenish;
+  final CorrectLatestReceipt _correct;
 
   static const _fieldCodes = {
     'INVALID_QUANTITY': InventoryField.quantity,
@@ -81,11 +85,29 @@ final class InventoryBloc extends Bloc<InventoryEvent, InventoryState> {
     replenished: true,
   );
 
+  Future<void> _correction(
+    ReceiptCorrectionSubmitted event,
+    Emitter<InventoryState> emit,
+  ) => _write(
+    emit,
+    InventoryPhase.ready,
+    () => _correct(
+      medicationId,
+      batchId: event.batchId,
+      quantity: event.quantity,
+      lot: event.lot,
+      threshold: event.threshold,
+    ),
+    replenished: false,
+    corrected: true,
+  );
+
   Future<void> _write(
     Emitter<InventoryState> emit,
     InventoryPhase expected,
     Future<AppResult<Inventory>> Function() send, {
     required bool replenished,
+    bool corrected = false,
   }) async {
     if (state.phase != expected || state.submitting) return;
     emit(state.copyWith(submitting: true));
@@ -98,6 +120,7 @@ final class InventoryBloc extends Bloc<InventoryEvent, InventoryState> {
             phase: InventoryPhase.ready,
             inventory: value,
             replenished: replenished,
+            corrected: corrected,
           ),
         );
       case AppFailure(code: 'INVENTORY_ALREADY_EXISTS'):
@@ -117,7 +140,8 @@ final class InventoryBloc extends Bloc<InventoryEvent, InventoryState> {
     if (state.submitting) return;
     if (state.invalidField == null &&
         state.errorCode == null &&
-        !state.replenished) {
+        !state.replenished &&
+        !state.corrected) {
       return;
     }
     if (state.phase == InventoryPhase.failure) return;

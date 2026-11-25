@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../shared/presentation/widgets/motion_aware_routes.dart';
 import '../../application/readmodels/medication_registration_result.dart';
 import '../../domain/entities/medication.dart';
 import '../bloc/medication_management/medication_management_bloc.dart';
@@ -13,6 +14,7 @@ import '../bloc/treatment_list/treatment_list_event.dart';
 import '../bloc/treatment_management/treatment_management_bloc.dart';
 import '../bloc/treatment_management/treatment_management_event.dart';
 import '../bloc/treatment_setup/treatment_setup_bloc.dart';
+import '../bloc/treatment_setup/treatment_setup_state.dart';
 import '../screens/medication_management_screen.dart';
 import '../screens/medication_registration_screen.dart';
 import '../screens/my_medications_screen.dart';
@@ -20,6 +22,7 @@ import '../screens/treatment_detail_screen.dart';
 import '../screens/treatment_list_screen.dart';
 import '../screens/treatment_setup_screen.dart';
 import '../widgets/active_medications_card.dart';
+import 'medication_stock_hooks.dart';
 
 /// Builders for the blocs of the Treatment Management flows; each route owns and closes
 /// the bloc it creates.
@@ -38,7 +41,10 @@ final class TreatmentFactories {
   createRegistrationBloc;
   final MedicationManagementBloc Function(String olderAdultId)
   createMedicationsBloc;
-  final TreatmentSetupBloc Function(String olderAdultId, String medicationId)
+  final TreatmentSetupBloc Function(
+    String olderAdultId,
+    List<SetupMedication> medications,
+  )
   createSetupBloc;
   final TreatmentManagementBloc Function(
     String treatmentId,
@@ -154,6 +160,7 @@ final class TreatmentNavigation {
     VoidCallback onSessionInvalidated, {
     String? personName,
     void Function(BuildContext context, Medication medication)? onOpenInventory,
+    MedicationStockHooks? stock,
   }) async {
     await _openMedicationManagement(
       context,
@@ -162,6 +169,7 @@ final class TreatmentNavigation {
       picking: false,
       onOpenInventory: onOpenInventory,
       personName: personName,
+      stock: stock,
     );
   }
 
@@ -172,6 +180,7 @@ final class TreatmentNavigation {
     required bool picking,
     String? personName,
     void Function(BuildContext context, Medication medication)? onOpenInventory,
+    MedicationStockHooks? stock,
   }) => Navigator.of(context).push<bool>(
     MaterialPageRoute(
       builder: (_) => BlocProvider(
@@ -181,6 +190,7 @@ final class TreatmentNavigation {
         child: Builder(
           builder: (medicationsContext) => MedicationManagementScreen(
             pickingForTreatment: picking,
+            loadStock: stock?.remaining,
             onOpenInventory: onOpenInventory == null
                 ? null
                 : (medication) =>
@@ -202,6 +212,7 @@ final class TreatmentNavigation {
                           builder: (registrationContext) =>
                               MedicationRegistrationScreen(
                                 personName: personName,
+                                registerInitialStock: stock?.registerInitial,
                                 onRegistered: (result) =>
                                     Navigator.of(registrationContext)
                                         .pop(result),
@@ -217,24 +228,29 @@ final class TreatmentNavigation {
               if (!medicationsContext.mounted) return;
               medications.add(
                 MedicationsRequested(
-                  notice: result == null ? null : MedicationNotice.registered,
+                  notice: switch (result) {
+                    null => null,
+                    MedicationRegistrationResult(initialStockSaved: false) =>
+                      MedicationNotice.registeredWithoutStock,
+                    _ => MedicationNotice.registered,
+                  },
                 ),
               );
               if (result != null && picking) {
-                await _createFromMedication(
+                await _createTreatment(
                   medicationsContext,
                   olderAdultId,
-                  result.medication,
+                  [result.medication],
                   onSessionInvalidated,
                   picking: picking,
                   initial: result,
                 );
               }
             },
-            onCreateTreatment: (medication) => _createFromMedication(
+            onCreateTreatment: (preselected) => _createTreatment(
               medicationsContext,
               olderAdultId,
-              medication,
+              preselected,
               onSessionInvalidated,
               picking: picking,
             ),
@@ -244,23 +260,32 @@ final class TreatmentNavigation {
     ),
   );
 
-  /// The same wizard handles an existing medication or the registration receipt.
-  Future<void> _createFromMedication(
+  /// Opens the treatment wizard with [preselected] medications; the caregiver
+  /// can add any other active medication of the catalog in its first step.
+  Future<void> _createTreatment(
     BuildContext context,
     String olderAdultId,
-    Medication medication,
+    List<Medication> preselected,
     VoidCallback onSessionInvalidated, {
     required bool picking,
     MedicationRegistrationResult? initial,
   }) async {
+    SetupMedication setup(Medication medication) =>
+        SetupMedication(medication.id, medication.label);
+    final available = [
+      for (final medication
+          in context.read<MedicationManagementBloc>().state.medications)
+        if (medication.active) setup(medication),
+    ];
     final activated = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (_) => BlocProvider(
-          create: (_) =>
-              _factories.createSetupBloc(olderAdultId, medication.id),
+          create: (_) => _factories.createSetupBloc(olderAdultId, [
+            for (final medication in preselected) setup(medication),
+          ]),
           child: Builder(
             builder: (setupContext) => TreatmentSetupScreen(
-              medicationLabel: medication.label,
+              availableMedications: available,
               initialFrequency: initial?.frequency ?? '',
               initialInstructions: initial?.instructions ?? '',
               onFinished: () => Navigator.of(setupContext).pop(true),
@@ -295,25 +320,25 @@ final class TreatmentNavigation {
     VoidCallback? onAgenda,
     VoidCallback? onMore,
     Future<void> Function(String)? onDose,
-  }) => Navigator.of(context).push<void>(
-    MaterialPageRoute(
-      builder: (_) => BlocProvider(
-        create: (_) =>
-            _factories.createMyMedicationsBloc()
-              ..add(const MyMedicationsRequested()),
-        child: Builder(
-          builder: (innerContext) => MyMedicationsScreen(
-            onHome: onHome,
-            onAgenda: onAgenda,
-            onMore: onMore,
-            onDose: onDose,
-            onSessionInvalidated: _invalidate(
-              innerContext,
-              onSessionInvalidated,
-            ),
-          ),
+    bool asTab = false,
+  }) {
+    Widget page(BuildContext _) => BlocProvider(
+      create: (_) =>
+          _factories.createMyMedicationsBloc()
+            ..add(const MyMedicationsRequested()),
+      child: Builder(
+        builder: (innerContext) => MyMedicationsScreen(
+          onHome: onHome,
+          onAgenda: onAgenda,
+          onMore: onMore,
+          onDose: onDose,
+          onSessionInvalidated: _invalidate(innerContext, onSessionInvalidated),
         ),
       ),
-    ),
-  );
+    );
+    // From a bottom-bar destination it replaces the previous tab.
+    return asTab
+        ? TabPageRoute.replaceTab<void>(context, page)
+        : Navigator.of(context).push<void>(MaterialPageRoute(builder: page));
+  }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
@@ -7,6 +8,7 @@ import '../../../../shared/presentation/widgets/async_states.dart';
 import '../../../../shared/presentation/widgets/status_notice.dart';
 import '../../application/policies/medication_fields.dart';
 import '../../application/readmodels/medication_registration_result.dart';
+import '../../domain/entities/medication.dart';
 import '../bloc/medication_registration/medication_registration_bloc.dart';
 import '../bloc/medication_registration/medication_registration_event.dart';
 import '../bloc/medication_registration/medication_registration_state.dart';
@@ -21,10 +23,20 @@ class MedicationRegistrationScreen extends StatefulWidget {
     required this.onRegistered,
     required this.onSessionInvalidated,
     this.personName,
+    this.registerInitialStock,
   });
   final ValueChanged<MedicationRegistrationResult> onRegistered;
   final VoidCallback onSessionInvalidated;
   final String? personName;
+
+  /// Saves the optional initial stock after the medication exists; returns
+  /// null on success. Absent when inventory is not available to the host.
+  final Future<String?> Function(
+    String medicationId, {
+    required String quantity,
+    required String threshold,
+  })?
+  registerInitialStock;
 
   @override
   State<MedicationRegistrationScreen> createState() =>
@@ -36,7 +48,10 @@ class _MedicationRegistrationScreenState
   final _form = GlobalKey<FormState>();
   final _name = TextEditingController();
   final _presentation = TextEditingController();
+  final _quantity = TextEditingController();
+  final _threshold = TextEditingController();
   bool _showMissingFields = false;
+  bool _savingStock = false;
 
   bool get _missingRequired =>
       _name.text.trim().isEmpty || _presentation.text.trim().isEmpty;
@@ -45,6 +60,8 @@ class _MedicationRegistrationScreenState
   void dispose() {
     _name.dispose();
     _presentation.dispose();
+    _quantity.dispose();
+    _threshold.dispose();
     super.dispose();
   }
 
@@ -61,6 +78,7 @@ class _MedicationRegistrationScreenState
     String? Function(String?)? validator,
     Widget? suffix,
     int maxLines = 1,
+    bool numeric = false,
   }) => Container(
     decoration: BoxDecoration(
       borderRadius: BorderRadius.circular(15),
@@ -80,8 +98,14 @@ class _MedicationRegistrationScreenState
       maxLength: maxLength,
       minLines: 1,
       maxLines: maxLines,
+      keyboardType: numeric ? TextInputType.number : null,
+      inputFormatters: numeric
+          ? [FilteringTextInputFormatter.digitsOnly]
+          : null,
       style: const TextStyle(fontSize: 16, color: TataColors.ink),
-      textCapitalization: TextCapitalization.sentences,
+      textCapitalization: numeric
+          ? TextCapitalization.none
+          : TextCapitalization.sentences,
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
@@ -110,6 +134,29 @@ class _MedicationRegistrationScreenState
     ),
   );
 
+  /// The medication exists; the initial stock, when typed, is saved next so
+  /// the caregiver does not have to open Inventory separately.
+  Future<void> _finish(Medication medication) async {
+    final hook = widget.registerInitialStock;
+    if (hook == null || _quantity.text.trim().isEmpty) {
+      widget.onRegistered(MedicationRegistrationResult(medication: medication));
+      return;
+    }
+    setState(() => _savingStock = true);
+    final failure = await hook(
+      medication.id,
+      quantity: _quantity.text,
+      threshold: _threshold.text.trim().isEmpty ? '0' : _threshold.text,
+    );
+    if (!mounted) return;
+    widget.onRegistered(
+      MedicationRegistrationResult(
+        medication: medication,
+        initialStockSaved: failure == null,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final text = AppLocalizations.of(context);
@@ -126,16 +173,16 @@ class _MedicationRegistrationScreenState
           widget.onSessionInvalidated();
         } else if (state.status == MedicationRegistrationStatus.registered &&
             state.medication != null) {
-          widget.onRegistered(
-            MedicationRegistrationResult(medication: state.medication!),
-          );
+          _finish(state.medication!);
         }
       },
       builder: (context, state) {
         final locked =
+            _savingStock ||
             state.status == MedicationRegistrationStatus.submitting ||
             state.status == MedicationRegistrationStatus.registered;
         final submitting =
+            _savingStock ||
             state.status == MedicationRegistrationStatus.submitting;
         return PopScope(
           canPop: !submitting,
@@ -210,6 +257,61 @@ class _MedicationRegistrationScreenState
                           maxLength: maxMedicationFieldLength,
                           validator: (v) => _required(v, text),
                         ),
+                        if (widget.registerInitialStock != null) ...[
+                          const SizedBox(height: 28),
+                          Text(
+                            text.invInitialAtRegistration,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: TataColors.ink,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            text.invInitialAtRegistrationHint,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: TataColors.muted,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: _field(
+                                  fieldKey: 'medication-initial-quantity',
+                                  controller: _quantity,
+                                  label: text.invInitialQuantity,
+                                  hint: text.invQuantityHint,
+                                  locked: locked,
+                                  maxLength: 6,
+                                  numeric: true,
+                                  validator: (v) {
+                                    final raw = v?.trim() ?? '';
+                                    return raw.isEmpty ||
+                                            (int.tryParse(raw) ?? 0) > 0
+                                        ? null
+                                        : text.invInvalidQuantity;
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _field(
+                                  fieldKey: 'medication-initial-threshold',
+                                  controller: _threshold,
+                                  label: text.invThreshold,
+                                  hint: text.invThresholdHint,
+                                  locked: locked,
+                                  maxLength: 6,
+                                  numeric: true,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                         if (_showMissingFields) ...[
                           const SizedBox(height: 10),
                           StatusNotice(
@@ -241,8 +343,7 @@ class _MedicationRegistrationScreenState
                                       );
                                 },
                           child: Text(
-                            state.status ==
-                                    MedicationRegistrationStatus.submitting
+                            submitting
                                 ? text.processing
                                 : text.tmRegistrationSaveMedication,
                           ),

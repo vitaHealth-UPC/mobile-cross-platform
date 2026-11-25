@@ -37,6 +37,7 @@ abstract final class TreatmentMapper {
       olderAdultId: _text(data, 'olderAdultId'),
       name: _text(data, 'name'),
       status: _status(data),
+      planId: _optionalText(data, 'planId'),
     );
   }
 
@@ -71,6 +72,7 @@ abstract final class TreatmentMapper {
       recurrenceZone: _optionalText(data, 'recurrenceZone'),
       recurrenceMode: _optionalText(data, 'recurrenceMode'),
       recurrenceAnchor: _instant(data, 'recurrenceAnchor'),
+      planId: _optionalText(data, 'planId'),
     );
   }
 

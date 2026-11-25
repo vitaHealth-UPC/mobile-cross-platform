@@ -15,16 +15,16 @@ String adherenceBandLabel(AppLocalizations text, AdherenceTimeBand band) =>
       AdherenceTimeBand.night => text.adherenceBandNight,
     };
 
-/// Arrow, magnitude and sign of a change against the previous period, or null
-/// when that period had no evidence ("↑ 8%", "↓ 3%", "= 0%").
+/// Signed change against the previous period, as the design writes it
+/// ("+8%", "−3%", "0%"), or null when that period had no evidence.
 String? adherenceChangeText(int? change) {
   if (change == null) return null;
-  final arrow = change > 0
-      ? '↑'
+  final sign = change > 0
+      ? '+'
       : change < 0
-      ? '↓'
-      : '=';
-  return '$arrow ${change.abs()}%';
+      ? '−'
+      : '';
+  return '$sign${change.abs()}%';
 }
 
 /// Caption of the adherence card: the change and the length it compares with.

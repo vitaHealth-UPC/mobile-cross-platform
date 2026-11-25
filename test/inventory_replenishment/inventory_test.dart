@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:tata/features/inventory_replenishment/application/ports/inventory_repository.dart';
+import 'package:tata/features/inventory_replenishment/application/usecases/correct_latest_receipt.dart';
 import 'package:tata/features/inventory_replenishment/application/usecases/get_inventory.dart';
 import 'package:tata/features/inventory_replenishment/application/usecases/register_initial_inventory.dart';
 import 'package:tata/features/inventory_replenishment/application/usecases/register_replenishment.dart';
@@ -119,6 +120,18 @@ final class FakeInventory implements InventoryRepository {
   }
 
   @override
+  Future<AppResult<Inventory>> correctLatest(
+    String medicationId, {
+    required String batchId,
+    required int quantity,
+    String? lot,
+    int? threshold,
+  }) async {
+    writes.add('correct $batchId $quantity/$threshold');
+    return written ?? AppSuccess(stock(remaining: quantity, low: false));
+  }
+
+  @override
   Future<AppResult<Inventory>> replenish(
     String medicationId, {
     required int quantity,
@@ -142,6 +155,7 @@ InventoryBloc blocFor(FakeInventory fake) => InventoryBloc(
   read: GetInventory(fake),
   registerInitial: RegisterInitialInventory(fake),
   replenish: RegisterReplenishment(fake),
+  correct: CorrectLatestReceipt(fake),
 );
 
 Future<void> settle(InventoryBloc bloc) =>
@@ -453,7 +467,7 @@ void main() {
           home: BlocProvider.value(
             value: bloc,
             child: InventoryScreen(
-              medicationLabel: 'Losartán · 50 mg',
+              medicationLabel: 'Losartán 50 mg',
               personName: 'Rosa Quispe',
               onSessionInvalidated: onSessionInvalidated ?? () {},
             ),
@@ -490,7 +504,7 @@ void main() {
             .label,
         'Alcanza para 5 días',
       );
-      expect(find.text('Última reposición'), findsNothing);
+      expect(find.text('Reposición'), findsNothing);
       semantics.dispose();
     });
 
@@ -522,8 +536,13 @@ void main() {
       expect(find.text('35 unidades restantes'), findsOneWidget);
       expect(find.text('Stock disponible'), findsOneWidget);
       expect(find.text('Reposición registrada.'), findsOneWidget);
-      expect(find.text('Última reposición'), findsOneWidget);
-      expect(find.text('30 unidades, Lote 2026-09'), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.text('Lote 2026-09'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.text('Reposición'), findsOneWidget);
+      expect(find.text('+30 unidades'), findsNWidgets(2));
       final fields = tester.widgetList<TextField>(find.byType(TextField));
       expect(fields.every((field) => field.controller!.text.isEmpty), isTrue);
     });

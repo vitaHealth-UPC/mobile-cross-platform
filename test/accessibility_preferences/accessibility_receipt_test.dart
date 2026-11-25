@@ -59,7 +59,13 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Preferencia guardada'), findsNothing);
       final toggle = find.widgetWithText(SwitchListTile, 'Reducir movimiento');
-      await tester.ensureVisible(toggle);
+      // The text size slider is taller than the old switch, so the toggle may
+      // start outside the built range of the list.
+      await tester.scrollUntilVisible(
+        toggle,
+        150,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.pumpAndSettle();
       await tester.tap(toggle);
       await tester.pumpAndSettle();

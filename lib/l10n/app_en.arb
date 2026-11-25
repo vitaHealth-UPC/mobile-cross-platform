@@ -69,12 +69,12 @@
   "linkCodeStep": "Code",
   "linkRequestStep": "Request",
   "linkConsentStep": "Consent",
-  "temporaryCode": "Temporary code",
-  "codeNotIssued": "Generate a code to continue",
+  "temporaryCode": "Invitation for your family member",
+  "codeNotIssued": "Create the invitation and share it so your family member can sign in from their phone.",
   "linkConfirmed": "Link confirmed",
   "linkPending": "Awaiting consent",
-  "generateCode": "Generate code",
-  "renewCode": "Renew code",
+  "generateCode": "Create invitation",
+  "renewCode": "Renew invitation",
   "adultConsentTitle": "Older adult consent",
   "caregiverConsentExplanation": "The adult enters the code and decides whether to share their follow-up information.",
   "consentConfirmed": "The adult has authorized this care relationship.",
@@ -103,9 +103,9 @@
       }
     }
   },
-  "haveInvitation": "I have an invitation",
-  "invitationExplanation": "Paste the complete invitation shared by your family member. You will review consent before authorizing access.",
-  "invitationLabel": "Care invitation",
+  "haveInvitation": "I'm the older adult",
+  "invitationExplanation": "Paste the invitation or type the access code your family member shared with you.",
+  "invitationLabel": "Invitation or access code",
   "reviewInvitation": "Review invitation",
   "invalidInvitation": "This invitation is invalid. Ask your family member to copy it again.",
   "expiredInvitation": "This invitation expired or was already used. Request a new one.",
@@ -303,7 +303,7 @@
   "doseConfirming": "Confirming…",
   "doseNotConfirmable": "This dose can no longer be confirmed.",
   "outcomeWellDone": "Well done!",
-  "outcomeConfirmed": "Dose confirmed ♡",
+  "outcomeConfirmed": "Dose confirmed",
   "outcomeLateTitle": "Dose recorded",
   "outcomeLateBody": "We recorded it after its scheduled time.",
   "outcomeAlreadyTitle": "Dose already confirmed",
@@ -695,7 +695,7 @@
   "tmNoNextDose": "No upcoming doses.",
   "tmActiveTab": "Active",
   "tmHistoryTab": "History",
-  "tmNoActiveMedications": "You have no active medications.",
+  "tmNoActiveMedications": "There are no active medications. Register one first.",
   "tmNoHistory": "No medications in history.",
   "tmErrInvalidDosage": "Enter a valid dose (up to 100 characters).",
   "tmErrInvalidFrequency": "Enter a valid frequency (up to 100 characters).",
@@ -1032,7 +1032,7 @@
   "fmNotesLoading": "Loading notes…",
   "fmNotesAuthorYou": "You",
   "fmNotesAuthorOther": "Another caregiver",
-  "fmNotesMeta": "{author} · {date}",
+  "fmNotesMeta": "{author}, {date}",
   "@fmNotesMeta": {
     "placeholders": {
       "author": {
@@ -1047,7 +1047,7 @@
   "fmNotesSharedHistoryBody": "Notes are linked to the person and the caregiver who records them.",
   "fmPersonActive": "Active",
   "fmPersonLinkActive": "Active link",
-  "fmPersonAgeActive": "{age} years old · active link",
+  "fmPersonAgeActive": "{age} years old, active link",
   "@fmPersonAgeActive": {
     "placeholders": {
       "age": {
@@ -1153,8 +1153,12 @@
   "pnRecordedAt": "{day} - {time}",
   "@pnRecordedAt": {
     "placeholders": {
-      "day": {"type": "String"},
-      "time": {"type": "String"}
+      "day": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
     }
   },
   "pnAll": "All",
@@ -1287,7 +1291,7 @@
   "pfNeedHelp": "Need help?",
   "pfHelpSummary": "We help you set up your app.",
   "homeDueTitle": "Time for your dose",
-  "homeDueBody": "{medication} · Confirm it once you have taken it.",
+  "homeDueBody": "{medication}. Confirm it once you have taken it.",
   "homeReinforcedTitle": "Second reminder",
   "homeReinforcedBody": "The dose is still pending. Confirm it when you take it.",
   "planChoiceTitle": "Choose how to start",
@@ -1314,7 +1318,7 @@
   "planChoiceApplyFailed": "Your account is ready. We could not activate the chosen plan; you can change it in Settings.",
   "reminderChannelName": "Dose reminders",
   "reminderChannelDescription": "Alerts at the time of each dose and if it is still pending.",
-  "reminderDueBody": "{medication} · {dose}. Confirm it once you have taken it.",
+  "reminderDueBody": "{medication}, {dose}. Confirm it once you have taken it.",
   "reminderReinforcedBody": "{medication} is still pending. Confirm it when you take it.",
   "lpAge": "{years} years old",
   "lpBirthday": "Birthday: {date}",
@@ -1476,7 +1480,9 @@
   "pfAccessibilityReceipt": "{preference}: your choice is kept for future sign-ins.",
   "@pfAccessibilityReceipt": {
     "placeholders": {
-      "preference": { "type": "String" }
+      "preference": {
+        "type": "String"
+      }
     }
   },
   "pfContrastActive": "High contrast enabled",
@@ -1555,5 +1561,269 @@
   "tmDeleteMedicationTitle": "Delete medication?",
   "tmDeleteMedicationBody": "This permanently removes the medication from the list and pauses associated active treatments. History is retained. It cannot be reactivated.",
   "tmMedicationDeleted": "Medication deleted.",
-  "tmMedicationUnavailableHistory": "The medication is no longer available. You can still view this treatment’s regimen and history."
+  "tmMedicationUnavailableHistory": "The medication is no longer available. You can still view this treatment’s regimen and history.",
+  "invNewReplenishmentTitle": "New replenishment",
+  "invCorrectLatest": "Correct last replenishment",
+  "invCorrectInitial": "Correct initial stock",
+  "invCorrectHint": "You can correct it only once, before an intake is recorded.",
+  "invCorrectQuantity": "Correct quantity",
+  "invCorrected": "Quantity corrected.",
+  "invErrNotCorrectable": "That receipt can no longer be corrected: an intake or a later replenishment was recorded.",
+  "invHistoryTitle": "Activity",
+  "invReceiptInitial": "Initial stock",
+  "invReceiptReplenishment": "Replenishment",
+  "invIntakesConsumed": "Confirmed intakes",
+  "invUnitsAdded": "{count, plural, =1{+1 unit} other{+{count} units}}",
+  "@invUnitsAdded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "invUnitsTaken": "{count, plural, =1{−1 unit} other{−{count} units}}",
+  "@invUnitsTaken": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "invInitialAtRegistration": "Initial stock (optional)",
+  "invInitialAtRegistrationHint": "Record how many units there are now and when to warn. You can also do it later from Inventory.",
+  "invSaveCorrection": "Save correction",
+  "tmFrequencyEveryNHours": "Every {hours} hours",
+  "@tmFrequencyEveryNHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "tmFrequencyOtherInterval": "Other interval",
+  "tmFrequencyIntervalTitle": "Every how many hours?",
+  "tmStartTime": "Start time",
+  "tmDoseTime": "Dose time",
+  "tmStartTimeHint": "Choose the first dose of the day; the others are calculated for you.",
+  "tmDosesPerDay": "{count, plural, =1{1 dose a day} other{{count} doses a day}}",
+  "@tmDosesPerDay": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tmDoseSelect": "Choose the dose",
+  "tmDoseCustom": "Custom dose",
+  "tmDoseAmount": "Amount",
+  "tmDoseUnit": "Form",
+  "tmDoseDecrease": "Remove half a unit",
+  "tmDoseIncrease": "Add half a unit",
+  "tmUnitTablet": "{count, plural, =1{tablet} other{tablets}}",
+  "@tmUnitTablet": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tmUnitCapsule": "{count, plural, =1{capsule} other{capsules}}",
+  "@tmUnitCapsule": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tmUnitDrop": "{count, plural, =1{drop} other{drops}}",
+  "@tmUnitDrop": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tmUnitMl": "ml",
+  "tmUnitSachet": "{count, plural, =1{sachet} other{sachets}}",
+  "@tmUnitSachet": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tmUnitPuff": "{count, plural, =1{puff} other{puffs}}",
+  "@tmUnitPuff": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tmUnitApply": "Use this dose",
+  "tmMealsLabel": "With meals (optional)",
+  "tmMealsSelect": "Timing with meals",
+  "tmMealBefore": "Before",
+  "tmMealDuring": "With",
+  "tmMealAfter": "After",
+  "tmMealBreakfast": "Breakfast",
+  "tmMealLunch": "Lunch",
+  "tmMealDinner": "Dinner",
+  "tmMealBreakfastPhrase": "breakfast",
+  "tmMealLunchPhrase": "lunch",
+  "tmMealDinnerPhrase": "dinner",
+  "tmMealAnd": "and",
+  "tmMealsClear": "Not tied to meals",
+  "tmMealsApply": "Apply",
+  "tmExtraInstructions": "Additional instructions (optional)",
+  "tmTimesSummary": "Times: {times}",
+  "@tmTimesSummary": {
+    "placeholders": {
+      "times": {
+        "type": "String"
+      }
+    }
+  },
+  "tmMedicationsLabel": "Medications",
+  "tmAddMedicationToTreatment": "Add medication",
+  "tmChooseMedications": "Choose the medications",
+  "tmChooseMedicationsHint": "A treatment can have one or more medications, each with its own regimen.",
+  "tmMedicationsDone": "Done",
+  "tmErrMedicationRequired": "Add at least one medication to the treatment.",
+  "tmRemoveFromTreatment": "Remove from treatment",
+  "tmMedicationCount": "{count, plural, =1{1 medication} other{{count} medications}}",
+  "@tmMedicationCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tmSortLabel": "Sort",
+  "tmSortNameAsc": "Name (A to Z)",
+  "tmSortNameDesc": "Name (Z to A)",
+  "tmSortNewest": "Recently added",
+  "tmSortOldest": "Added first",
+  "tmSortStockLow": "Lowest stock",
+  "tmSortStockHigh": "Highest stock",
+  "tmSearchMedications": "Search medication",
+  "tmNoSearchResults": "No medication matches that name.",
+  "tmMoreActions": "More actions",
+  "tmStockUnits": "{count, plural, =1{1 unit} other{{count} units}}",
+  "@tmStockUnits": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tmNoStock": "No stock recorded",
+  "tmStockNotSaved": "The medication was saved, but not its initial stock. Add it from Inventory.",
+  "invitationValidUntil": "Expires at {time}. Your family member pastes it in “I'm the older adult”.",
+  "@invitationValidUntil": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationExpired": "The invitation expired. Renew it to share a new one.",
+  "adultEntryButton": "I'm the older adult: sign in with my code",
+  "accessCodeTitle": "Access code",
+  "accessCodeNew": "New access code",
+  "accessCodeExplanation": "Use it if {name} changed phones or reinstalled the app. They type it in “I'm the older adult”; if they already have a PIN we will ask for it. It works once and expires at {time}.",
+  "@accessCodeExplanation": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "accessCodeCopy": "Copy code",
+  "accessCodeCopied": "Code copied.",
+  "accessCodeFailed": "We couldn't create the code. Try again.",
+  "accessCodeInvalid": "That code doesn't exist or was already used. Ask your family member for a new one.",
+  "accessCodeExpired": "That code expired or was already used. Ask your family member for a new one.",
+  "accessCodeEnterPin": "Hi, {name}. Enter your PIN to continue.",
+  "@accessCodeEnterPin": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "adultStatusSignedIn": "Signed in on their phone",
+  "adultStatusSignedOut": "Not signed in",
+  "adultStatusSignedOutHint": "Create an access code so they can sign in again.",
+  "removeFamilyMember": "Stop caring",
+  "removeFamilyTitle": "Stop caring for {name}?",
+  "@removeFamilyTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "removeFamilyBody": "You will stop seeing their doses, alerts and notes. Their history is kept and other caregivers keep their access. To care for them again you will need a new invitation.",
+  "removeFamilyConfirm": "Stop caring",
+  "removeFamilyDone": "They are no longer in your family list.",
+  "removeFamilyFailed": "We couldn't complete the change. Try again.",
+  "familyMemberActions": "Options for {name}",
+  "@familyMemberActions": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "consentManageSignOutHint": "Signing out only leaves this phone: your family member will see you as “Not signed in” and care continues. Withdrawing consent ends care.",
+  "coCaregiverTitle": "Another caregiver",
+  "coCaregiverNew": "Invite another caregiver",
+  "coCaregiverExplanation": "Share it with the person who will also care for {name}. They enter it in “Your family” and {name} must accept them. It works once and expires at {time}.",
+  "@coCaregiverExplanation": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "coCaregiverIntro": "Several people can care for {name}. Each one needs their approval.",
+  "@coCaregiverIntro": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "joinCaregiverButton": "I have a code from another caregiver",
+  "joinCaregiverTitle": "Care for an already registered relative",
+  "joinCaregiverHint": "Type the code the other caregiver shared. Your relative must accept you before you see their information.",
+  "joinCaregiverLabel": "Caregiver code",
+  "joinCaregiverSend": "Send request",
+  "joinCaregiverSent": "Request sent. They will appear in your family once they accept.",
+  "joinCaregiverFailed": "That code is invalid, expired or you already care for this person.",
+  "caregiverRequestsTitle": "Care requests",
+  "caregiverRequestBody": "{name} wants to help with your medications and see your follow-up.",
+  "@caregiverRequestBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "caregiverRequestUnknown": "Another relative",
+  "caregiverRequestAccept": "Accept",
+  "caregiverRequestReject": "Decline",
+  "caregiverRequestAccepted": "Done, they now also care for you.",
+  "caregiverRequestRejected": "Request declined.",
+  "removeAccount": "Delete my account",
+  "removeAccountTitle": "Delete your account?",
+  "removeAccountBody": "No relative will be able to see your doses or information and your PIN will be deleted. To use Tata again you will need a new invitation.",
+  "removeAccountConfirm": "Delete account"
 }

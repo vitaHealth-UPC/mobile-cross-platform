@@ -10,11 +10,13 @@ import 'package:tata/features/treatment_management/application/usecases/set_remi
 import 'package:tata/features/treatment_management/application/usecases/set_schedule_instructions.dart';
 import 'package:tata/features/treatment_management/domain/value_objects/treatment_status.dart';
 import 'package:tata/features/treatment_management/presentation/bloc/treatment_setup/treatment_setup_bloc.dart';
+import 'package:tata/features/treatment_management/presentation/bloc/treatment_setup/treatment_setup_state.dart';
 import 'package:tata/features/treatment_management/presentation/screens/treatment_setup_screen.dart';
 import 'package:tata/l10n/generated/app_localizations.dart';
 import 'package:tata/shared/presentation/theme/tata_theme.dart';
 
 import '../support/fake_treatment_backend.dart';
+import '../support/regimen_input.dart';
 import '../support/visual_capture.dart';
 import 'treatment_blocs_test.dart' show FakeReader;
 
@@ -44,10 +46,9 @@ void main() {
             configure: ConfigureTreatment(backend),
             changeStatus: ChangeTreatmentStatus(backend),
             olderAdultId: 'adult-A',
-            medicationId: 'med-1',
+            medications: [SetupMedication('med-1', 'Metformina 500 mg')],
           ),
           child: TreatmentSetupScreen(
-            medicationLabel: 'Metformina · 500 mg',
             onFinished: () => finished = true,
             onSessionInvalidated: () {},
           ),
@@ -71,42 +72,18 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(ElevatedButton, 'Continuar'));
     await tester.pumpAndSettle();
-    expect(backend.createCalls, 1);
+    // Drafts are created only when the treatment is activated.
+    expect(backend.createCalls, 0);
 
-    // Step 2.
-    await tester.enterText(
-      find.byKey(const Key('treatment-dose')),
-      '1 tableta',
-    );
-    tester
-            .widget<TextFormField>(find.byKey(const Key('treatment-frequency')))
-            .controller!
-            .text =
-        'cada 12 horas';
-    await tester.pump();
-    // The same Pauta page validates dosage, frequency and times.
-    tester
-            .widget<TextFormField>(find.byKey(const Key('treatment-times')))
-            .controller!
-            .text =
-        '8am';
-    await tester.pump();
+    // Step 2: the Pauta is refused while dose and frequency are missing.
     await tester.ensureVisible(
       find.widgetWithText(ElevatedButton, 'Continuar'),
     );
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(ElevatedButton, 'Continuar'));
     await tester.pumpAndSettle();
-    expect(
-      find.text('Usa horarios en formato HH:mm, por ejemplo 08:00.'),
-      findsOneWidget,
-    );
-    tester
-            .widget<TextFormField>(find.byKey(const Key('treatment-times')))
-            .controller!
-            .text =
-        '20:00, 8:00';
-    await tester.pump();
+    expect(find.text('Completa este campo.'), findsOneWidget);
+    await fillRegimen(tester);
     await tester.ensureVisible(
       find.widgetWithText(ElevatedButton, 'Continuar'),
     );
@@ -134,6 +111,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(backend.stored!.status, TreatmentStatus.active);
+    expect(backend.createCalls, 1);
     expect(finished, isTrue);
     expect(tester.takeException(), isNull);
   });

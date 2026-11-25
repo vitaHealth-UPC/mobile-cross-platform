@@ -44,6 +44,10 @@ void main() {
       final client = ApiClient(
         baseUrl: Uri.parse('https://example.com/'),
         client: MockClient((request) async {
+          // Opening the screen also checks for other caregivers' requests.
+          if (request.url.path == '/api/v1/care-links/caregiver-requests') {
+            return http.Response('[]', 200);
+          }
           requests++;
           expect(request.method, 'DELETE');
           expect(request.url.path, '/api/v1/care-links/link-A/consent');

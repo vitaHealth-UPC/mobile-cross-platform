@@ -20,7 +20,19 @@ class CaregiverProfilesScreen extends StatefulWidget {
     this.errorText,
     this.onOpenProfile,
     this.onOpenSettings,
+    this.onRemove,
+    this.notice,
+    this.onJoin,
   });
+
+  /// Sends another caregiver's code to care for an already registered adult.
+  final ValueChanged<String>? onJoin;
+
+  /// Ends the caregiver's link with a person, after confirmation; null hides it.
+  final ValueChanged<CaregiverLinkSummary>? onRemove;
+
+  /// Confirmation of the last change, shown in the list.
+  final String? notice;
 
   /// Opens the caregiver's own settings; null hides the entry.
   final VoidCallback? onOpenSettings;
@@ -42,10 +54,15 @@ class CaregiverProfilesScreen extends StatefulWidget {
 /// white card, the initials avatar (never a mockup photo) and the green status
 /// pill. It is actionable only when the host offers something to open.
 class _ProfileCard extends StatelessWidget {
-  const _ProfileCard({required this.profile, required this.onOpen});
+  const _ProfileCard({
+    required this.profile,
+    required this.onOpen,
+    this.onRemove,
+  });
 
   final CaregiverLinkSummary profile;
   final VoidCallback? onOpen;
+  final VoidCallback? onRemove;
 
   @override
   Widget build(BuildContext context) {
@@ -110,9 +127,56 @@ class _ProfileCard extends StatelessWidget {
                             ),
                           ),
                         ),
+                        // Whether the adult is actually using the app, not
+                        // only that the link was accepted once.
+                        if (profile.adultSignedIn case final signedIn?) ...[
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.circle,
+                                size: 9,
+                                color: signedIn
+                                    ? const Color(0xFF3D754F)
+                                    : TataColors.muted,
+                              ),
+                              const SizedBox(width: 6),
+                              Flexible(
+                                child: Text(
+                                  signedIn
+                                      ? text.adultStatusSignedIn
+                                      : text.adultStatusSignedOut,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: TataColors.muted,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ],
                     ),
                   ),
+                  if (onRemove != null)
+                    PopupMenuButton<String>(
+                      key: Key('family-actions-${profile.id}'),
+                      tooltip: text.familyMemberActions(profile.fullName),
+                      icon: const Icon(
+                        Icons.more_vert,
+                        color: TataColors.deepNavy,
+                      ),
+                      onSelected: (_) => onRemove!(),
+                      itemBuilder: (_) => [
+                        PopupMenuItem(
+                          value: 'remove',
+                          child: Text(
+                            text.removeFamilyMember,
+                            style: const TextStyle(color: TataColors.errorText),
+                          ),
+                        ),
+                      ],
+                    ),
                   if (onOpen != null)
                     const Icon(Icons.chevron_right, color: TataColors.deepNavy),
                 ],
@@ -127,6 +191,42 @@ class _ProfileCard extends StatelessWidget {
 
 /// Owns transient editable input for one registration attempt.
 class _CaregiverProfilesScreenState extends State<CaregiverProfilesScreen> {
+  Future<void> _join() async {
+    final code = await showDialog<String>(
+      context: context,
+      builder: (_) => const _JoinDialog(),
+    );
+    if (code != null && code.trim().isNotEmpty && mounted) {
+      widget.onJoin?.call(code);
+    }
+  }
+
+  Future<void> _confirmRemove(CaregiverLinkSummary profile) async {
+    final text = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialog) => AlertDialog(
+        title: Text(text.removeFamilyTitle(profile.fullName)),
+        content: Text(text.removeFamilyBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialog, false),
+            child: Text(text.tmCancel),
+          ),
+          TextButton(
+            key: const Key('confirm-remove-family'),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(dialog).colorScheme.error,
+            ),
+            onPressed: () => Navigator.pop(dialog, true),
+            child: Text(text.removeFamilyConfirm),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && mounted) widget.onRemove?.call(profile);
+  }
+
   final _name = TextEditingController();
   final _form = GlobalKey<FormState>();
   DateTime? _birthDate;
@@ -157,6 +257,32 @@ class _CaregiverProfilesScreenState extends State<CaregiverProfilesScreen> {
                     style: TataTypography.subtitle,
                   ),
                   const SizedBox(height: 20),
+                  if (widget.notice case final notice?) ...[
+                    Semantics(
+                      liveRegion: true,
+                      child: Container(
+                        key: const Key('family-notice'),
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: TataColors.mint,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Text(
+                          notice,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF3A7B56),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                  ],
                   if (widget.links.isEmpty && !widget.loading)
                     Text(text.noConfirmedProfiles),
                   for (final profile in widget.links)
@@ -167,12 +293,22 @@ class _CaregiverProfilesScreenState extends State<CaregiverProfilesScreen> {
                         onOpen: widget.onOpenProfile == null
                             ? null
                             : () => widget.onOpenProfile!(profile),
+                        onRemove: widget.onRemove == null || widget.loading
+                            ? null
+                            : () => _confirmRemove(profile),
                       ),
                     ),
                   TextButton(
                     onPressed: widget.loading ? null : widget.onRefresh,
                     child: Text(text.refreshProfiles),
                   ),
+                  if (widget.onJoin != null)
+                    OutlinedButton.icon(
+                      key: const Key('join-caregiver'),
+                      onPressed: widget.loading ? null : _join,
+                      icon: const Icon(Icons.group_add_outlined),
+                      label: Text(text.joinCaregiverButton),
+                    ),
                   const SizedBox(height: 24),
                   Text(
                     text.registerFamilyMember,
@@ -280,6 +416,60 @@ class _CaregiverProfilesScreenState extends State<CaregiverProfilesScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Owns the code field so its controller outlives the closing animation.
+class _JoinDialog extends StatefulWidget {
+  const _JoinDialog();
+  @override
+  State<_JoinDialog> createState() => _JoinDialogState();
+}
+
+class _JoinDialogState extends State<_JoinDialog> {
+  final _code = TextEditingController();
+
+  @override
+  void dispose() {
+    _code.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final text = AppLocalizations.of(context);
+    return AlertDialog(
+      title: Text(text.joinCaregiverTitle),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            text.joinCaregiverHint,
+            style: const TextStyle(fontSize: 13, color: TataColors.muted),
+          ),
+          const SizedBox(height: 14),
+          TextField(
+            key: const Key('join-caregiver-code'),
+            controller: _code,
+            autofocus: true,
+            textCapitalization: TextCapitalization.characters,
+            decoration: InputDecoration(labelText: text.joinCaregiverLabel),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(text.tmCancel),
+        ),
+        TextButton(
+          key: const Key('send-join-caregiver'),
+          onPressed: () => Navigator.of(context).pop(_code.text),
+          child: Text(text.joinCaregiverSend),
+        ),
+      ],
     );
   }
 }

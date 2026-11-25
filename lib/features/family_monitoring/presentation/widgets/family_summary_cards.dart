@@ -365,11 +365,18 @@ class FamilySummaryCards extends StatelessWidget {
             ],
           ),
           if (onAddMedication != null) ...[
-            const SizedBox(height: 16),
-            TextButton(
-              onPressed: onAddMedication,
-              child: Text(text.fmAddMedication),
+            const SizedBox(height: 18),
+            // Primary task of the caregiver home: a real filled button, not a link.
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                key: const Key('summary-add-medication'),
+                onPressed: onAddMedication,
+                icon: const Icon(Icons.add),
+                label: Text(text.fmAddMedication),
+              ),
             ),
+            const SizedBox(height: 4),
           ],
           if (onLinkAnother != null)
             TextButton(

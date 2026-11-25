@@ -166,7 +166,7 @@ class DoseOutcomeScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '${intakeDay(context, recorded, now)} · '
+                            '${intakeDay(context, recorded, now)}, '
                             '${intake.medicationName}',
                             style: const TextStyle(
                               fontSize: 13,

@@ -84,7 +84,6 @@ void main() {
         home: BlocProvider(
           create: (_) => setupBloc(backend),
           child: TreatmentSetupScreen(
-            medicationLabel: 'Losartán 50 mg',
             initialFrequency: 'Cada 12 horas',
             initialInstructions: 'Con el desayuno\nPreparar agua',
             onFinished: () {},
@@ -103,24 +102,22 @@ void main() {
     }
 
     await advance();
+    InputDecorator picker(String key) => tester.widget<InputDecorator>(
+      find.descendant(
+        of: find.byKey(Key(key)),
+        matching: find.byType(InputDecorator),
+      ),
+    );
+    // The dose is never inferred; the carried frequency stays editable.
+    expect(picker('treatment-dose').isEmpty, isTrue);
     expect(
-      tester
-          .widget<TextFormField>(find.byKey(const Key('treatment-dose')))
-          .controller!
-          .text,
-      isEmpty,
+      find.descendant(
+        of: find.byKey(const Key('treatment-frequency')),
+        matching: find.text('Cada 12 horas'),
+      ),
+      findsOneWidget,
     );
-    expect(
-      tester
-          .widget<TextFormField>(find.byKey(const Key('treatment-frequency')))
-          .controller!
-          .text,
-      'Cada 12 horas',
-    );
-    await tester.enterText(
-      find.byKey(const Key('treatment-dose')),
-      '1 comprimido',
-    );
+    expect(picker('treatment-times').isEmpty, isTrue);
     expect(
       tester
           .widget<TextFormField>(
@@ -129,13 +126,6 @@ void main() {
           .controller!
           .text,
       'Con el desayuno\nPreparar agua',
-    );
-    expect(
-      tester
-          .widget<TextFormField>(find.byKey(const Key('treatment-times')))
-          .controller!
-          .text,
-      isEmpty,
     );
     expect(backend.configureCalls, 0);
   });

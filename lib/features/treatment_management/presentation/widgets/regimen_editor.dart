@@ -28,7 +28,7 @@ class _RegimenEditorState extends State<RegimenEditor> {
     final detail = widget.detail;
     dose = TextEditingController(text: detail.dose);
     frequency = TextEditingController(text: detail.frequency);
-    times = TextEditingController(text: detail.scheduledTimes.join(', '));
+    times = TextEditingController(text: detail.scheduledTimes.join(','));
     instructions = TextEditingController(text: detail.instructions);
     lead = TextEditingController(
       text: (detail.reminderLeadMinutes ?? 0).toString(),
@@ -70,8 +70,6 @@ class _RegimenEditorState extends State<RegimenEditor> {
   @override
   Widget build(BuildContext context) {
     final text = AppLocalizations.of(context);
-    String? required(String? value) =>
-        value == null || value.trim().isEmpty ? text.tmRequiredField : null;
     return AlertDialog(
       title: Text(text.tmEditRegimen, style: treatmentDialogTitle(context)),
       content: SingleChildScrollView(
@@ -80,65 +78,13 @@ class _RegimenEditorState extends State<RegimenEditor> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextFormField(
-                key: const Key('edit-dose'),
-                controller: dose,
-                style: treatmentFieldStyle(context),
-                maxLength: 100,
-                autovalidateMode: AutovalidateMode.onUserInteraction,
-                decoration: InputDecoration(
-                  labelText: text.tmDoseShort,
-                  hintText: text.tmDose,
-                  counterText: '',
-                  suffixIcon: prescriptionOptions(
-                    tooltip: text.tmDoseOptions,
-                    options: [
-                      text.tmDoseTablet,
-                      text.tmDoseHalfTablet,
-                      text.tmDoseCapsule,
-                      text.tmDoseTwoTablets,
-                    ],
-                    controller: dose,
-                  ),
-                ),
-                validator: required,
-              ),
-              const SizedBox(height: 18),
-              FrequencyField(
-                fieldKey: const Key('edit-frequency'),
-                controller: frequency,
-              ),
-              const SizedBox(height: 18),
-              ValueListenableBuilder<TextEditingValue>(
-                valueListenable: frequency,
-                builder: (_, _, _) => ScheduleTimeField(
-                  fieldKey: const Key('edit-times'),
-                  controller: times,
-                  frequency: frequency,
-                ),
-              ),
-              const SizedBox(height: 18),
-              TextFormField(
-                key: const Key('edit-instructions'),
-                controller: instructions,
-                style: treatmentFieldStyle(context),
-                maxLines: 3,
-                maxLength: 500,
-                decoration: InputDecoration(
-                  labelText: text.tmInstructionsShort,
-                  hintText: text.tmInstructions,
-                  suffixIcon: prescriptionOptions(
-                    tooltip: text.tmInstructionOptions,
-                    options: [
-                      text.tmInstructionBeforeMeal,
-                      text.tmInstructionWithMeal,
-                      text.tmInstructionAfterMeal,
-                      text.tmInstructionWithWater,
-                    ],
-                    controller: instructions,
-                    append: true,
-                  ),
-                ),
+              RegimenFields(
+                keyPrefix: 'edit',
+                dose: dose,
+                frequency: frequency,
+                times: times,
+                instructions: instructions,
+                timeZone: widget.detail.recurrenceZone,
               ),
               const SizedBox(height: 18),
               TextFormField(

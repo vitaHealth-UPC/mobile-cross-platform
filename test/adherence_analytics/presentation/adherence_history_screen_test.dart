@@ -67,8 +67,8 @@ void main() {
     expect(find.text('92%'), findsWidgets);
     expect(find.text('86%'), findsOneWidget);
     expect(find.text('6, 4'), findsOneWidget);
-    expect(find.text('↑ 8% vs. 30 días previos'), findsOneWidget);
-    expect(find.text('↑ 12%'), findsOneWidget);
+    expect(find.text('+8% vs. 30 días previos'), findsOneWidget);
+    expect(find.text('+12%'), findsOneWidget);
     expect(find.text('últ. 30 días'), findsOneWidget);
     expect(find.text('Evolución de adherencia'), findsOneWidget);
     expect(find.text('Patrón detectado'), findsOneWidget);
@@ -346,7 +346,7 @@ void main() {
 
     expect(find.text('History & insights'), findsOneWidget);
     expect(find.text('Last 30 days ⌄'), findsOneWidget);
-    expect(find.text('↑ 8% vs. previous 30 days'), findsOneWidget);
+    expect(find.text('+8% vs. previous 30 days'), findsOneWidget);
     expect(
       find.text('4 omissions and 6 late intakes concentrate in the afternoon.'),
       findsOneWidget,

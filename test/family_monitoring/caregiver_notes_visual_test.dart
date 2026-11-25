@@ -74,7 +74,7 @@ void main() {
       (tester) async {
         await _show(tester, FakeNotes(list: _notes()), _People(), scale: scale);
         expect(find.text('Rosa Vargas'), findsOneWidget);
-        expect(find.text('68 años · vínculo activo'), findsOneWidget);
+        expect(find.text('68 años, vínculo activo'), findsOneWidget);
         expect(find.text('Salida de la tarde'), findsOneWidget);
         expect(find.text('Hoy - Tú'), findsOneWidget);
         await captureWidget(

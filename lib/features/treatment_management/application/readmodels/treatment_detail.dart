@@ -18,7 +18,8 @@ final class TreatmentDetail {
     this.recurrenceZone,
     this.recurrenceMode,
     this.recurrenceAnchor,
-  });
+    String? planId,
+  }) : planId = planId ?? id;
 
   final String id;
   final String olderAdultId;
@@ -38,6 +39,9 @@ final class TreatmentDetail {
   final String? recurrenceZone;
   final String? recurrenceMode;
   final DateTime? recurrenceAnchor;
+
+  /// Plan shared with the other medications of the same treatment.
+  final String planId;
 
   bool get isDraft => status == TreatmentStatus.draft;
 

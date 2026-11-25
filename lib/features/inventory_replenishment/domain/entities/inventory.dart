@@ -34,7 +34,10 @@ final class Inventory {
     required this.lowStock,
     required List<InventoryBatch> batches,
     this.daysRemaining,
-  }) : batches = List.unmodifiable(batches) {
+    this.latestReceiptCorrectable = false,
+    List<DateTime> recentConsumptions = const [],
+  }) : batches = List.unmodifiable(batches),
+       recentConsumptions = List.unmodifiable(recentConsumptions) {
     if (id.trim().isEmpty ||
         medicationId.trim().isEmpty ||
         remainingStock < 0 ||
@@ -56,6 +59,19 @@ final class Inventory {
 
   /// Whole days of coverage, or null when the schedule gives no reliable rate.
   final int? daysRemaining;
+
+  /// The server still accepts one correction of [newestReceipt]: nothing was
+  /// consumed or received after it.
+  final bool latestReceiptCorrectable;
+
+  /// Newest one-unit decrements from confirmed intakes, most recent first.
+  final List<DateTime> recentConsumptions;
+
+  /// The receipt the server lets the caregiver correct: the last one added.
+  InventoryBatch get newestReceipt => batches.last;
+
+  /// True while the stock only holds its initial receipt.
+  bool get onlyInitialStock => batches.length == 1;
 
   /// The newest receipt after the initial stock. The API does not mark a batch
   /// as initial, so a single batch is never shown as a replenishment.

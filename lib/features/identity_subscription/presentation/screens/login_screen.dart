@@ -177,19 +177,31 @@ class _LoginScreenState extends State<LoginScreen> {
                           ],
                         ),
                       ),
-                      if (widget.onInvitation != null)
-                        Center(
-                          child: TextButton(
-                            onPressed: widget.busy ? null : widget.onInvitation,
-                            child: Text(text.haveInvitation),
-                          ),
+                      // The older adult has their own entry: a real button,
+                      // separate from the caregiver's email sign-in.
+                      if (widget.onPinAccess != null ||
+                          widget.onInvitation != null) ...[
+                        const SizedBox(height: 12),
+                        const Divider(color: TataColors.border),
+                        const SizedBox(height: 12),
+                      ],
+                      if (widget.onPinAccess != null) ...[
+                        OutlinedButton.icon(
+                          key: const Key('login-pin-access'),
+                          onPressed: widget.busy ? null : widget.onPinAccess,
+                          icon: const Icon(Icons.dialpad, size: 20),
+                          label: Text(text.signInWithPin),
                         ),
-                      if (widget.onPinAccess != null)
-                        Center(
-                          child: TextButton.icon(
-                            onPressed: widget.busy ? null : widget.onPinAccess,
-                            icon: const Icon(Icons.dialpad, size: 18),
-                            label: Text(text.signInWithPin),
+                        const SizedBox(height: 10),
+                      ],
+                      if (widget.onInvitation != null)
+                        OutlinedButton.icon(
+                          key: const Key('login-adult-entry'),
+                          onPressed: widget.busy ? null : widget.onInvitation,
+                          icon: const Icon(Icons.elderly, size: 22),
+                          label: Text(
+                            text.adultEntryButton,
+                            textAlign: TextAlign.center,
                           ),
                         ),
                     ],
