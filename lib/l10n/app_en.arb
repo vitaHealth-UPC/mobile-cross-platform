@@ -106,7 +106,7 @@
   "haveInvitation": "I'm the older adult",
   "invitationExplanation": "Paste the invitation or type the access code your family member shared with you.",
   "invitationLabel": "Invitation or access code",
-  "reviewInvitation": "Review invitation",
+  "reviewInvitation": "Sign in",
   "invalidInvitation": "This invitation is invalid. Ask your family member to copy it again.",
   "expiredInvitation": "This invitation expired or was already used. Request a new one.",
   "adultConsentExplanation": "By accepting, you authorize the person who shared this invitation to view your adherence, alerts and information needed for follow-up.",
@@ -649,14 +649,14 @@
   "tmMedicationDeactivated": "Medication deactivated.",
   "tmMedicationReactivated": "Medication reactivated.",
   "tmEdit": "Edit",
-  "tmDeactivate": "Deactivate",
+  "tmDeactivate": "Retire",
   "tmReactivate": "Reactivate",
   "tmInactive": "Inactive",
   "tmCancel": "Cancel",
   "tmSave": "Save",
   "tmRetry": "Retry",
   "tmCreateTreatment": "Create treatment",
-  "tmDeactivateTitle": "Deactivate this medication?",
+  "tmDeactivateTitle": "Retire this medication?",
   "tmDeactivateBody": "It will stop producing new intakes, but its history is kept.",
   "tmRequiredField": "Fill in this field.",
   "tmSetupTitle": "Create treatment",
@@ -698,7 +698,7 @@
   "tmNoActiveMedications": "There are no active medications. Register one first.",
   "tmNoHistory": "No medications in history.",
   "tmErrInvalidDosage": "Enter a valid dose (up to 100 characters).",
-  "tmErrInvalidFrequency": "Enter a valid frequency (up to 100 characters).",
+  "tmErrInvalidFrequency": "Choose the frequency.",
   "tmErrEmptySchedule": "Add at least one time.",
   "tmErrInvalidTime": "Use times in HH:mm format, for example 08:00.",
   "tmErrInstructionsLong": "The instructions exceed 500 characters.",
@@ -790,14 +790,14 @@
       }
     }
   },
-  "tmFollowUpHelp": "Wait from 0 to 1440 minutes. Leave empty to use the default delay.",
+  "tmFollowUpHelp": "If the dose is not confirmed, the family is alerted after this time.",
   "tmTreatmentAdherence": "Adherence for this treatment",
   "tmTreatmentFor": "Treatment for {name}",
   "tmManagementSubtitle": "Manage the regimen while preserving history.",
   "tmActiveMedicationCount": "{count, plural, =1{1 active medication} other{{count} active medications}}",
   "tmHistoryProtected": "History preserved",
   "tmHistoryProtectedBody": "Regimen changes preserve recorded intakes.",
-  "tmDeactivateMedication": "Deactivate medication",
+  "tmDeactivateMedication": "Retire medication",
   "@tmTreatmentFor": {
     "placeholders": {
       "name": {
@@ -1825,5 +1825,14 @@
   "removeAccount": "Delete my account",
   "removeAccountTitle": "Delete your account?",
   "removeAccountBody": "No relative will be able to see your doses or information and your PIN will be deleted. To use Tata again you will need a new invitation.",
-  "removeAccountConfirm": "Delete account"
+  "removeAccountConfirm": "Delete account",
+  "tmFollowUpMinutes": "{minutes, plural, =1{1 minute later} other{{minutes} minutes later}}",
+  "@tmFollowUpMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "adultStartButton": "I'm the older adult"
 }

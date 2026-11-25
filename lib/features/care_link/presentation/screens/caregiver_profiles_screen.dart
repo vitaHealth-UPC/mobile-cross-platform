@@ -298,17 +298,29 @@ class _CaregiverProfilesScreenState extends State<CaregiverProfilesScreen> {
                             : () => _confirmRemove(profile),
                       ),
                     ),
-                  TextButton(
-                    onPressed: widget.loading ? null : widget.onRefresh,
-                    child: Text(text.refreshProfiles),
-                  ),
-                  if (widget.onJoin != null)
-                    OutlinedButton.icon(
-                      key: const Key('join-caregiver'),
-                      onPressed: widget.loading ? null : _join,
-                      icon: const Icon(Icons.group_add_outlined),
-                      label: Text(text.joinCaregiverButton),
+                  // Secondary actions share the cards' left edge and width
+                  // instead of floating as loose links.
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      alignment: Alignment.centerLeft,
                     ),
+                    onPressed: widget.loading ? null : widget.onRefresh,
+                    icon: const Icon(Icons.refresh, size: 18),
+                    label: Text(text.refreshProfiles),
+                  ),
+                  if (widget.onJoin != null) ...[
+                    const SizedBox(height: 4),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        key: const Key('join-caregiver'),
+                        onPressed: widget.loading ? null : _join,
+                        icon: const Icon(Icons.group_add_outlined),
+                        label: Text(text.joinCaregiverButton),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 24),
                   Text(
                     text.registerFamilyMember,
@@ -400,15 +412,27 @@ class _CaregiverProfilesScreenState extends State<CaregiverProfilesScreen> {
                         ),
                       ),
                     ),
+                  const SizedBox(height: 28),
+                  const Divider(),
                   const SizedBox(height: 16),
-                  if (widget.onOpenSettings != null)
-                    TextButton(
-                      onPressed: widget.onOpenSettings,
-                      child: Text(text.pfSettings),
+                  if (widget.onOpenSettings != null) ...[
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: widget.onOpenSettings,
+                        icon: const Icon(Icons.settings_outlined),
+                        label: Text(text.pfSettings),
+                      ),
                     ),
-                  TextButton(
-                    onPressed: widget.loading ? null : widget.onSignOut,
-                    child: Text(text.signOut),
+                    const SizedBox(height: 12),
+                  ],
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: widget.loading ? null : widget.onSignOut,
+                      icon: const Icon(Icons.logout),
+                      label: Text(text.signOut),
+                    ),
                   ),
                 ],
               ),

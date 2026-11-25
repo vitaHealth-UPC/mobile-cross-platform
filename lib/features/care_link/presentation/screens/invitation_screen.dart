@@ -39,7 +39,8 @@ class _InvitationScreenState extends State<InvitationScreen> {
       canPop: !widget.loading,
       child: Scaffold(
         body: SafeArea(
-          child: Center(
+          child: Align(
+            alignment: Alignment.topCenter,
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 440),
               child: SingleChildScrollView(
@@ -47,11 +48,24 @@ class _InvitationScreenState extends State<InvitationScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    IconButton(
+                      tooltip: text.back,
+                      onPressed: widget.loading
+                          ? null
+                          : () => Navigator.of(context).pop(false),
+                      icon: const Icon(Icons.chevron_left, size: 30),
+                    ),
+                    const SizedBox(height: 8),
                     Text(text.haveInvitation, style: TataTypography.heading),
                     const SizedBox(height: 12),
+                    // Larger than the usual subtitle: this screen is read by
+                    // the older adult.
                     Text(
                       text.invitationExplanation,
-                      style: TataTypography.subtitle,
+                      style: TataTypography.subtitle.copyWith(
+                        fontSize: 16,
+                        height: 1.45,
+                      ),
                     ),
                     const SizedBox(height: 28),
                     TextField(
@@ -61,6 +75,8 @@ class _InvitationScreenState extends State<InvitationScreen> {
                       maxLines: 4,
                       autocorrect: false,
                       enableSuggestions: false,
+                      style: const TextStyle(fontSize: 20, letterSpacing: 1),
+                      textCapitalization: TextCapitalization.characters,
                       decoration: InputDecoration(
                         labelText: text.invitationLabel,
                       ),

@@ -248,19 +248,24 @@ class TreatmentDetailScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
+                  // A full-width secondary action aligned with the cards, not
+                  // a loose link; red text marks it as the risky one.
                   if (state.medication?.active == true)
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: TextButton(
-                        key: const Key('deactivate-treatment-medication'),
-                        style: TextButton.styleFrom(
-                          foregroundColor: const Color(0xFFC72E3D),
+                    OutlinedButton.icon(
+                      key: const Key('deactivate-treatment-medication'),
+                      style: treatmentSecondaryStyle(context).copyWith(
+                        foregroundColor: const WidgetStatePropertyAll(
+                          Color(0xFFC72E3D),
                         ),
-                        onPressed: state.busy
-                            ? null
-                            : () => _deactivateMedication(context),
-                        child: Text(text.tmDeactivateMedication),
+                        minimumSize: const WidgetStatePropertyAll(
+                          Size(double.infinity, 48),
+                        ),
                       ),
+                      onPressed: state.busy
+                          ? null
+                          : () => _deactivateMedication(context),
+                      icon: const Icon(Icons.archive_outlined, size: 20),
+                      label: Text(text.tmDeactivateMedication),
                     ),
                   if (state.errorCode != null)
                     InlineError(treatmentErrorText(text, state.errorCode)!),

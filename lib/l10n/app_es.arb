@@ -106,7 +106,7 @@
   "haveInvitation": "Soy adulto mayor",
   "invitationExplanation": "Pega la invitación o escribe el código de acceso que te compartió tu familiar.",
   "invitationLabel": "Invitación o código de acceso",
-  "reviewInvitation": "Revisar invitación",
+  "reviewInvitation": "Ingresar",
   "invalidInvitation": "La invitación no es válida. Pide a tu familiar que la copie nuevamente.",
   "expiredInvitation": "Esta invitación venció o ya fue utilizada. Solicita una nueva.",
   "adultConsentExplanation": "Al aceptar, autorizas a la persona que te compartió esta invitación a consultar tu adherencia, alertas e información necesaria para tu seguimiento.",
@@ -656,14 +656,14 @@
   "tmMedicationDeactivated": "Medicamento desactivado.",
   "tmMedicationReactivated": "Medicamento reactivado.",
   "tmEdit": "Editar",
-  "tmDeactivate": "Desactivar",
+  "tmDeactivate": "Retirar",
   "tmReactivate": "Reactivar",
   "tmInactive": "Inactivo",
   "tmCancel": "Cancelar",
   "tmSave": "Guardar",
   "tmRetry": "Reintentar",
   "tmCreateTreatment": "Crear tratamiento",
-  "tmDeactivateTitle": "¿Desactivar este medicamento?",
+  "tmDeactivateTitle": "¿Retirar este medicamento?",
   "tmDeactivateBody": "Dejará de generar nuevas tomas, pero su historial se conserva.",
   "tmRequiredField": "Completa este campo.",
   "tmSetupTitle": "Crear tratamiento",
@@ -705,7 +705,7 @@
   "tmNoActiveMedications": "No hay medicamentos activos. Registra uno primero.",
   "tmNoHistory": "No hay medicamentos en el historial.",
   "tmErrInvalidDosage": "Ingresa una dosis válida (hasta 100 caracteres).",
-  "tmErrInvalidFrequency": "Ingresa una frecuencia válida (hasta 100 caracteres).",
+  "tmErrInvalidFrequency": "Selecciona la frecuencia.",
   "tmErrEmptySchedule": "Agrega al menos un horario.",
   "tmErrInvalidTime": "Usa horarios en formato HH:mm, por ejemplo 08:00.",
   "tmErrInstructionsLong": "Las indicaciones superan los 500 caracteres.",
@@ -797,14 +797,14 @@
       }
     }
   },
-  "tmFollowUpHelp": "Espera de 0 a 1440 minutos. Si lo dejas vacío, se usa la espera predeterminada.",
+  "tmFollowUpHelp": "Si la toma no se confirma, avisaremos a la familia después de este tiempo.",
   "tmTreatmentAdherence": "Adherencia de este tratamiento",
   "tmTreatmentFor": "Tratamiento de {name}",
   "tmManagementSubtitle": "Gestiona la pauta sin perder historial.",
   "tmActiveMedicationCount": "{count, plural, =1{1 medicamento activo} other{{count} medicamentos activos}}",
   "tmHistoryProtected": "Historial protegido",
   "tmHistoryProtectedBody": "Los cambios de pauta conservan las tomas registradas.",
-  "tmDeactivateMedication": "Desactivar medicamento",
+  "tmDeactivateMedication": "Retirar medicamento",
   "@tmTreatmentFor": {
     "placeholders": {
       "name": {
@@ -1999,5 +1999,14 @@
   "removeAccount": "Eliminar mi cuenta",
   "removeAccountTitle": "¿Eliminar tu cuenta?",
   "removeAccountBody": "Ningún familiar podrá ver tus tomas ni tu información y se borrará tu PIN. Para volver a usar Tata necesitarás una nueva invitación.",
-  "removeAccountConfirm": "Eliminar cuenta"
+  "removeAccountConfirm": "Eliminar cuenta",
+  "tmFollowUpMinutes": "{minutes, plural, =1{1 minuto después} other{{minutes} minutos después}}",
+  "@tmFollowUpMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "adultStartButton": "Soy adulto mayor"
 }

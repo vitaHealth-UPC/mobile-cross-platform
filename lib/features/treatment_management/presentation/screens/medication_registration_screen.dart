@@ -276,40 +276,31 @@ class _MedicationRegistrationScreenState
                             ),
                           ),
                           const SizedBox(height: 16),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: _field(
-                                  fieldKey: 'medication-initial-quantity',
-                                  controller: _quantity,
-                                  label: text.invInitialQuantity,
-                                  hint: text.invQuantityHint,
-                                  locked: locked,
-                                  maxLength: 6,
-                                  numeric: true,
-                                  validator: (v) {
-                                    final raw = v?.trim() ?? '';
-                                    return raw.isEmpty ||
-                                            (int.tryParse(raw) ?? 0) > 0
-                                        ? null
-                                        : text.invInvalidQuantity;
-                                  },
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _field(
-                                  fieldKey: 'medication-initial-threshold',
-                                  controller: _threshold,
-                                  label: text.invThreshold,
-                                  hint: text.invThresholdHint,
-                                  locked: locked,
-                                  maxLength: 6,
-                                  numeric: true,
-                                ),
-                              ),
-                            ],
+                          // Stacked: side by side the threshold label was cut.
+                          _field(
+                            fieldKey: 'medication-initial-quantity',
+                            controller: _quantity,
+                            label: text.invInitialQuantity,
+                            hint: text.invQuantityHint,
+                            locked: locked,
+                            maxLength: 6,
+                            numeric: true,
+                            validator: (v) {
+                              final raw = v?.trim() ?? '';
+                              return raw.isEmpty || (int.tryParse(raw) ?? 0) > 0
+                                  ? null
+                                  : text.invInvalidQuantity;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          _field(
+                            fieldKey: 'medication-initial-threshold',
+                            controller: _threshold,
+                            label: text.invThreshold,
+                            hint: text.invThresholdHint,
+                            locked: locked,
+                            maxLength: 6,
+                            numeric: true,
                           ),
                         ],
                         if (_showMissingFields) ...[

@@ -801,7 +801,12 @@ class _CorrectionDialog extends StatefulWidget {
 }
 
 class _CorrectionDialogState extends State<_CorrectionDialog> {
-  late final _quantity = TextEditingController(text: '${widget.quantity}');
+  // Selected on open, so typing replaces the mistaken amount.
+  late final _quantity = TextEditingController(text: '${widget.quantity}')
+    ..selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: '${widget.quantity}'.length,
+    );
   late final _threshold = TextEditingController(
     text: widget.threshold?.toString() ?? '',
   );
