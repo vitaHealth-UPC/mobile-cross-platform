@@ -25,7 +25,7 @@ class ConsentManagementRoute extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => BlocProvider(
-    create: (_) => createBloc(),
+    create: (_) => createBloc()..add(const CaregiverRequestsRequested()),
     child: BlocConsumer<ConsentBloc, ConsentState>(
       listener: (context, state) {
         if (state.withdrawn) onWithdrawn?.call();
@@ -44,9 +44,19 @@ class ConsentManagementRoute extends StatelessWidget {
           'ACCESS_DENIED' => text.accessDenied,
           _ => text.genericLinkError,
         };
+        final bloc = context.read<ConsentBloc>();
         return ConsentManagementScreen(
           loading: state.loading,
           errorText: error,
+          requests: state.requests,
+          notice: switch (state.decided) {
+            true => text.caregiverRequestAccepted,
+            false => text.caregiverRequestRejected,
+            null => null,
+          },
+          onDecide: (request, accepted) =>
+              bloc.add(CaregiverRequestDecided(request.careLinkId, accepted)),
+          onRemoveAccount: () => bloc.add(const AccountRemovalRequested()),
           onSignOut: onSignOut,
           onWithdraw: () => context.read<ConsentBloc>().add(
             const ConsentWithdrawalRequested(),

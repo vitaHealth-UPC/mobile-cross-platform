@@ -42,41 +42,6 @@ class AccessibilityScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _chooseSize(BuildContext context, TextSizeLevel current) async {
-    final text = AppLocalizations.of(context);
-    final bloc = context.read<AccessibilityBloc>();
-    final selected = await showModalBottomSheet<TextSizeLevel>(
-      context: context,
-      showDragHandle: true,
-      builder: (sheetContext) => RadioGroup<TextSizeLevel>(
-        groupValue: current,
-        onChanged: (value) => Navigator.of(sheetContext).pop(value),
-        child: SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                child: Text(
-                  text.pfTextSize,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ),
-              for (final size in TextSizeLevel.values)
-                RadioListTile<TextSizeLevel>(
-                  title: Text(_sizeLabel(text, size)),
-                  value: size,
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-    if (selected != null && context.mounted) {
-      bloc.add(AccessibilityChanged(TextSizeChange(selected)));
-    }
-  }
-
   @override
   Widget build(
     BuildContext context,
@@ -186,34 +151,21 @@ class AccessibilityScreen extends StatelessWidget {
                 heading(text.pfViewGroup),
                 _Group(
                   children: [
-                    ListTile(
+                    _TextSizeSlider(
                       key: const Key('accessibility-text-size'),
-                      dense: true,
-                      visualDensity: VisualDensity.compact,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                      ),
+                      value: prefs.textSize,
                       leading: ExcludeSemantics(
                         child: icon('text_size', const Color(0xFFF0EBFF)),
                       ),
-                      title: Text(text.pfLargeTextTitle, style: titleStyle),
-                      subtitle: Text(text.pfLargeTextHint, style: hintStyle),
-                      onTap: () => _chooseSize(context, prefs.textSize),
-                      trailing: Switch(
-                        value: prefs.largeTextEnabled,
-                        activeTrackColor: colors.primary,
-                        inactiveThumbColor: normal
-                            ? Colors.white
-                            : colors.onSurfaceVariant,
-                        trackOutlineColor: normal
-                            ? const WidgetStatePropertyAll(Colors.transparent)
-                            : null,
-                        onChanged: (value) => change(
-                          TextSizeChange(
-                            value ? TextSizeLevel.large : TextSizeLevel.medium,
-                          ),
-                        ),
-                      ),
+                      title: text.pfTextSize,
+                      hint: text.pfLargeTextHint,
+                      titleStyle: titleStyle,
+                      hintStyle: hintStyle,
+                      labelOf: (level) => _sizeLabel(text, level),
+                      inactiveTrack: normal
+                          ? const Color(0xFFE8EAF1)
+                          : colors.surfaceContainerHighest,
+                      onChanged: (level) => change(TextSizeChange(level)),
                     ),
                     toggle(
                       title: text.pfHighContrast,
@@ -424,6 +376,116 @@ class _AccessibilityHeader extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Four-step text size slider (the levels the account contract stores). The
+/// preview follows the thumb while dragging; the level is saved on release.
+class _TextSizeSlider extends StatefulWidget {
+  const _TextSizeSlider({
+    super.key,
+    required this.value,
+    required this.leading,
+    required this.title,
+    required this.hint,
+    required this.titleStyle,
+    required this.hintStyle,
+    required this.labelOf,
+    required this.inactiveTrack,
+    required this.onChanged,
+  });
+
+  final TextSizeLevel value;
+  final Widget leading;
+  final String title;
+  final String hint;
+  final TextStyle titleStyle;
+  final TextStyle hintStyle;
+  final String Function(TextSizeLevel level) labelOf;
+  final Color inactiveTrack;
+  final ValueChanged<TextSizeLevel> onChanged;
+
+  @override
+  State<_TextSizeSlider> createState() => _TextSizeSliderState();
+}
+
+class _TextSizeSliderState extends State<_TextSizeSlider> {
+  TextSizeLevel? _dragging;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final shown = _dragging ?? widget.value;
+    final last = TextSizeLevel.values.length - 1;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              widget.leading,
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(widget.title, style: widget.titleStyle),
+                    const SizedBox(height: 2),
+                    Text(widget.hint, style: widget.hintStyle),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                widget.labelOf(shown),
+                style: widget.titleStyle.copyWith(
+                  fontSize: 14,
+                  color: colors.primary,
+                ),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              ExcludeSemantics(
+                child: Text(
+                  'A',
+                  style: widget.titleStyle.copyWith(fontSize: 13),
+                ),
+              ),
+              Expanded(
+                child: Slider(
+                  value: shown.index.toDouble(),
+                  max: last.toDouble(),
+                  divisions: last,
+                  label: widget.labelOf(shown),
+                  semanticFormatterCallback: (value) =>
+                      widget.labelOf(TextSizeLevel.values[value.round()]),
+                  activeColor: colors.primary,
+                  inactiveColor: widget.inactiveTrack,
+                  onChanged: (value) => setState(
+                    () => _dragging = TextSizeLevel.values[value.round()],
+                  ),
+                  onChangeEnd: (value) {
+                    final level = TextSizeLevel.values[value.round()];
+                    setState(() => _dragging = null);
+                    if (level != widget.value) widget.onChanged(level);
+                  },
+                ),
+              ),
+              ExcludeSemantics(
+                child: Text(
+                  'A',
+                  style: widget.titleStyle.copyWith(fontSize: 22),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+        ],
+      ),
     );
   }
 }

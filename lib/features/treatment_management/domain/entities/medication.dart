@@ -21,8 +21,8 @@ final class Medication {
   final String presentation;
   final bool active;
 
-  /// Name and presentation as one label, for example `Losartán · 50 mg`.
-  String get label => '$name · $presentation';
+  /// Name and presentation as one label, for example `Losartán 50 mg`.
+  String get label => '$name $presentation';
 
   @override
   String toString() => 'Medication[clinicalData=REDACTED]';

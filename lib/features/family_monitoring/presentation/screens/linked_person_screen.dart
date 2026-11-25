@@ -34,7 +34,15 @@ class LinkedPersonScreen extends StatelessWidget {
     this.treatment,
     this.now = DateTime.now,
     this.onEdit,
+    this.adultSignedIn,
+    this.access,
   });
+
+  /// Whether the adult is signed in on a device; null keeps the link badge.
+  final bool? adultSignedIn;
+
+  /// Card to give the adult a new sign-in code.
+  final Widget? access;
 
   final String olderAdultName;
 
@@ -174,14 +182,26 @@ class LinkedPersonScreen extends StatelessWidget {
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFE5F3E8),
+                                  color: adultSignedIn == false
+                                      ? const Color(0xFFF1F2F6)
+                                      : const Color(0xFFE5F3E8),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
+                                // "Vinculada" only said the invitation was
+                                // accepted once; show whether the adult is
+                                // actually signed in on their phone.
                                 child: Text(
-                                  text.lpLinked,
-                                  style: const TextStyle(
+                                  switch (adultSignedIn) {
+                                    true => text.adultStatusSignedIn,
+                                    false => text.adultStatusSignedOut,
+                                    null => text.lpLinked,
+                                  },
+                                  key: const Key('person-device-status'),
+                                  style: TextStyle(
                                     fontSize: 12,
-                                    color: Color(0xFF2E6B46),
+                                    color: adultSignedIn == false
+                                        ? _muted
+                                        : const Color(0xFF2E6B46),
                                   ),
                                 ),
                               ),
@@ -226,6 +246,10 @@ class LinkedPersonScreen extends StatelessWidget {
                       onMedications: onOpenMedications,
                       onHistory: onOpenHistory,
                     ),
+                    if (access case final card?) ...[
+                      const SizedBox(height: 16),
+                      card,
+                    ],
                     const SizedBox(height: 16),
                     _LatestNote(
                       state: notes,

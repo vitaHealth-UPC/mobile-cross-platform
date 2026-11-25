@@ -416,12 +416,25 @@ class _PlanCard extends StatelessWidget {
                       for (final capability in PlanCapability.values.where(
                         added.contains,
                       ))
-                        Text(
-                          '✓ ${_capability(text, capability)}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: TataColors.ink,
-                          ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const ExcludeSemantics(
+                              child: Icon(
+                                Icons.check,
+                                size: 14,
+                                color: TataColors.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              _capability(text, capability),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: TataColors.ink,
+                              ),
+                            ),
+                          ],
                         ),
                     ],
                   ),

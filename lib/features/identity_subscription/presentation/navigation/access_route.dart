@@ -251,14 +251,24 @@ class _AccessRouteState extends State<AccessRoute> {
             onInvitation: widget.invitationBuilder == null
                 ? null
                 : () async {
-                    await Navigator.of(context).push<bool>(
+                    final result = await Navigator.of(context).push<Object?>(
                       MaterialPageRoute(builder: widget.invitationBuilder!),
                     );
-                    if (context.mounted) {
-                      context.read<AccessBloc>().add(
-                        const AccessRestoreRequested(),
-                      );
+                    if (!context.mounted) return;
+                    // An access code identified an adult who already has a
+                    // PIN: it is remembered now, so ask for it right away.
+                    if (result == 'pin') {
+                      await _loadRemembered();
+                      if (!context.mounted) return;
+                      if (_remembered case final adult?
+                          when widget.createPinAccessBloc != null) {
+                        await _pinAccess(context, adult);
+                        return;
+                      }
                     }
+                    context.read<AccessBloc>().add(
+                      const AccessRestoreRequested(),
+                    );
                   },
             busy: state.status == AccessStatus.busy,
             errorText: _error(text, state.errorCode),

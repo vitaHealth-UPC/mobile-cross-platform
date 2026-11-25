@@ -17,6 +17,15 @@ abstract final class InventoryMapper {
         lowStock: _bool(body, 'lowStock'),
         daysRemaining: _optionalInt(body, 'daysRemaining'),
         batches: [for (final batch in batches) _batch(batch)],
+        // Optional for servers that predate receipt corrections.
+        latestReceiptCorrectable: body['latestReceiptCorrectable'] == true,
+        recentConsumptions: [
+          for (final instant in switch (body['recentConsumptions']) {
+            final List<Object?> list => list,
+            _ => const <Object?>[],
+          })
+            if (instant is String) DateTime.parse(instant),
+        ],
       );
     } on ArgumentError {
       throw const FormatException('Invalid inventory');

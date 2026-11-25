@@ -24,6 +24,7 @@ final class RemoteInventoryRepository implements InventoryRepository {
     'INVENTORY_ALREADY_EXISTS',
     'CONCURRENT_UPDATE',
     'INVALID_QUANTITY',
+    'RECEIPT_NOT_CORRECTABLE',
   };
 
   @override
@@ -51,6 +52,31 @@ final class RemoteInventoryRepository implements InventoryRepository {
     (inventory) =>
         inventory.replenishmentThreshold == threshold &&
         inventory.batches.any((batch) => batch.quantity == quantity),
+  );
+
+  @override
+  Future<AppResult<Inventory>> correctLatest(
+    String medicationId, {
+    required String batchId,
+    required int quantity,
+    String? lot,
+    int? threshold,
+  }) => _request(
+    medicationId,
+    (session) => _api.correctLatest(
+      medicationId,
+      batchId,
+      quantity,
+      lot,
+      threshold,
+      session.accessToken,
+    ),
+    success: 200,
+    (inventory) =>
+        inventory.batches.any(
+          (batch) => batch.id == batchId && batch.quantity == quantity,
+        ) &&
+        (threshold == null || inventory.replenishmentThreshold == threshold),
   );
 
   @override

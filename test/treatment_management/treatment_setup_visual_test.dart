@@ -9,6 +9,7 @@ import 'package:tata/l10n/generated/app_localizations.dart';
 import 'package:tata/shared/presentation/theme/tata_theme.dart';
 
 import '../support/fake_treatment_backend.dart';
+import '../support/regimen_input.dart';
 import '../support/visual_capture.dart';
 import 'treatment_blocs_test.dart' show setupBloc;
 
@@ -41,7 +42,6 @@ void main() {
         home: BlocProvider.value(
           value: bloc,
           child: TreatmentSetupScreen(
-            medicationLabel: 'Losartán 50 mg',
             onFinished: () {},
             onSessionInvalidated: () {},
           ),
@@ -63,7 +63,9 @@ void main() {
           await tester.pump();
         }
         if (step.index > 1) {
-          bloc.add(const RegimenBasicsSubmitted('1 comprimido', 'Cada día'));
+          bloc.add(
+            const RegimenBasicsSubmitted('1 comprimido', 'Una vez al día'),
+          );
           await tester.pump();
         }
         if (step.index > 2) {
@@ -82,28 +84,20 @@ void main() {
           );
         }
         if (step == TreatmentSetupStep.regimen) {
-          await tester.enterText(
-            find.byKey(const Key('treatment-dose')),
-            '1 comprimido',
+          await fillRegimen(tester, frequency: 'Una vez al día');
+          await tester.drag(
+            find.byType(SingleChildScrollView).first,
+            const Offset(0, 2000),
           );
-          tester
-                  .widget<TextFormField>(
-                    find.byKey(const Key('treatment-frequency')),
-                  )
-                  .controller!
-                  .text =
-              'Cada día';
-          await tester.pump();
         }
         if (step == TreatmentSetupStep.schedule) {
-          tester
-                  .widget<TextFormField>(
-                    find.byKey(const Key('treatment-times')),
-                  )
-                  .controller!
-                  .text =
-              '08:00';
-          await tester.pump();
+          final times = find.byKey(const Key('treatment-times'));
+          await tester.ensureVisible(times);
+          await tester.pumpAndSettle();
+          await tester.tap(times);
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('ACEPTAR'));
+          await tester.pumpAndSettle();
           await tester.enterText(
             find.byKey(const Key('treatment-instructions')),
             'Con agua',
@@ -140,7 +134,9 @@ void main() {
         addTearDown(bloc.close);
         bloc.add(const TreatmentDraftSubmitted('Control de presión'));
         await tester.pump();
-        bloc.add(const RegimenBasicsSubmitted('1 comprimido', 'Cada día'));
+        bloc.add(
+          const RegimenBasicsSubmitted('1 comprimido', 'Una vez al día'),
+        );
         await tester.pump();
         bloc.add(const ScheduleSubmitted('08:00', 'Con agua'));
         await tester.pump();
@@ -177,18 +173,18 @@ void main() {
         await tester.pumpAndSettle();
         expect(bloc.state.step, TreatmentSetupStep.regimen);
         expect(
-          tester
-              .widget<TextFormField>(find.byKey(const Key('treatment-dose')))
-              .controller!
-              .text,
-          '1 comprimido',
+          find.descendant(
+            of: find.byKey(const Key('treatment-dose')),
+            matching: find.text('1 comprimido'),
+          ),
+          findsOneWidget,
         );
         expect(backend.createCalls, 1);
         expect(tester.takeException(), isNull);
       },
     );
   }
-  testWidgets('returning to saved draft shows an immutable acknowledged name', (
+  testWidgets('returning to the details keeps the typed name editable', (
     tester,
   ) async {
     final backend = FakeBackend();
@@ -199,13 +195,18 @@ void main() {
       find.byKey(const Key('treatment-name')),
       'Control de presión',
     );
-    await tester.tap(find.widgetWithText(ElevatedButton, 'Continuar'));
+    final next = find.widgetWithText(ElevatedButton, 'Continuar');
+    await tester.ensureVisible(next);
+    await tester.pumpAndSettle();
+    await tester.tap(next);
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Volver'));
     await tester.pumpAndSettle();
     final field = tester.widget<TextFormField>(
       find.byKey(const Key('treatment-name')),
     );
+    // No draft exists before activation, so the name can still change.
+    expect(field.controller!.text, 'Control de presión');
     expect(
       tester
           .widget<TextField>(
@@ -215,11 +216,8 @@ void main() {
             ),
           )
           .readOnly,
-      isTrue,
+      isFalse,
     );
-    expect(field.controller!.text, 'Control de presión');
-    await tester.tap(find.widgetWithText(ElevatedButton, 'Continuar'));
-    await tester.pumpAndSettle();
-    expect(backend.createCalls, 1);
+    expect(backend.createCalls, 0);
   });
 }

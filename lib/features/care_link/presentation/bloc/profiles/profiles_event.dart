@@ -21,3 +21,15 @@ final class OlderAdultSubmitted extends ProfilesEvent {
 final class LinkingCodeRequested extends ProfilesEvent {
   const LinkingCodeRequested();
 }
+
+/// Removes one person from the caregiver's family list.
+final class CareLinkEndRequested extends ProfilesEvent {
+  const CareLinkEndRequested(this.careLinkId);
+  final String careLinkId;
+}
+
+/// Requests caring for an adult with another caregiver's code.
+final class CaregiverJoinRequested extends ProfilesEvent {
+  const CaregiverJoinRequested(this.code);
+  final String code;
+}

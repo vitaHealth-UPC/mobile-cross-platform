@@ -30,9 +30,17 @@ final class LinkedPersonSlots {
     this.adherence,
     this.treatment,
     this.onEdit,
+    this.adultSignedIn,
+    this.access,
   });
 
   final DateTime linkedSince;
+
+  /// Whether the adult is signed in on a device; null when unknown.
+  final bool? adultSignedIn;
+
+  /// Host card that issues a sign-in code for the adult's device.
+  final WidgetBuilder? access;
   final WidgetBuilder? adherence;
   final WidgetBuilder? treatment;
 
@@ -393,6 +401,8 @@ class _CaregiverShellState extends State<_CaregiverShell> {
         CaregiverTab.person when widget.person != null => LinkedPersonScreen(
           olderAdultName: widget.olderAdultName,
           linkedSince: widget.person!.linkedSince,
+          adultSignedIn: widget.person!.adultSignedIn,
+          access: widget.person!.access?.call(context),
           launcher: widget.factories.launcher,
           onBack: widget.onPerson,
           onTab: _select,

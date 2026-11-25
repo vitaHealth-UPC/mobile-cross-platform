@@ -4,9 +4,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../features/accessibility_preferences/presentation/navigation/preferences_navigation.dart';
 import '../../features/adherence_analytics/presentation/bloc/level/level_bloc.dart';
 import '../../features/adherence_analytics/presentation/navigation/adherence_level_view.dart';
+import '../../features/care_link/application/readmodels/adult_access_code.dart';
 import '../../features/care_link/application/readmodels/caregiver_link_summary.dart';
 import '../../features/care_link/presentation/bloc/profile_editor/profile_editor_cubit.dart';
 import '../../features/care_link/presentation/navigation/profile_editor_route.dart';
+import '../../features/care_link/presentation/widgets/adult_access_code_card.dart';
 import '../../features/family_monitoring/application/readmodels/family_summary.dart';
 import '../../features/family_monitoring/presentation/navigation/family_monitoring_navigation.dart';
 import '../../features/identity_subscription/presentation/bloc/subscription/subscription_bloc.dart';
@@ -16,8 +18,10 @@ import '../../features/inventory_replenishment/presentation/navigation/inventory
 import '../../features/omission_escalation/application/services/omission_push_facade.dart';
 import '../../features/omission_escalation/presentation/widgets/follow_omission_push.dart';
 import '../../features/treatment_management/domain/entities/medication.dart';
+import '../../features/treatment_management/presentation/navigation/medication_stock_hooks.dart';
 import '../../features/treatment_management/presentation/navigation/treatment_navigation.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../../shared/common/result/app_result.dart';
 import '../../shared/presentation/widgets/caregiver_tab_bar.dart';
 import 'caregiver_treatment_entry.dart';
 
@@ -40,7 +44,17 @@ class CaregiverCareRoute extends StatelessWidget {
     this.createProfileEditorCubit,
     this.initialTab = CaregiverTab.home,
     this.initialIntakeId,
+    this.issueAccessCode,
+    this.inviteCaregiver,
   });
+
+  /// Issues another caregiver's invitation code; absent hides the card.
+  final Future<AppResult<AdultAccessCode>> Function(String careLinkId)?
+  inviteCaregiver;
+
+  /// Issues a sign-in code for the adult of [profile]; absent hides the card.
+  final Future<AppResult<AdultAccessCode>> Function(String careLinkId)?
+  issueAccessCode;
 
   final CaregiverTab initialTab;
   final String? initialIntakeId;
@@ -82,10 +96,47 @@ class CaregiverCareRoute extends StatelessWidget {
           onSessionInvalidated,
           personName: profile.fullName,
           onOpenInventory: _inventoryOpener(inner),
+          stock: switch (inventory) {
+            final stock? => MedicationStockHooks(
+              remaining: stock.remainingStock,
+              registerInitial: stock.registerInitialStock,
+            ),
+            null => null,
+          },
         ),
         onPerson: () => Navigator.of(inner).maybePop(),
         person: LinkedPersonSlots(
           linkedSince: profile.confirmedAt,
+          adultSignedIn: profile.adultSignedIn,
+          access: issueAccessCode == null && inviteCaregiver == null
+              ? null
+              : (context) {
+                  final text = AppLocalizations.of(context);
+                  return Column(
+                    children: [
+                      if (issueAccessCode case final issue?)
+                        AdultAccessCodeCard(
+                          olderAdultName: profile.fullName,
+                          signedIn: profile.adultSignedIn,
+                          issue: () => issue(profile.id),
+                        ),
+                      if (inviteCaregiver case final invite?) ...[
+                        const SizedBox(height: 16),
+                        AdultAccessCodeCard(
+                          key: const Key('co-caregiver-card'),
+                          olderAdultName: profile.fullName,
+                          title: text.coCaregiverTitle,
+                          buttonLabel: text.coCaregiverNew,
+                          intro: text.coCaregiverIntro(
+                            profile.fullName.split(' ').first,
+                          ),
+                          explanation: text.coCaregiverExplanation,
+                          issue: () => invite(profile.id),
+                        ),
+                      ],
+                    ],
+                  );
+                },
           onEdit: switch (createProfileEditorCubit) {
             final create? => (context) async => (await openProfileEditor(
               context,

@@ -279,7 +279,7 @@ class _Ready extends StatelessWidget {
                   const SizedBox(height: 10),
                   _Row(
                     text.fmDetailScheduled,
-                    '${alert.medicationName} · '
+                    '${alert.medicationName}, '
                     '${monitoringDateTime(locale, alert.scheduledAt)}',
                   ),
                   _Row(

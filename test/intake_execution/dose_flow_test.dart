@@ -306,7 +306,7 @@ void main() {
 
       expect(fake.confirmed, ['d1']);
       expect(find.text('¡Bien hecho!'), findsOneWidget);
-      expect(find.text('Toma confirmada ♡'), findsOneWidget);
+      expect(find.text('Toma confirmada'), findsOneWidget);
       expect(find.text('Metformina'), findsOneWidget);
       await captureWidget(
         tester,

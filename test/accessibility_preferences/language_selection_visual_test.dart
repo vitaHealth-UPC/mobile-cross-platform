@@ -100,7 +100,7 @@ void main() {
             .jumpTo(0);
         await tester.pumpAndSettle();
         expect(find.text('Accessibility'), findsOneWidget);
-        expect(find.text('Large text'), findsOneWidget);
+        expect(find.text('Text size'), findsOneWidget);
         await captureWidget(
           tester,
           find.byKey(const Key('language-capture')),

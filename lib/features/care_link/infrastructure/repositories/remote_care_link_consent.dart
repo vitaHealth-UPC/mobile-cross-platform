@@ -5,6 +5,8 @@ import '../../../../shared/application/time/clock.dart';
 import '../../../../shared/common/result/app_result.dart';
 import '../../../../shared/infrastructure/network/api_response.dart';
 import '../../application/ports/care_link_consent.dart';
+import '../../application/readmodels/adult_access_redemption.dart';
+import '../../application/readmodels/caregiver_request.dart';
 import '../../domain/entities/care_link.dart';
 import '../../domain/value_objects/care_link_invitation.dart';
 import '../mappers/care_link_mapper.dart';
@@ -51,6 +53,51 @@ final class RemoteCareLinkConsent implements CareLinkConsent {
         }
         return AppSuccess(link);
       });
+
+  @override
+  Future<AppResult<AdultAccessRedemption>> redeem(String code) => _guard(
+    () async {
+      await _store.initialize();
+      if (_store.current != null) return const AppFailure('ACCESS_DENIED');
+      final generation = _store.generation;
+      final response = await _api.redeemAccessCode(code);
+      if (_store.generation != generation) {
+        return const AppFailure('SESSION_CHANGED');
+      }
+      if (response.status != 200) return _failure(response);
+      final body = response.body;
+      if (body is! Map<String, dynamic> ||
+          body['olderAdultId'] is! String ||
+          body['careLinkId'] is! String ||
+          body['pinRegistered'] is! bool) {
+        return const AppFailure('INVALID_RESPONSE');
+      }
+      final adult = body['olderAdultId'] as String;
+      final pin = body['pinRegistered'] as bool;
+      if (!pin) {
+        final credential = StoredSession(
+          accessToken: body['accessToken'] as String,
+          expiresAt: DateTime.parse(body['expiresAt'] as String),
+          owner: SessionOwner(
+            adult,
+            SessionRole.olderAdult,
+            careLinkId: body['careLinkId'] as String,
+          ),
+        );
+        if (!credential.isValidAt(_clock()) ||
+            !await _store.replace(credential, expectedGeneration: generation)) {
+          return const AppFailure('SESSION_CHANGED');
+        }
+      }
+      return AppSuccess(
+        AdultAccessRedemption(
+          olderAdultId: adult,
+          olderAdultName: body['olderAdultName'] as String?,
+          pinRegistered: pin,
+        ),
+      );
+    },
+  );
 
   @override
   Future<AppResult<CareLink>> pending() => _restricted(
@@ -109,6 +156,71 @@ final class RemoteCareLinkConsent implements CareLinkConsent {
       }
     }
     return AppSuccess(link);
+  });
+
+  @override
+  Future<AppResult<List<CaregiverRequest>>> caregiverRequests() =>
+      _adult((session) async {
+        final response = await _api.caregiverRequests(session.accessToken);
+        if (response.status != 200) return _failure(response);
+        final body = response.body;
+        if (body is! List) return const AppFailure('INVALID_RESPONSE');
+        return AppSuccess([
+          for (final item in body)
+            if (item is Map<String, dynamic> && item['careLinkId'] is String)
+              CaregiverRequest(
+                careLinkId: item['careLinkId'] as String,
+                caregiverName: item['caregiverName'] as String?,
+              ),
+        ]);
+      });
+
+  @override
+  Future<AppResult<void>> decideCaregiverRequest(
+    String careLinkId,
+    bool accepted,
+  ) => _adult((session) async {
+    final response = await _api.decideCaregiverRequest(
+      careLinkId,
+      accepted,
+      session.accessToken,
+    );
+    if (response.status != 200) return _failure(response);
+    return const AppSuccess<void>(null);
+  });
+
+  @override
+  Future<AppResult<void>> removeAccount() => _guard(() async {
+    await _store.initialize();
+    final session = _store.current;
+    if (session == null) return const AppFailure('AUTHENTICATION_REQUIRED');
+    if (session.owner.role != SessionRole.olderAdult) {
+      return const AppFailure('ACCESS_DENIED');
+    }
+    final generation = _store.generation;
+    final response = await _api.removeAdultAccount(session.accessToken);
+    if (response.status == 204 || response.status == 401) {
+      if (!await _store.replace(null, expectedGeneration: generation)) {
+        return const AppFailure('SESSION_CHANGED');
+      }
+      return response.status == 204
+          ? const AppSuccess(null)
+          : const AppFailure('AUTHENTICATION_REQUIRED');
+    }
+    return _failure(response);
+  });
+
+  /// Runs an adult-only request with the captured full adult session.
+  Future<AppResult<T>> _adult<T>(
+    Future<AppResult<T>> Function(StoredSession session) action,
+  ) => _guard(() async {
+    await _store.initialize();
+    final session = _store.current;
+    if (session == null) return const AppFailure('AUTHENTICATION_REQUIRED');
+    if (session.owner.role != SessionRole.olderAdult) {
+      return const AppFailure('ACCESS_DENIED');
+    }
+    return action(session);
   });
 
   @override

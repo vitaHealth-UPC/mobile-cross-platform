@@ -25,6 +25,20 @@ final class ReplenishmentSubmitted extends InventoryEvent {
   final String lot;
 }
 
+/// Corrects the newest receipt; [threshold] only with the initial stock.
+final class ReceiptCorrectionSubmitted extends InventoryEvent {
+  const ReceiptCorrectionSubmitted({
+    required this.batchId,
+    required this.quantity,
+    this.lot = '',
+    this.threshold,
+  });
+  final String batchId;
+  final String quantity;
+  final String lot;
+  final String? threshold;
+}
+
 /// The caregiver edited a field, so earlier feedback no longer applies.
 final class InventoryInputChanged extends InventoryEvent {
   const InventoryInputChanged();

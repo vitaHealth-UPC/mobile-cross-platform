@@ -24,6 +24,7 @@ import 'package:tata/l10n/generated/app_localizations.dart';
 import 'package:tata/shared/presentation/theme/tata_theme.dart';
 
 import '../support/fake_treatment_backend.dart';
+import '../support/regimen_input.dart';
 import 'treatment_blocs_test.dart' show FakeReader;
 
 /// Exercises actual route ownership and receipts across registration and setup.
@@ -33,27 +34,23 @@ void main() {
     (tester) async {
       final backend = FakeBackend();
       await _openCatalog(tester, backend);
-      final delete = find.widgetWithText(OutlinedButton, 'Eliminar');
+      Future<void> delete(String id) => _action(tester, id, 'Eliminar');
       final confirm = find.descendant(
         of: find.byType(AlertDialog),
         matching: find.text('Eliminar'),
       );
-      await tester.ensureVisible(delete);
-      await tester.tap(delete);
-      await tester.pumpAndSettle();
+      await delete('med-1');
       await tester.tap(find.text('Cancelar'));
       await tester.pumpAndSettle();
       expect(backend.medications.length, 1);
-      await tester.tap(delete);
-      await tester.pumpAndSettle();
+      await delete('med-1');
       backend.failure = 'REQUEST_FAILED';
       await tester.tap(confirm);
       await tester.pumpAndSettle();
       expect(backend.medications.length, 1);
       expect(find.text('Medicamento eliminado.'), findsNothing);
       backend.failure = null;
-      await tester.tap(find.text('Retirar'));
-      await tester.pumpAndSettle();
+      await _action(tester, 'med-1', 'Retirar');
       await tester.tap(
         find.descendant(
           of: find.byType(AlertDialog),
@@ -62,16 +59,14 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('Medicamentos retirados'), findsOneWidget);
-      await tester.tap(delete);
-      await tester.pumpAndSettle();
+      await delete('med-1');
       await tester.tap(confirm);
       await tester.pumpAndSettle();
       expect(backend.medications, isEmpty);
       expect(find.text('Medicamento eliminado.'), findsOneWidget);
       expect(find.byType(SnackBar), findsNothing);
       await _register(tester);
-      await tester.tap(delete);
-      await tester.pumpAndSettle();
+      await delete(backend.medications.keys.single);
       await tester.tap(confirm);
       await tester.pumpAndSettle();
       expect(backend.medications, isEmpty);
@@ -85,10 +80,7 @@ void main() {
   ) async {
     final backend = FakeBackend();
     await _openCatalog(tester, backend, scale: 1.5);
-    final remove = find.text('Retirar');
-    await tester.ensureVisible(remove);
-    await tester.tap(remove);
-    await tester.pumpAndSettle();
+    await _action(tester, 'med-1', 'Retirar');
     await tester.tap(
       find.descendant(
         of: find.byType(AlertDialog),
@@ -120,8 +112,8 @@ void main() {
     expect(backend.medications.length, 1);
     expect(find.text('Medicamento registrado.'), findsOneWidget);
     expect(find.byType(SnackBar), findsNothing);
-    await tester.tap(find.text('Retirar'));
-    await tester.pumpAndSettle();
+    final registered = backend.medications.keys.single;
+    await _action(tester, registered, 'Retirar');
     await tester.tap(
       find.descendant(
         of: find.byType(AlertDialog),
@@ -137,8 +129,7 @@ void main() {
       findsOneWidget,
     );
     expect(find.byType(SnackBar), findsNothing);
-    await tester.tap(find.text('Reactivar'));
-    await tester.pumpAndSettle();
+    await _action(tester, registered, 'Reactivar');
     expect(backend.medications.values.single.active, isTrue);
     expect(find.text('Medicamento reactivado.'), findsOneWidget);
     expect(find.text('Medicamento desactivado.'), findsNothing);
@@ -155,54 +146,29 @@ void main() {
       await _register(tester);
       expect(find.byType(TreatmentSetupScreen), findsNothing);
       expect(find.textContaining('Losartán'), findsWidgets);
-      await tester.tap(
-        find.widgetWithText(TextButton, 'Crear tratamiento').last,
-      );
-      await tester.pumpAndSettle();
+      await _button(tester, 'Crear tratamiento');
       expect(find.byType(TreatmentSetupScreen), findsOneWidget);
       expect(backend.medications.length, 2);
       expect(backend.createCalls, 0);
+      // The wizard starts without medications; the caregiver picks them.
       await tester.enterText(
         find.byKey(const Key('treatment-name')),
         'Presión',
       );
       await _button(tester, 'Continuar');
       expect(
-        tester
-            .widget<TextFormField>(find.byKey(const Key('treatment-dose')))
-            .controller!
-            .text,
-        isEmpty,
+        find.text('Agrega al menos un medicamento al tratamiento.'),
+        findsOneWidget,
       );
-      expect(
-        tester
-            .widget<TextFormField>(find.byKey(const Key('treatment-frequency')))
-            .controller!
-            .text,
-        isEmpty,
-      );
-      await tester.enterText(
-        find.byKey(const Key('treatment-dose')),
-        '1 comprimido',
-      );
-      await tester.tap(find.byTooltip('Selecciona la frecuencia'));
+      await tester.tap(find.byKey(const Key('treatment-add-medication')));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Cada 12 horas').last);
+      await tester.tap(find.byKey(const Key('choose-med-2')));
       await tester.pumpAndSettle();
-      expect(
-        tester
-            .widget<TextFormField>(
-              find.byKey(const Key('treatment-instructions')),
-            )
-            .controller!
-            .text,
-        isEmpty,
-      );
-      tester
-              .widget<TextFormField>(find.byKey(const Key('treatment-times')))
-              .controller!
-              .text =
-          '08:00,20:00';
+      await tester.tap(find.byKey(const Key('medications-done')));
+      await tester.pumpAndSettle();
+      expect(find.text('Losartán 50 mg, comprimido'), findsOneWidget);
+      await _button(tester, 'Continuar');
+      await fillRegimen(tester);
       await tester.enterText(
         find.byKey(const Key('treatment-instructions')),
         'Con el desayuno\nPreparar agua',
@@ -215,7 +181,7 @@ void main() {
       expect(find.text('Tratamiento activado.'), findsOneWidget);
       expect(find.byType(SnackBar), findsNothing);
       expect(backend.stored!.medicationId, 'med-2');
-      expect(backend.stored!.dose, '1 comprimido');
+      expect(backend.stored!.dose, '1 tableta');
       expect(backend.stored!.frequency, 'Cada 12 horas');
       expect(backend.stored!.scheduledTimes, ['08:00', '20:00']);
       expect(backend.stored!.instructions, 'Con el desayuno\nPreparar agua');
@@ -232,10 +198,7 @@ void main() {
       final backend = FakeBackend();
       await _openCatalog(tester, backend);
       await _register(tester);
-      await tester.tap(
-        find.widgetWithText(TextButton, 'Crear tratamiento').last,
-      );
-      await tester.pumpAndSettle();
+      await _button(tester, 'Crear tratamiento');
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
       expect(find.byType(MedicationManagementScreen), findsOneWidget);
@@ -282,7 +245,7 @@ Future<void> _openCatalog(
         configure: ConfigureTreatment(backend),
         changeStatus: ChangeTreatmentStatus(backend),
         olderAdultId: adult,
-        medicationId: medication,
+        medications: medication,
       ),
       createManagementBloc: (_, _) => throw UnimplementedError(),
       createMyMedicationsBloc: () => throw UnimplementedError(),
@@ -328,6 +291,21 @@ Future<void> _register(WidgetTester tester) async {
     await tester.enterText(find.byKey(Key(entry.key)), entry.value);
   }
   await _button(tester, 'Guardar medicamento');
+}
+
+/// Opens the actions menu of one medication card and picks [label].
+Future<void> _action(
+  WidgetTester tester,
+  String medicationId,
+  String label,
+) async {
+  final menu = find.byKey(Key('medication-actions-$medicationId'));
+  await tester.ensureVisible(menu);
+  await tester.pumpAndSettle();
+  await tester.tap(menu);
+  await tester.pumpAndSettle();
+  await tester.tap(find.text(label).last);
+  await tester.pumpAndSettle();
 }
 
 Future<void> _button(WidgetTester tester, String text) async {

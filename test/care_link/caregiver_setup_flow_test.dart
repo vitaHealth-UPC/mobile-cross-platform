@@ -164,12 +164,17 @@ void main() {
         );
         await tester.pumpAndSettle();
         expect(find.textContaining('Rosa Vargas,'), findsOneWidget);
-        await tester.ensureVisible(find.text('Generar código'));
+        await tester.ensureVisible(find.text('Generar invitación'));
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Generar código'));
+        await tester.tap(find.text('Generar invitación'));
         await tester.pumpAndSettle();
         expect(generated, true);
-        expect(find.text('TATA-4821'), findsOneWidget);
+        // The whole invitation is shown (it carries the code), with copying
+        // as the main action and renewal as a secondary one.
+        expect(find.byKey(const Key('link-invitation')), findsOneWidget);
+        expect(find.textContaining('tata-link:v1:'), findsOneWidget);
+        expect(find.byKey(const Key('copy-invitation')), findsOneWidget);
+        expect(find.text('Renovar invitación'), findsOneWidget);
         expect(find.text('Aceptar vínculo'), findsNothing);
         expect(find.text('Pendiente'), findsOneWidget);
         tester
@@ -194,7 +199,7 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.text('Vínculo confirmado'), findsOneWidget);
         expect(find.text('Confirmado'), findsOneWidget);
-        expect(find.text('Renovar código'), findsNothing);
+        expect(find.text('Renovar invitación'), findsNothing);
         expect(store.current?.owner.role, SessionRole.caregiver);
         await tester.ensureVisible(find.text('Consultar consentimiento'));
         await tester.pumpAndSettle();

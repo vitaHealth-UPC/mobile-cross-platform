@@ -23,7 +23,23 @@ final class FakeBackend
       active: true,
     ),
   };
-  TreatmentDetail? stored;
+
+  /// Every treatment the fake server holds, by id.
+  final treatments = <String, TreatmentDetail>{};
+  String? _current;
+
+  /// The treatment touched last (the only one in single-medication tests).
+  TreatmentDetail? get stored => _current == null ? null : treatments[_current];
+  set stored(TreatmentDetail? value) {
+    if (value == null) {
+      treatments.clear();
+      _current = null;
+    } else {
+      treatments[value.id] = value;
+      _current = value.id;
+    }
+  }
+
   String? failure;
   String? configureFailure;
   int configureCalls = 0;
@@ -52,22 +68,26 @@ final class FakeBackend
   @override
   Future<AppResult<Treatment>> createTreatment(
     String olderAdultId,
-    String name,
-  ) async {
+    String name, {
+    String? planId,
+  }) async {
     createCalls++;
     if (failure != null) return _fail();
+    final id = 'tr-${treatments.length + 1}';
     stored = TreatmentDetail(
-      id: 'tr-1',
+      id: id,
       olderAdultId: olderAdultId,
       name: name,
       status: TreatmentStatus.draft,
+      planId: planId,
     );
     return AppSuccess(
       Treatment(
-        id: 'tr-1',
+        id: id,
         olderAdultId: olderAdultId,
         name: name,
         status: TreatmentStatus.draft,
+        planId: planId,
       ),
     );
   }
@@ -110,9 +130,11 @@ final class FakeBackend
   Future<AppResult<Medication>> deactivate(String medicationId) async {
     if (failure != null) return _fail();
     final medication = _availability(medicationId, false);
-    if (stored?.medicationId == medicationId &&
-        stored?.status == TreatmentStatus.active) {
-      _treatment(TreatmentStatus.paused);
+    for (final treatment in treatments.values.toList()) {
+      if (treatment.medicationId == medicationId &&
+          treatment.status == TreatmentStatus.active) {
+        _treatment(TreatmentStatus.paused, treatment.id);
+      }
     }
     return AppSuccess(medication);
   }
@@ -132,7 +154,8 @@ final class FakeBackend
   Future<AppResult<Medication>> reactivate(String medicationId) async =>
       failure != null ? _fail() : AppSuccess(_availability(medicationId, true));
 
-  Treatment _treatment(TreatmentStatus status) {
+  Treatment _treatment(TreatmentStatus status, [String? treatmentId]) {
+    if (treatmentId != null) _current = treatmentId;
     final old = stored!;
     stored = TreatmentDetail(
       id: old.id,
@@ -149,12 +172,14 @@ final class FakeBackend
       recurrenceZone: old.recurrenceZone,
       recurrenceMode: old.recurrenceMode,
       recurrenceAnchor: old.recurrenceAnchor,
+      planId: old.planId,
     );
     return Treatment(
       id: old.id,
       olderAdultId: old.olderAdultId,
       name: old.name,
       status: status,
+      planId: old.planId,
     );
   }
 
@@ -167,6 +192,7 @@ final class FakeBackend
     configureCalls++;
     if (configureFailure != null) return AppFailure(configureFailure!);
     if (failure != null) return _fail();
+    if (treatments.containsKey(treatmentId)) _current = treatmentId;
     final old = stored!;
     stored = TreatmentDetail(
       id: old.id,
@@ -183,6 +209,7 @@ final class FakeBackend
       recurrenceZone: regimen.recurrenceZone ?? old.recurrenceZone,
       recurrenceMode: regimen.recurrenceMode ?? old.recurrenceMode,
       recurrenceAnchor: regimen.recurrenceAnchor ?? old.recurrenceAnchor,
+      planId: old.planId,
     );
     return AppSuccess(_treatment(old.status));
   }
@@ -191,17 +218,21 @@ final class FakeBackend
   Future<AppResult<Treatment>> activate(String treatmentId) async =>
       failure != null
       ? _fail()
-      : AppSuccess(_treatment(TreatmentStatus.active));
+      : AppSuccess(_treatment(TreatmentStatus.active, _known(treatmentId)));
 
   @override
   Future<AppResult<Treatment>> pause(String treatmentId) async =>
       failure != null
       ? _fail()
-      : AppSuccess(_treatment(TreatmentStatus.paused));
+      : AppSuccess(_treatment(TreatmentStatus.paused, _known(treatmentId)));
 
   @override
   Future<AppResult<Treatment>> resume(String treatmentId) async =>
       failure != null
       ? _fail()
-      : AppSuccess(_treatment(TreatmentStatus.active));
+      : AppSuccess(_treatment(TreatmentStatus.active, _known(treatmentId)));
+
+  /// Tests may seed [stored] with any id; unknown ids act on the current one.
+  String? _known(String treatmentId) =>
+      treatments.containsKey(treatmentId) ? treatmentId : null;
 }

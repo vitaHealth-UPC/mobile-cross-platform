@@ -14,7 +14,6 @@ import '../texts/inventory_texts.dart';
 
 const _gold = Color(0xFFDBAD52);
 const _success = Color(0xFF3A7B56);
-const _softLavenderBorder = Color(0xFFC9BEF2);
 
 /// Inventory of one medication for the caregiver (Figma 563:1632 stock and
 /// restock, 563:5213 invalid quantity, 563:5284 stock replenished).
@@ -147,40 +146,48 @@ class _InventoryScreenState extends State<InventoryScreen> {
     Inventory inventory,
   ) {
     final bloc = context.read<InventoryBloc>();
-    final last = inventory.lastReplenishment;
     return [
       _StockCard(label: widget.medicationLabel, inventory: inventory),
-      Align(
-        alignment: Alignment.centerRight,
-        child: TextButton(
-          onPressed: () => showDialog<void>(
-            context: context,
-            builder: (dialog) => AlertDialog(
-              title: Text(text.invDefineInitial),
-              content: Text(text.invInitialInfo),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dialog).pop(),
-                  child: Text(text.invUnderstood),
-                ),
-              ],
+      // A mistyped receipt can be fixed once, until an intake or another
+      // receipt follows it; afterwards the server keeps it as recorded.
+      if (inventory.latestReceiptCorrectable)
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            key: const Key('correct-latest-receipt'),
+            onPressed: state.submitting
+                ? null
+                : () => _correct(context, inventory),
+            child: Text(
+              inventory.onlyInitialStock
+                  ? text.invCorrectInitial
+                  : text.invCorrectLatest,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: TataColors.link,
+              ),
             ),
           ),
-          child: Text(
-            text.invDefineInitial,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: TataColors.link,
-            ),
+        )
+      else
+        const SizedBox(height: 12),
+      if (state.corrected) ...[
+        _Notice(text.invCorrected, background: TataColors.mint, ink: _success),
+        const SizedBox(height: 12),
+      ],
+      Semantics(
+        header: true,
+        child: Text(
+          text.invNewReplenishmentTitle,
+          style: const TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+            color: TataColors.ink,
           ),
         ),
       ),
-      ElevatedButton(
-        onPressed: state.submitting ? null : _quantityFocus.requestFocus,
-        child: Text(text.invRegisterReplenishment),
-      ),
-      const SizedBox(height: 22),
+      const SizedBox(height: 12),
       _Field(
         label: text.invQuantityReceived,
         hint: text.invQuantityHint,
@@ -205,7 +212,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
         onChanged: _changed,
       ),
       const SizedBox(height: 20),
-      OutlinedButton(
+      ElevatedButton(
         key: const Key('save-replenishment'),
         onPressed: state.submitting
             ? null
@@ -215,14 +222,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   lot: _lot.text,
                 ),
               ),
-        style: OutlinedButton.styleFrom(
-          minimumSize: const Size.fromHeight(56),
-          backgroundColor: TataColors.lavender,
-          foregroundColor: TataColors.primary,
-          side: const BorderSide(color: _softLavenderBorder),
-          shape: const StadiumBorder(),
-          textStyle: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
-        ),
         child: Text(
           state.submitting ? text.invSaving : text.invSaveReplenishment,
         ),
@@ -244,11 +243,52 @@ class _InventoryScreenState extends State<InventoryScreen> {
           ink: TataColors.errorText,
         ),
       ],
-      if (last != null) ...[
-        const SizedBox(height: 14),
-        _LastReplenishment(batch: last),
+      const SizedBox(height: 26),
+      Semantics(
+        header: true,
+        child: Text(
+          text.invHistoryTitle,
+          style: const TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+            color: TataColors.ink,
+          ),
+        ),
+      ),
+      const SizedBox(height: 12),
+      for (final movement in _Movement.of(inventory)) ...[
+        _MovementCard(movement: movement),
+        const SizedBox(height: 10),
       ],
     ];
+  }
+
+  /// One-time correction of the newest receipt; the threshold is offered only
+  /// while that receipt is the initial stock.
+  Future<void> _correct(BuildContext context, Inventory inventory) async {
+    final bloc = context.read<InventoryBloc>();
+    final receipt = inventory.newestReceipt;
+    final initial = inventory.onlyInitialStock;
+    final values = await showDialog<(String, String?)>(
+      context: context,
+      builder: (_) => _CorrectionDialog(
+        quantity: receipt.quantity,
+        threshold: initial ? inventory.replenishmentThreshold : null,
+        title: initial
+            ? AppLocalizations.of(context).invCorrectInitial
+            : AppLocalizations.of(context).invCorrectLatest,
+      ),
+    );
+    if (values case (final quantity, final threshold)) {
+      bloc.add(
+        ReceiptCorrectionSubmitted(
+          batchId: receipt.id,
+          quantity: quantity,
+          lot: receipt.lot ?? '',
+          threshold: threshold,
+        ),
+      );
+    }
   }
 
   List<Widget> _initial(
@@ -601,88 +641,228 @@ class _Notice extends StatelessWidget {
   );
 }
 
-class _LastReplenishment extends StatelessWidget {
-  const _LastReplenishment({required this.batch});
-  final InventoryBatch batch;
+/// A stock change shown in the history: a receipt (+units) or the intakes
+/// confirmed on one day (−units), newest first.
+final class _Movement {
+  const _Movement.receipt(this.batch, {required this.initial})
+    : day = null,
+      taken = 0;
+  const _Movement.intakes(DateTime this.day, this.taken)
+    : batch = null,
+      initial = false;
+
+  final InventoryBatch? batch;
+  final bool initial;
+  final DateTime? day;
+  final int taken;
+
+  DateTime get at => batch?.registeredAt ?? day!;
+
+  static List<_Movement> of(Inventory inventory) {
+    final first = inventory.batches.first;
+    final byDay = <DateTime, int>{};
+    for (final instant in inventory.recentConsumptions) {
+      final local = instant.toLocal();
+      final day = DateTime(local.year, local.month, local.day);
+      byDay[day] = (byDay[day] ?? 0) + 1;
+    }
+    final newestByDay = <DateTime, DateTime>{};
+    for (final instant in inventory.recentConsumptions) {
+      final local = instant.toLocal();
+      final day = DateTime(local.year, local.month, local.day);
+      final known = newestByDay[day];
+      if (known == null || local.isAfter(known)) newestByDay[day] = local;
+    }
+    return [
+      for (final batch in inventory.batches)
+        _Movement.receipt(batch, initial: identical(batch, first)),
+      for (final entry in byDay.entries)
+        _Movement.intakes(newestByDay[entry.key]!, entry.value),
+    ]..sort((a, b) => b.at.compareTo(a.at));
+  }
+}
+
+class _MovementCard extends StatelessWidget {
+  const _MovementCard({required this.movement});
+  final _Movement movement;
 
   @override
   Widget build(BuildContext context) {
     final text = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context).toLanguageTag();
-    final units = text.invBatchUnits(batch.quantity);
-    return Container(
-      padding: const EdgeInsets.fromLTRB(18, 14, 16, 16),
-      decoration: _cardDecoration(const [Color(0xFFECF5FC), Color(0xFFE0EDF7)]),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    final receipt = movement.batch;
+    final date = receipt == null
+        ? DateFormat('d MMM y', locale).format(movement.at)
+        : DateFormat(
+            'd MMM y, HH:mm',
+            locale,
+          ).format(receipt.registeredAt.toLocal());
+    final title = receipt == null
+        ? text.invIntakesConsumed
+        : movement.initial
+        ? text.invReceiptInitial
+        : text.invReceiptReplenishment;
+    final amount = receipt == null
+        ? text.invUnitsTaken(movement.taken)
+        : text.invUnitsAdded(receipt.quantity);
+    return Semantics(
+      container: true,
+      label:
+          '$title, $amount, $date'
+          '${receipt?.lot == null ? '' : ', ${receipt!.lot}'}',
+      excludeSemantics: true,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+        decoration: _cardDecoration(
+          receipt == null
+              ? const [Color(0xFFFFF4F1), Color(0xFFFCE9E4)]
+              : const [Color(0xFFECF5FC), Color(0xFFE0EDF7)],
+        ),
+        child: Column(
+          children: [
+            Row(
               children: [
-                Text(
-                  text.invLastReplenishment,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: TataColors.ink,
+                Icon(
+                  receipt == null
+                      ? Icons.check_circle_outline
+                      : Icons.medication_outlined,
+                  size: 18,
+                  color: receipt == null
+                      ? TataColors.errorText
+                      : TataColors.primary,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: TataColors.muted,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  DateFormat(
-                    'dd MMM y',
-                    locale,
-                  ).format(batch.registeredAt.toLocal()),
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: TataColors.ink,
+                if (receipt?.lot case final lot?)
+                  Flexible(
+                    child: Text(
+                      lot,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: TataColors.muted,
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  batch.lot == null
-                      ? units
-                      : text.invBatchWithLot(units, batch.lot!),
-                  style: const TextStyle(fontSize: 12, color: TataColors.muted),
-                ),
               ],
             ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: TataColors.mint,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  text.invRegistered,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: _success,
-                  ),
-                ),
+            const SizedBox(height: 6),
+            Text(
+              amount,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 24,
+                height: 1.15,
+                fontWeight: FontWeight.w700,
+                color: receipt == null ? TataColors.errorText : TataColors.ink,
               ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              date,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: TataColors.ink,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Owns its controllers so they outlive the dialog's closing animation.
+class _CorrectionDialog extends StatefulWidget {
+  const _CorrectionDialog({
+    required this.quantity,
+    required this.threshold,
+    required this.title,
+  });
+
+  final int quantity;
+  final int? threshold;
+  final String title;
+
+  @override
+  State<_CorrectionDialog> createState() => _CorrectionDialogState();
+}
+
+class _CorrectionDialogState extends State<_CorrectionDialog> {
+  late final _quantity = TextEditingController(text: '${widget.quantity}');
+  late final _threshold = TextEditingController(
+    text: widget.threshold?.toString() ?? '',
+  );
+
+  @override
+  void dispose() {
+    _quantity.dispose();
+    _threshold.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final text = AppLocalizations.of(context);
+    return AlertDialog(
+      title: Text(widget.title),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              text.invCorrectHint,
+              style: const TextStyle(fontSize: 13, color: TataColors.muted),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              key: const Key('correct-quantity'),
+              controller: _quantity,
+              autofocus: true,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration: InputDecoration(labelText: text.invCorrectQuantity),
+            ),
+            if (widget.threshold != null) ...[
               const SizedBox(height: 12),
-              const ExcludeSemantics(
-                child: Icon(
-                  Icons.medication_outlined,
-                  size: 22,
-                  color: TataColors.primary,
-                ),
+              TextField(
+                key: const Key('correct-threshold'),
+                controller: _threshold,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                decoration: InputDecoration(labelText: text.invThreshold),
               ),
             ],
-          ),
-        ],
+          ],
+        ),
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(text.tmCancel),
+        ),
+        TextButton(
+          key: const Key('confirm-correction'),
+          onPressed: () => Navigator.of(context).pop((
+            _quantity.text,
+            widget.threshold == null ? null : _threshold.text,
+          )),
+          child: Text(text.invSaveCorrection),
+        ),
+      ],
     );
   }
 }

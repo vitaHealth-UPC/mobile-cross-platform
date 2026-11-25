@@ -268,9 +268,15 @@ void main() {
           .position
           .jumpTo(0);
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('accessibility-text-size')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Grande'));
+      // Medium → Large is one step to the right on the four-stop slider.
+      final slider = find.descendant(
+        of: find.byKey(const Key('accessibility-text-size')),
+        matching: find.byType(Slider),
+      );
+      final box = tester.getRect(slider);
+      await tester.tapAt(
+        Offset(box.left + 24 + (box.width - 48) * 2 / 3, box.center.dy),
+      );
       await tester.pumpAndSettle();
       expect((await local.current('user-A')).textSize, TextSizeLevel.large);
       await tester.scrollUntilVisible(

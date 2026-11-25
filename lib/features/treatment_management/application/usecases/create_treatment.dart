@@ -8,13 +8,18 @@ final class CreateTreatment {
   const CreateTreatment(this._repository);
   final TreatmentRepository _repository;
 
-  Future<AppResult<Treatment>> call(String olderAdultId, String name) async {
+  Future<AppResult<Treatment>> call(
+    String olderAdultId,
+    String name, {
+    String? planId,
+  }) async {
     if (olderAdultId.trim().isEmpty || name.trim().isEmpty) {
       return const AppFailure('REQUIRED_FIELDS_MISSING');
     }
     final result = await _repository.createTreatment(
       olderAdultId.trim(),
       name.trim(),
+      planId: planId,
     );
     return switch (result) {
       AppSuccess<Treatment>(:final value)

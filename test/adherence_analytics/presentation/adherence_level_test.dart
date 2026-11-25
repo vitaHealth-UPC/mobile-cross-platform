@@ -169,7 +169,7 @@ void main() {
       expect(find.text('Nivel de adherencia'), findsOneWidget);
       expect(find.text('92%'), findsOneWidget);
       expect(find.text('Excelente'), findsOneWidget);
-      expect(find.text('↑ 8% vs. mes anterior'), findsOneWidget);
+      expect(find.text('+8% vs. mes anterior'), findsOneWidget);
       // Figma frame: 349 wide and about 100 tall, never the height of its host.
       final size = tester.getSize(find.byType(AdherenceLevelCard));
       expect(size.width, closeTo(349, 1));
@@ -203,10 +203,10 @@ void main() {
       tester,
     ) async {
       await pumpCard(tester, days: 7);
-      expect(find.text('↑ 8% vs. semana anterior'), findsOneWidget);
+      expect(find.text('+8% vs. semana anterior'), findsOneWidget);
 
       await pumpCard(tester, days: 14, change: -3);
-      expect(find.text('↓ 3% vs. 14 días previos'), findsOneWidget);
+      expect(find.text('−3% vs. 14 días previos'), findsOneWidget);
     });
 
     testWidgets('omits the comparison when the previous period had none', (
@@ -232,7 +232,7 @@ void main() {
 
       expect(find.text('Adherence level'), findsOneWidget);
       expect(find.text('Excellent'), findsOneWidget);
-      expect(find.text('↑ 8% vs. previous month'), findsOneWidget);
+      expect(find.text('+8% vs. previous month'), findsOneWidget);
     });
 
     testWidgets('has one screen reader summary', (tester) async {

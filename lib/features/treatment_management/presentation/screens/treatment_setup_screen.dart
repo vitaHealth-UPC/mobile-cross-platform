@@ -14,23 +14,50 @@ import '../widgets/treatment_setup_review.dart';
 import '../widgets/treatment_stepper.dart';
 import '../widgets/treatment_visuals.dart';
 
-/// Wizard from a registered medication to an active treatment: details, regimen, schedule,
-/// reminders and review. Field text lives here; validated values live in the bloc.
+/// Text controllers of one medication's regimen.
+final class _RegimenControllers {
+  final dose = TextEditingController();
+  final frequency = TextEditingController();
+  final times = TextEditingController();
+  final instructions = TextEditingController();
+
+  void fill(SetupRegimen regimen) {
+    dose.text = regimen.dose;
+    frequency.text = regimen.frequency;
+    times.text = regimen.scheduleText;
+    instructions.text = regimen.instructions;
+  }
+
+  RegimenInput get input =>
+      RegimenInput(dose.text, frequency.text, times.text, instructions.text);
+
+  void dispose() {
+    for (final controller in [dose, frequency, times, instructions]) {
+      controller.dispose();
+    }
+  }
+}
+
+/// Wizard from registered medications to an active treatment: details (name
+/// and one or more medications), one regimen per medication, reminders and
+/// review. Field text lives here; validated values live in the bloc.
 class TreatmentSetupScreen extends StatefulWidget {
   const TreatmentSetupScreen({
     super.key,
-    required this.medicationLabel,
     required this.onFinished,
     required this.onSessionInvalidated,
+    this.availableMedications = const [],
     this.initialFrequency = '',
     this.initialInstructions = '',
   });
 
-  final String medicationLabel;
   final VoidCallback onFinished;
   final VoidCallback onSessionInvalidated;
 
-  /// Editable text carried from registration, validated by the ordinary wizard steps.
+  /// Active medications the caregiver can add to the treatment.
+  final List<SetupMedication> availableMedications;
+
+  /// Editable text carried from registration for the first medication.
   final String initialFrequency;
   final String initialInstructions;
 
@@ -40,11 +67,8 @@ class TreatmentSetupScreen extends StatefulWidget {
 
 class _TreatmentSetupScreenState extends State<TreatmentSetupScreen> {
   final _name = TextEditingController();
-  final _dose = TextEditingController();
-  final _frequency = TextEditingController();
-  final _times = TextEditingController();
-  final _instructions = TextEditingController();
   final _delay = TextEditingController();
+  final _regimens = <String, _RegimenControllers>{};
   final _form = GlobalKey<FormState>();
 
   @override
@@ -52,30 +76,53 @@ class _TreatmentSetupScreenState extends State<TreatmentSetupScreen> {
     super.initState();
     final state = context.read<TreatmentSetupBloc>().state;
     _name.text = state.treatmentName;
-    _dose.text = state.dose;
-    _frequency.text = state.frequency.isEmpty
-        ? widget.initialFrequency
-        : state.frequency;
-    _times.text = state.scheduleText;
-    _instructions.text = state.instructions.isEmpty
-        ? widget.initialInstructions
-        : state.instructions;
     _delay.text = state.followUpDelayMinutes?.toString() ?? '';
+    for (final (index, medication) in state.medications.indexed) {
+      final controllers = _controllersFor(medication.id)
+        ..fill(state.regimens[medication.id] ?? const SetupRegimen());
+      if (index == 0 && controllers.frequency.text.isEmpty) {
+        controllers.frequency.text = widget.initialFrequency;
+      }
+      if (index == 0 && controllers.instructions.text.isEmpty) {
+        controllers.instructions.text = widget.initialInstructions;
+      }
+    }
   }
+
+  _RegimenControllers _controllersFor(String medicationId) =>
+      _regimens.putIfAbsent(medicationId, _RegimenControllers.new);
 
   @override
   void dispose() {
-    for (final controller in [
-      _name,
-      _dose,
-      _frequency,
-      _times,
-      _instructions,
-      _delay,
-    ]) {
-      controller.dispose();
+    _name.dispose();
+    _delay.dispose();
+    for (final controllers in _regimens.values) {
+      controllers.dispose();
     }
     super.dispose();
+  }
+
+  /// Single medication keeps the historical field keys (`treatment-dose`...).
+  String _prefix(TreatmentSetupState state, int index) =>
+      state.medications.length == 1 ? 'treatment' : 'treatment-$index';
+
+  Future<void> _chooseMedications(TreatmentSetupState state) async {
+    final text = AppLocalizations.of(context);
+    final bloc = context.read<TreatmentSetupBloc>();
+    final options = {
+      for (final medication in widget.availableMedications)
+        medication.id: medication,
+      for (final medication in state.medications) medication.id: medication,
+    }.values.toList();
+    final chosen = await showRegimenSheet<List<SetupMedication>>(
+      context,
+      title: text.tmChooseMedications,
+      body: (sheet) =>
+          _MedicationChooser(options: options, selected: state.medications),
+    );
+    if (chosen != null && mounted) {
+      bloc.add(TreatmentMedicationsChanged(chosen));
+    }
   }
 
   @override
@@ -84,9 +131,6 @@ class _TreatmentSetupScreenState extends State<TreatmentSetupScreen> {
     final bloc = context.read<TreatmentSetupBloc>();
     return BlocConsumer<TreatmentSetupBloc, TreatmentSetupState>(
       listener: (context, state) {
-        if (state.treatmentId != null && state.treatmentName != _name.text) {
-          _name.text = state.treatmentName;
-        }
         if (isSessionFailure(state.errorCode)) {
           widget.onSessionInvalidated();
         } else if (state.activated) {
@@ -102,7 +146,12 @@ class _TreatmentSetupScreenState extends State<TreatmentSetupScreen> {
         ];
         final error = state.configurationIncomplete
             ? text.tmErrIncomplete
+            : state.errorCode == 'MEDICATION_REQUIRED'
+            ? text.tmErrMedicationRequired
             : treatmentErrorText(text, state.errorCode);
+        final failedMedication = state.medications
+            .where((m) => m.id == state.errorMedicationId)
+            .firstOrNull;
         return PopScope(
           canPop: !state.loading && (state.step.index == 0 || state.activated),
           onPopInvokedWithResult: (didPop, _) {
@@ -150,31 +199,7 @@ class _TreatmentSetupScreenState extends State<TreatmentSetupScreen> {
                         },
                       ),
                       const SizedBox(height: 16),
-                      if (state.step != TreatmentSetupStep.details &&
-                          state.step != TreatmentSetupStep.review) ...[
-                        _medication(text),
-                        const SizedBox(height: 16),
-                      ],
                       ..._fields(context, text, state),
-                      if (state.step == TreatmentSetupStep.details) ...[
-                        const SizedBox(height: 16),
-                        _medication(text),
-                        const SizedBox(height: 16),
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF1ECFF),
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                          child: Text(
-                            text.tmSetupDraftHint,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: TataColors.muted,
-                            ),
-                          ),
-                        ),
-                      ],
                       if (state.configurationIncomplete)
                         Container(
                           padding: const EdgeInsets.all(16),
@@ -204,10 +229,16 @@ class _TreatmentSetupScreenState extends State<TreatmentSetupScreen> {
                           ),
                         )
                       else if (error != null)
-                        InlineError(error),
+                        InlineError(
+                          failedMedication != null &&
+                                  state.medications.length > 1
+                              ? '${failedMedication.label}: $error'
+                              : error,
+                        ),
                       const SizedBox(height: 24),
                       _actions(context, text, state),
                       if (state.step == TreatmentSetupStep.review &&
+                          state.medications.length == 1 &&
                           state.scheduledTimes.isNotEmpty) ...[
                         const SizedBox(height: 16),
                         TreatmentSchedulePreview(times: state.scheduledTimes),
@@ -233,6 +264,7 @@ class _TreatmentSetupScreenState extends State<TreatmentSetupScreen> {
   ) {
     switch (state.step) {
       case TreatmentSetupStep.details:
+        final locked = state.treatmentIds.isNotEmpty;
         return [
           TextFormField(
             style: treatmentFieldStyle(context),
@@ -240,87 +272,88 @@ class _TreatmentSetupScreenState extends State<TreatmentSetupScreen> {
             controller: _name,
             autovalidateMode: AutovalidateMode.onUserInteraction,
             enabled: !state.loading,
-            readOnly: state.treatmentId != null,
-            decoration: InputDecoration(labelText: text.tmTreatmentName),
+            readOnly: locked,
+            maxLength: 160,
+            decoration: InputDecoration(
+              labelText: text.tmTreatmentName,
+              counterText: '',
+            ),
             validator: (value) => _required(value, text),
           ),
+          const SizedBox(height: 16),
+          Text(
+            text.tmMedicationsLabel,
+            style: const TextStyle(fontSize: 11, color: TataColors.muted),
+          ),
+          const SizedBox(height: 8),
+          for (final medication in state.medications) ...[
+            _medication(
+              medication.label,
+              onRemove: locked || state.loading
+                  ? null
+                  : () => context.read<TreatmentSetupBloc>().add(
+                      TreatmentMedicationsChanged([
+                        for (final other in state.medications)
+                          if (other != medication) other,
+                      ]),
+                    ),
+            ),
+            const SizedBox(height: 10),
+          ],
+          if (!locked)
+            OutlinedButton.icon(
+              key: const Key('treatment-add-medication'),
+              style: treatmentSecondaryStyle(context),
+              onPressed: state.loading ? null : () => _chooseMedications(state),
+              icon: const Icon(Icons.add),
+              label: Text(text.tmAddMedicationToTreatment),
+            ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF1ECFF),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Text(
+              '${text.tmChooseMedicationsHint} ${text.tmSetupDraftHint}',
+              style: const TextStyle(fontSize: 13, color: TataColors.muted),
+            ),
+          ),
+          const SizedBox(height: 8),
         ];
       case TreatmentSetupStep.regimen:
       case TreatmentSetupStep.schedule:
+        final several = state.medications.length > 1;
         return [
-          TextFormField(
-            style: treatmentFieldStyle(context),
-            key: const Key('treatment-dose'),
-            controller: _dose,
-            enabled: !state.loading,
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            maxLength: 100,
-            decoration: InputDecoration(
-              labelText: text.tmDoseShort,
-              hintText: text.tmDose,
-              counterText: '',
-              suffixIcon: prescriptionOptions(
-                tooltip: text.tmDoseOptions,
-                options: [
-                  text.tmDoseTablet,
-                  text.tmDoseHalfTablet,
-                  text.tmDoseCapsule,
-                  text.tmDoseTwoTablets,
-                ],
-                controller: _dose,
-                enabled: !state.loading,
+          for (final (index, medication) in state.medications.indexed) ...[
+            if (several) ...[
+              Text(
+                '${index + 1}. ${medication.label}',
+                style: treatmentSectionStyle(context),
               ),
-            ),
-            validator: (value) => _required(value, text),
-          ),
-          const SizedBox(height: 16),
-          FrequencyField(
-            fieldKey: const Key('treatment-frequency'),
-            controller: _frequency,
-            enabled: !state.loading,
-          ),
-          const SizedBox(height: 20),
-          ValueListenableBuilder<TextEditingValue>(
-            valueListenable: _frequency,
-            builder: (_, _, _) => ScheduleTimeField(
-              fieldKey: const Key('treatment-times'),
-              controller: _times,
-              frequency: _frequency,
+              const SizedBox(height: 10),
+            ] else ...[
+              _medication(medication.label),
+              const SizedBox(height: 16),
+            ],
+            RegimenFields(
+              keyPrefix: _prefix(state, index),
+              dose: _controllersFor(medication.id).dose,
+              frequency: _controllersFor(medication.id).frequency,
+              times: _controllersFor(medication.id).times,
+              instructions: _controllersFor(medication.id).instructions,
               enabled: !state.loading,
+              timeZone: index == 0
+                  ? context.read<TreatmentSetupBloc>().calendarZone
+                  : null,
             ),
-          ),
-          if (context.read<TreatmentSetupBloc>().calendarZone
-              case final zone?) ...[
-            const SizedBox(height: 8),
-            Text(
-              '${text.tmTimeZone}: $zone',
-              style: treatmentSupportingStyle(context).copyWith(fontSize: 12),
-            ),
+            if (several && index < state.medications.length - 1) ...[
+              const SizedBox(height: 18),
+              const Divider(),
+            ],
+            const SizedBox(height: 18),
           ],
-          const SizedBox(height: 16),
-          TextFormField(
-            style: treatmentFieldStyle(context),
-            key: const Key('treatment-instructions'),
-            controller: _instructions,
-            enabled: !state.loading,
-            maxLength: 500,
-            maxLines: 3,
-            decoration: InputDecoration(
-              labelText: text.tmInstructionsShort,
-              hintText: text.tmInstructions,
-              suffixIcon: prescriptionOptions(
-                tooltip: text.tmInstructionOptions,
-                options: [
-                  text.tmInstructionBeforeMeal,
-                  text.tmInstructionWithMeal,
-                  text.tmInstructionAfterMeal,
-                  text.tmInstructionWithWater,
-                ],
-                controller: _instructions,
-                append: true,
-              ),
-            ),
-          ),
         ];
       case TreatmentSetupStep.reminders:
         return [
@@ -351,49 +384,39 @@ class _TreatmentSetupScreenState extends State<TreatmentSetupScreen> {
           ),
         ];
       case TreatmentSetupStep.review:
-        return [
-          TreatmentSetupReview(state: state, medication: _medication(text)),
-        ];
+        return [TreatmentSetupReview(state: state)];
     }
   }
 
-  Widget _medication(AppLocalizations text) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        text.tmMedicationLabel,
-        style: const TextStyle(fontSize: 11, color: TataColors.muted),
-      ),
-      const SizedBox(height: 8),
-      Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(15),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x141A2138),
-              blurRadius: 18,
-              offset: Offset(0, 6),
-            ),
-          ],
+  Widget _medication(String label, {VoidCallback? onRemove}) => Container(
+    padding: EdgeInsets.fromLTRB(16, 12, onRemove == null ? 16 : 4, 12),
+    constraints: const BoxConstraints(minHeight: 56),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(15),
+      boxShadow: const [
+        BoxShadow(
+          color: Color(0x141A2138),
+          blurRadius: 18,
+          offset: Offset(0, 6),
         ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                widget.medicationLabel,
-                style: const TextStyle(fontSize: 14),
-              ),
-            ),
-            const SizedBox(width: 12),
-            ExcludeSemantics(
-              child: SvgPicture.asset('assets/icons/treatment_medication.svg'),
-            ),
-          ],
+      ],
+    ),
+    child: Row(
+      children: [
+        Expanded(child: Text(label, style: const TextStyle(fontSize: 14))),
+        const SizedBox(width: 12),
+        ExcludeSemantics(
+          child: SvgPicture.asset('assets/icons/treatment_medication.svg'),
         ),
-      ),
-    ],
+        if (onRemove != null)
+          IconButton(
+            tooltip: AppLocalizations.of(context).tmRemoveFromTreatment,
+            onPressed: onRemove,
+            icon: const Icon(Icons.close),
+          ),
+      ],
+    ),
   );
 
   Widget _actions(
@@ -426,12 +449,10 @@ class _TreatmentSetupScreenState extends State<TreatmentSetupScreen> {
                       _name.text,
                     ),
                     TreatmentSetupStep.regimen ||
-                    TreatmentSetupStep.schedule => TreatmentRegimenSubmitted(
-                      _dose.text,
-                      _frequency.text,
-                      _times.text,
-                      _instructions.text,
-                    ),
+                    TreatmentSetupStep.schedule => TreatmentRegimensSubmitted({
+                      for (final medication in state.medications)
+                        medication.id: _controllersFor(medication.id).input,
+                    }),
                     _ => ReminderSubmitted(_delay.text),
                   });
                 },
@@ -452,6 +473,58 @@ class _TreatmentSetupScreenState extends State<TreatmentSetupScreen> {
                 : () => bloc.add(const TreatmentSetupBackRequested()),
             child: Text(text.tmBack),
           ),
+      ],
+    );
+  }
+}
+
+/// Multi-select list of the active medications.
+class _MedicationChooser extends StatefulWidget {
+  const _MedicationChooser({required this.options, required this.selected});
+  final List<SetupMedication> options;
+  final List<SetupMedication> selected;
+  @override
+  State<_MedicationChooser> createState() => _MedicationChooserState();
+}
+
+class _MedicationChooserState extends State<_MedicationChooser> {
+  late final _chosen = [...widget.selected];
+
+  @override
+  Widget build(BuildContext context) {
+    final text = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (widget.options.isEmpty)
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              text.tmNoActiveMedications,
+              style: treatmentSupportingStyle(context),
+            ),
+          ),
+        for (final medication in widget.options)
+          CheckboxListTile(
+            key: Key('choose-${medication.id}'),
+            value: _chosen.contains(medication),
+            title: Text(medication.label, style: treatmentFieldStyle(context)),
+            onChanged: (on) => setState(() {
+              if (on ?? false) {
+                _chosen.add(medication);
+              } else {
+                _chosen.remove(medication);
+              }
+            }),
+          ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: ElevatedButton(
+            key: const Key('medications-done'),
+            onPressed: () => Navigator.pop(context, _chosen),
+            child: Text(text.tmMedicationsDone),
+          ),
+        ),
       ],
     );
   }

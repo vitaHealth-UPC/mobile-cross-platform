@@ -23,6 +23,7 @@ final class InventoryState {
     this.invalidField,
     this.errorCode,
     this.replenished = false,
+    this.corrected = false,
   });
 
   final InventoryPhase phase;
@@ -38,6 +39,9 @@ final class InventoryState {
   /// The last write was a replenishment the server acknowledged.
   final bool replenished;
 
+  /// The last write was a receipt correction the server acknowledged.
+  final bool corrected;
+
   InventoryState copyWith({
     InventoryPhase? phase,
     Inventory? inventory,
@@ -45,6 +49,7 @@ final class InventoryState {
     InventoryField? invalidField,
     String? errorCode,
     bool? replenished,
+    bool? corrected,
   }) => InventoryState(
     phase: phase ?? this.phase,
     inventory: inventory ?? this.inventory,
@@ -52,5 +57,6 @@ final class InventoryState {
     invalidField: invalidField,
     errorCode: errorCode,
     replenished: replenished ?? false,
+    corrected: corrected ?? false,
   );
 }

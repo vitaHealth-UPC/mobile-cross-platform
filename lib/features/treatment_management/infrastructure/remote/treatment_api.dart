@@ -94,12 +94,13 @@ final class TreatmentApi {
     String olderAdultId,
     String caregiverId,
     String name,
-    String token,
-  ) => _client.request(
+    String token, {
+    String? planId,
+  }) => _client.request(
     'POST',
     'api/v1/older-adults/${_id(olderAdultId)}/treatments',
     token: token,
-    body: {'caregiverId': caregiverId, 'name': name},
+    body: {'caregiverId': caregiverId, 'name': name, 'planId': ?planId},
   );
 
   Future<ApiResponse> listTreatments(
