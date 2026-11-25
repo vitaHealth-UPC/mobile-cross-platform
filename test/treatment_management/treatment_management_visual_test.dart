@@ -287,7 +287,7 @@ void main() {
       expect(backend.medications['med-1']!.active, isTrue);
       await tester.tap(deactivate);
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Desactivar'));
+      await tester.tap(find.text('Retirar'));
       await tester.pumpAndSettle();
       expect(backend.medications['med-1']!.active, isFalse);
       expect(bloc.state.activeMedicationCount, 0);

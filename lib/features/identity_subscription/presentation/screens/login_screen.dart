@@ -186,22 +186,30 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 12),
                       ],
                       if (widget.onPinAccess != null) ...[
-                        OutlinedButton.icon(
-                          key: const Key('login-pin-access'),
-                          onPressed: widget.busy ? null : widget.onPinAccess,
-                          icon: const Icon(Icons.dialpad, size: 20),
-                          label: Text(text.signInWithPin),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            key: const Key('login-pin-access'),
+                            style: secondaryAccessStyle(),
+                            onPressed: widget.busy ? null : widget.onPinAccess,
+                            icon: const Icon(Icons.dialpad, size: 20),
+                            label: Text(text.signInWithPin),
+                          ),
                         ),
                         const SizedBox(height: 10),
                       ],
                       if (widget.onInvitation != null)
-                        OutlinedButton.icon(
-                          key: const Key('login-adult-entry'),
-                          onPressed: widget.busy ? null : widget.onInvitation,
-                          icon: const Icon(Icons.elderly, size: 22),
-                          label: Text(
-                            text.adultEntryButton,
-                            textAlign: TextAlign.center,
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            key: const Key('login-adult-entry'),
+                            style: secondaryAccessStyle(),
+                            onPressed: widget.busy ? null : widget.onInvitation,
+                            icon: const Icon(Icons.elderly, size: 22),
+                            label: Text(
+                              text.adultEntryButton,
+                              textAlign: TextAlign.center,
+                            ),
                           ),
                         ),
                     ],

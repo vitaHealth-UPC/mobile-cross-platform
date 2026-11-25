@@ -104,10 +104,11 @@ void main() {
           );
         }
         if (step == TreatmentSetupStep.reminders) {
-          await tester.enterText(
-            find.byKey(const Key('treatment-delay')),
-            '10',
-          );
+          await tester.tap(find.byKey(const Key('treatment-delay')));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text('10 minutos después').last);
+          await tester.pumpAndSettle();
+          expect(find.text('10 minutos después'), findsOneWidget);
         }
         FocusManager.instance.primaryFocus?.unfocus();
         await tester.pumpAndSettle();

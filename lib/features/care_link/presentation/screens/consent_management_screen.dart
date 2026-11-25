@@ -76,8 +76,19 @@ class ConsentManagementScreen extends StatelessWidget {
                 primary: false,
                 padding: const EdgeInsets.fromLTRB(22, 28, 22, 24),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    if (Navigator.of(context).canPop())
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: IconButton(
+                          tooltip: text.back,
+                          onPressed: loading
+                              ? null
+                              : () => Navigator.of(context).maybePop(),
+                          icon: const Icon(Icons.chevron_left, size: 30),
+                        ),
+                      ),
                     Text(
                       text.consentManagementTitle,
                       style: TataTypography.heading,
@@ -198,8 +209,53 @@ class ConsentManagementScreen extends StatelessWidget {
                           ),
                         ),
                     ],
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
+                    // Signing out and withdrawing are different decisions:
+                    // say what each one does, in its own card, before the
+                    // adult chooses.
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEEF6FC),
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const ExcludeSemantics(
+                            child: Icon(
+                              Icons.info_outline,
+                              size: 22,
+                              color: Color(0xFF21457A),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              text.consentManageSignOutHint,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                height: 1.45,
+                                color: Color(0xFF21457A),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    // Every action spans the same width so they read as one
+                    // group: leave this phone, end the care, delete account.
+                    OutlinedButton.icon(
+                      key: const Key('consent-sign-out'),
+                      onPressed: loading ? null : onSignOut,
+                      icon: const Icon(Icons.logout),
+                      label: Text(text.signOut),
+                    ),
+                    const SizedBox(height: 12),
                     OutlinedButton(
+                      key: const Key('withdraw-consent'),
                       onPressed: loading
                           ? null
                           : () async {
@@ -246,45 +302,35 @@ class ConsentManagementScreen extends StatelessWidget {
                           ),
                         ),
                       ),
-                    const SizedBox(height: 20),
-                    // Signing out and withdrawing are different decisions:
-                    // say what each one does before the adult chooses.
-                    Text(
-                      text.consentManageSignOutHint,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        height: 1.45,
-                        color: Color(0xFF5B6475),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextButton(
-                      onPressed: loading ? null : onSignOut,
-                      child: Text(text.signOut),
-                    ),
                     if (onRemoveAccount != null) ...[
                       const SizedBox(height: 12),
-                      TextButton(
-                        key: const Key('remove-account'),
-                        style: TextButton.styleFrom(
-                          foregroundColor: Theme.of(context).colorScheme.error,
+                      Center(
+                        child: TextButton(
+                          key: const Key('remove-account'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Theme.of(context)
+                                .colorScheme
+                                .error,
+                          ),
+                          onPressed: loading
+                              ? null
+                              : () async {
+                                  if (await _confirm(
+                                        context,
+                                        title: text.removeAccountTitle,
+                                        body: text.removeAccountBody,
+                                        confirm: text.removeAccountConfirm,
+                                        cancel: text.keepConsent,
+                                        key: const Key(
+                                          'confirm-remove-account',
+                                        ),
+                                      ) &&
+                                      context.mounted) {
+                                    onRemoveAccount!();
+                                  }
+                                },
+                          child: Text(text.removeAccount),
                         ),
-                        onPressed: loading
-                            ? null
-                            : () async {
-                                if (await _confirm(
-                                      context,
-                                      title: text.removeAccountTitle,
-                                      body: text.removeAccountBody,
-                                      confirm: text.removeAccountConfirm,
-                                      cancel: text.keepConsent,
-                                      key: const Key('confirm-remove-account'),
-                                    ) &&
-                                    context.mounted) {
-                                  onRemoveAccount!();
-                                }
-                              },
-                        child: Text(text.removeAccount),
                       ),
                     ],
                   ],
