@@ -1604,6 +1604,7 @@
   "tmFrequencyIntervalTitle": "Every how many hours?",
   "tmStartTime": "Start time",
   "tmDoseTime": "Dose time",
+  "tmEditPrescribedTimes": "Edit times as prescribed",
   "tmStartTimeHint": "Choose a reference time. The interval sets the other doses, including overnight doses.",
   "tmDosesPerDay": "{count, plural, =1{1 dose a day} other{{count} doses a day}}",
   "@tmDosesPerDay": {
@@ -1801,7 +1802,7 @@
       }
     }
   },
-  "joinCaregiverButton": "I have a code from another caregiver",
+  "joinCaregiverButton": "Link an existing family member",
   "joinCaregiverTitle": "Care for an already registered relative",
   "joinCaregiverHint": "Type the code the other caregiver shared. Your relative must accept you before you see their information.",
   "joinCaregiverLabel": "Caregiver code",
