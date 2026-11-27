@@ -719,63 +719,64 @@ class _MovementCard extends StatelessWidget {
               ? const [Color(0xFFFFF4F1), Color(0xFFFCE9E4)]
               : const [Color(0xFFECF5FC), Color(0xFFE0EDF7)],
         ),
-        child: Column(
+        child: Row(
           children: [
-            Row(
-              children: [
-                Icon(
-                  receipt == null
-                      ? Icons.check_circle_outline
-                      : Icons.medication_outlined,
-                  size: 18,
-                  color: receipt == null
-                      ? TataColors.errorText
-                      : TataColors.primary,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
+            Icon(
+              receipt == null
+                  ? Icons.check_circle_outline
+                  : Icons.medication_outlined,
+              size: 18,
+              color: receipt == null
+                  ? TataColors.errorText
+                  : TataColors.primary,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
                     title,
                     style: const TextStyle(
-                      fontSize: 13,
+                      fontSize: 14,
                       fontWeight: FontWeight.w600,
+                      color: TataColors.ink,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    date,
+                    style: const TextStyle(
+                      fontSize: 12,
                       color: TataColors.muted,
                     ),
                   ),
-                ),
-                if (receipt?.lot case final lot?)
-                  Flexible(
-                    child: Text(
+                  if (receipt?.lot case final lot?)
+                    Text(
                       lot,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontSize: 12,
                         color: TataColors.muted,
                       ),
                     ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Text(
-              amount,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 24,
-                height: 1.15,
-                fontWeight: FontWeight.w700,
-                color: receipt == null ? TataColors.errorText : TataColors.ink,
+                ],
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              date,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: TataColors.ink,
+            const SizedBox(width: 12),
+            Flexible(
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  amount,
+                  textAlign: TextAlign.end,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: receipt == null
+                        ? TataColors.errorText
+                        : TataColors.primary,
+                  ),
+                ),
               ),
             ),
           ],

@@ -1729,7 +1729,7 @@
     }
   },
   "invitationExpired": "The invitation expired. Renew it to share a new one.",
-  "adultEntryButton": "I'm the older adult: sign in with my code",
+  "adultEntryButton": "I'm the older adult",
   "accessCodeTitle": "Access code",
   "accessCodeNew": "New access code",
   "accessCodeExplanation": "Use it if {name} changed phones or reinstalled the app. They type it in “I'm the older adult”; if they already have a PIN we will ask for it. It works once and expires at {time}.",
