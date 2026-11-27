@@ -49,16 +49,13 @@ class SocialAccessButton extends StatelessWidget {
   );
 }
 
-/// Same look as the social buttons for the other secondary entries (PIN and
-/// the older adult's own entry): white, full width and softly raised.
+/// Secondary access uses the same pill silhouette as the main action.
 ButtonStyle secondaryAccessStyle() => OutlinedButton.styleFrom(
   backgroundColor: Colors.white,
   foregroundColor: TataColors.link,
   minimumSize: const Size(double.infinity, 52),
   side: const BorderSide(color: TataColors.border),
-  elevation: 2,
-  shadowColor: const Color(0x141A2138),
-  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+  shape: const StadiumBorder(),
   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
   textStyle: const TextStyle(
     fontFamily: 'Inter',
