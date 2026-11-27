@@ -481,6 +481,15 @@ void main() {
       return bloc;
     }
 
+    testWidgets('shows units in the ring when coverage is unknown', (
+      tester,
+    ) async {
+      final fake = FakeInventory()..found = AppSuccess(stock(days: null));
+      await pump(tester, fake);
+      expect(find.text('5 unidades'), findsOneWidget);
+      expect(find.text('Sin estimación de días'), findsOneWidget);
+    });
+
     testWidgets('shows low stock with its coverage (563:1632)', (tester) async {
       final semantics = tester.ensureSemantics();
       await pump(tester, FakeInventory());
