@@ -1604,7 +1604,7 @@
   "tmFrequencyIntervalTitle": "Every how many hours?",
   "tmStartTime": "Start time",
   "tmDoseTime": "Dose time",
-  "tmStartTimeHint": "Choose the first dose of the day; the others are calculated for you.",
+  "tmStartTimeHint": "Choose a reference time. The interval sets the other doses, including overnight doses.",
   "tmDosesPerDay": "{count, plural, =1{1 dose a day} other{{count} doses a day}}",
   "@tmDosesPerDay": {
     "placeholders": {
