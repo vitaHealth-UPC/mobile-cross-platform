@@ -447,10 +447,10 @@ class _StockCard extends StatelessWidget {
               Semantics(
                 container: true,
                 label: days == null
-                    ? text.invNoEstimate
+                    ? text.invUnitsRemaining(inventory.remainingStock)
                     : text.invDaysSemantics(days),
                 excludeSemantics: true,
-                child: _DaysRing(days: days),
+                child: _StockRing(days: days, units: inventory.remainingStock),
               ),
             ],
           ),
@@ -460,9 +460,10 @@ class _StockCard extends StatelessWidget {
   }
 }
 
-class _DaysRing extends StatelessWidget {
-  const _DaysRing({required this.days});
+class _StockRing extends StatelessWidget {
+  const _StockRing({required this.days, required this.units});
   final int? days;
+  final int units;
 
   @override
   Widget build(BuildContext context) {
@@ -490,7 +491,7 @@ class _DaysRing extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  days?.toString() ?? '–',
+                  days?.toString() ?? text.invBatchUnits(units),
                   style: const TextStyle(
                     fontSize: 22,
                     height: 1.1,
