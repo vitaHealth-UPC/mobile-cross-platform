@@ -257,6 +257,19 @@ class _CaregiverProfilesScreenState extends State<CaregiverProfilesScreen> {
                     style: TataTypography.subtitle,
                   ),
                   const SizedBox(height: 20),
+                  if (widget.onJoin != null) ...[
+                    const SizedBox(height: 4),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        key: const Key('join-caregiver'),
+                        onPressed: widget.loading ? null : _join,
+                        icon: const Icon(Icons.group_add_outlined),
+                        label: Text(text.joinCaregiverButton),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 12),
                   if (widget.notice case final notice?) ...[
                     Semantics(
                       liveRegion: true,
@@ -309,18 +322,6 @@ class _CaregiverProfilesScreenState extends State<CaregiverProfilesScreen> {
                     icon: const Icon(Icons.refresh, size: 18),
                     label: Text(text.refreshProfiles),
                   ),
-                  if (widget.onJoin != null) ...[
-                    const SizedBox(height: 4),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        key: const Key('join-caregiver'),
-                        onPressed: widget.loading ? null : _join,
-                        icon: const Icon(Icons.group_add_outlined),
-                        label: Text(text.joinCaregiverButton),
-                      ),
-                    ),
-                  ],
                   const SizedBox(height: 24),
                   Text(
                     text.registerFamilyMember,
