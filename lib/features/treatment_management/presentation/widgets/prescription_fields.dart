@@ -450,11 +450,13 @@ class StartTimeField extends StatelessWidget {
     required this.frequency,
     required this.fieldKey,
     this.enabled = true,
+    this.onEditTimes,
   });
   final TextEditingController controller;
   final Frequency frequency;
   final Key fieldKey;
   final bool enabled;
+  final VoidCallback? onEditTimes;
 
   /// The stored times are sorted, so the start shown is the first dose from
   /// 05:00 on (a day usually starts there: 08:00 rather than 02:00).
@@ -544,6 +546,14 @@ class StartTimeField extends StatelessWidget {
                     ),
                 ],
               ),
+              if (onEditTimes != null)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    onPressed: enabled ? onEditTimes : null,
+                    child: Text(text.tmEditPrescribedTimes),
+                  ),
+                ),
             ],
           ],
         );
@@ -941,6 +951,11 @@ class _RegimenFieldsState extends State<RegimenFields> {
               controller: widget.times,
               frequency: frequency,
               enabled: widget.enabled,
+              onEditTimes: () {
+                final times = widget.times.text;
+                widget.frequency.text = text.tmFrequencyPrescribed;
+                widget.times.text = times;
+              },
             )
           else
             ScheduleTimeField(

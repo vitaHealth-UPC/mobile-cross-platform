@@ -81,6 +81,38 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('explicitly edits generated times as a prescribed schedule', (
+    tester,
+  ) async {
+    final dose = TextEditingController();
+    final frequency = TextEditingController(text: 'Every 6 hours');
+    final times = TextEditingController(text: '02:00,08:00,14:00,20:00');
+    final instructions = TextEditingController();
+    for (final controller in [dose, frequency, times, instructions]) {
+      addTearDown(controller.dispose);
+    }
+    await _pump(
+      tester,
+      RegimenFields(
+        dose: dose,
+        frequency: frequency,
+        times: times,
+        instructions: instructions,
+      ),
+    );
+    final edit = find.text('Edit times as prescribed');
+    await tester.ensureVisible(edit);
+    await tester.tap(edit);
+    await tester.pumpAndSettle();
+    expect(frequency.text, 'As prescribed');
+    expect(times.text, '02:00,08:00,14:00,20:00');
+    final remove = find.byTooltip('Remove time 02:00');
+    await tester.ensureVisible(remove);
+    await tester.tap(remove);
+    await tester.pumpAndSettle();
+    expect(times.text, '08:00,14:00,20:00');
+  });
+
   testWidgets('dose and meals are chosen in sheets without typing', (
     tester,
   ) async {

@@ -1778,6 +1778,7 @@
   "tmFrequencyIntervalTitle": "¿Cada cuántas horas?",
   "tmStartTime": "Hora de inicio",
   "tmDoseTime": "Hora de la toma",
+  "tmEditPrescribedTimes": "Editar horarios según la receta",
   "tmStartTimeHint": "Elige una hora de referencia. El intervalo calcula las demás tomas, incluso de madrugada.",
   "tmDosesPerDay": "{count, plural, =1{1 toma al día} other{{count} tomas al día}}",
   "@tmDosesPerDay": {
@@ -1975,7 +1976,7 @@
       }
     }
   },
-  "joinCaregiverButton": "Tengo un código de otro cuidador",
+  "joinCaregiverButton": "Vincular un familiar ya registrado",
   "joinCaregiverTitle": "Cuidar a un familiar ya registrado",
   "joinCaregiverHint": "Escribe el código que te compartió el otro cuidador. Tu familiar debe aceptarte antes de que veas su información.",
   "joinCaregiverLabel": "Código del cuidador",
