@@ -1903,7 +1903,7 @@
     }
   },
   "invitationExpired": "La invitación venció. Renuévala para compartir una nueva.",
-  "adultEntryButton": "Soy adulto mayor: ingresar con mi código",
+  "adultEntryButton": "Soy adulto mayor",
   "accessCodeTitle": "Código de acceso",
   "accessCodeNew": "Nuevo código de acceso",
   "accessCodeExplanation": "Úsalo si {name} cambió de celular o reinstaló la app. Lo escribe en «Soy adulto mayor»; si ya tiene PIN, se lo pediremos. Sirve una sola vez y vence a las {time}.",
